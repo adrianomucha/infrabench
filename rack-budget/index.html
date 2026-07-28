@@ -121,6 +121,7 @@
   @media(min-width:1680px){.app{grid-template-columns:minmax(300px,430px) 1fr}}
   .panel{padding:28px 40px 40px 0}
   .panel.out{padding:28px 0 40px 40px;border-left:1px solid var(--rule)}
+  @media(min-width:881px){.app .panel:not(.out){position:sticky;top:64px;align-self:start}}
   @media(max-width:880px){
     .app{grid-template-columns:1fr}
     .panel{padding:28px 0}
