@@ -1,4 +1,7 @@
-<h1>Infrabench</h1>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/logo/glyph/infrabench-logo-solid.svg">
+  <img alt="Infrabench" src=".github/assets/logo/glyph/infrabench-logo-solid-light.svg" height="44">
+</picture>
 
 <p><strong>Published specs, corrected for reality.</strong><br>
 Open tools for the people who build data centers.</p>

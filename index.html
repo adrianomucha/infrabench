@@ -10,6 +10,9 @@
 <meta property="og:type" content="website">
 <meta property="og:image" content="/og.png">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -32,7 +35,7 @@
   header{border-bottom:1px solid var(--rule);position:sticky;top:0;background:rgba(14,17,22,.92);backdrop-filter:blur(8px);z-index:40}
   .bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0}
   .mark{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;letter-spacing:.08em}
-  .sq{width:9px;height:9px;background:var(--sig);display:inline-block;flex:none;box-shadow:0 0 0 3px rgba(61,220,151,.16)}
+  .sq{width:9px;height:9px;color:var(--sig);display:inline-block;flex:none;box-shadow:0 0 0 3px rgba(61,220,151,.16)}
   .mark b{font-weight:700}
   .mark span.t{color:var(--tx3)}
   .hnav{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3)}
@@ -98,7 +101,7 @@
 
 <header>
   <div class="wrap bar">
-    <div class="mark"><span class="sq"></span><b>INFRABENCH</b><span class="t">/ OPEN TOOLS FOR INFRASTRUCTURE</span></div>
+    <div class="mark"><svg class="sq" viewBox="0 0 24 24" aria-hidden="true"><path d="M0,0 H24 V24 H0 Z M4,3 H20 V8.2 H4 Z" fill="currentColor" fill-rule="evenodd"/></svg><b>INFRABENCH</b><span class="t">/ OPEN TOOLS FOR INFRASTRUCTURE</span></div>
     <div class="hnav"><a href="#tools">Tools</a></div>
   </div>
 </header>
