@@ -44,6 +44,8 @@
   html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
   body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
   .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  @media(min-width:1680px){.wrap{max-width:1400px}}
+  @media(min-width:2200px){.wrap{max-width:1560px}}
   a{color:var(--sig);text-decoration:none}
   a:hover{text-decoration:underline}
 
@@ -116,6 +118,7 @@
   .modes button[aria-pressed="true"]{background:var(--sigd);color:#04120C;font-weight:700}
 
   .app{display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:0;margin-top:22px;border-top:1px solid var(--rule)}
+  @media(min-width:1680px){.app{grid-template-columns:minmax(300px,430px) 1fr}}
   .panel{padding:28px 40px 40px 0}
   .panel.out{padding:28px 0 40px 40px;border-left:1px solid var(--rule)}
   @media(max-width:880px){
