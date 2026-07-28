@@ -203,6 +203,11 @@
   td.name{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--tx)}
   .tag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--rule2);padding:3px 7px;color:var(--tx3);white-space:nowrap}
   .tag.l{border-color:var(--sigd);color:var(--sig)}
+  #refBody tr{cursor:pointer}
+  #refBody tr:hover td{background:rgba(61,220,151,.04)}
+  #refBody tr:hover td.name{color:var(--sig)}
+  #refBody tr.on td{background:rgba(61,220,151,.06)}
+  #refBody tr.on td.name{color:var(--sig)}
   @media(max-width:700px){
     table th:last-child, table td:last-child{display:none}
     th,td{padding-right:10px}
@@ -251,6 +256,34 @@
 
   .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--sig);color:#04120C;font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:12px 18px;opacity:0;pointer-events:none;transition:.22s ease;z-index:60}
   .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .uswitch{display:flex;justify-content:flex-end;margin:22px 0 -8px}
+  .uswitch button{font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:5px 11px;background:none;border:1px solid var(--rule2);color:var(--tx3);cursor:pointer}
+  .uswitch button+button{border-left:0}
+  .uswitch button[aria-pressed="true"]{color:var(--sig);border-color:var(--sigd);background:rgba(61,220,151,.06)}
+  .print-url{display:none}
+
+  /* print: a one-page site brief. Only the calculator survives, on white. */
+  @media print{
+    @page{margin:11mm}
+    :root{--bg:#fff;--panel:#fff;--rule:#c7cdd5;--rule2:#a8b1bc;--tx:#12161b;--tx2:#39424d;--tx3:#66707c;--sig:#0b7f58;--sigd:#0b7f58;--ramp1:#31b381;--ramp2:#1e8a63;--ramp3:#135c44}
+    body{background:#fff;font-size:13px}
+    header{position:static;background:#fff;backdrop-filter:none;box-shadow:none}
+    header nav{display:none}
+    section,footer,.toast{display:none}
+    #calc{display:block;padding:12px 0 0}
+    #calc .kicker{margin-bottom:10px}
+    .modes,.actions,.uswitch,input[type="range"],.hint,.cursor{display:none}
+    .hero{padding:20px 0 8px}
+    .app{margin-top:8px}
+    .app .panel:not(.out){position:static}
+    .panel{padding:14px 24px 14px 0}
+    .panel.out{padding:14px 0 0 24px;border-left:0}
+    .field{margin-bottom:12px}
+    .headline-out,.pbar-wrap,.grid,.flag{break-inside:avoid}
+    .fleet-wrap{max-width:390px}
+    .print-url{display:block;margin-top:14px;font-family:var(--mono);font-size:10px;color:var(--tx3);word-break:break-all}
+  }
 </style>
 </head>
 <body>
@@ -347,12 +380,14 @@
           <div class="pbar" id="pbar" aria-hidden="true"></div>
           <div class="pbar-legend" id="pbarLegend"></div>
         </div>
+        <div class="uswitch" role="group" aria-label="Floor area units"><button id="uFt" aria-pressed="true">SQ FT</button><button id="uM2" aria-pressed="false">SQ M</button></div>
         <div class="grid" id="cells"></div>
         <div class="flag"><span class="t">Reality check</span><span id="flagText"></span></div>
         <div class="actions">
           <button class="btn" id="copyLink">Copy shareable link</button>
           <button class="btn ghost" id="copySummary">Copy summary</button>
         </div>
+        <div class="print-url" id="printUrl"></div>
       </div>
     </div>
   </div>
@@ -580,7 +615,12 @@
   var HOME_KWH = 10500;
 
   var $ = function(id){ return document.getElementById(id); };
-  var state = { mode:"A", mw:30, racks:64, preset:"gb200", kw:120, pue:1.2, margin:15 };
+  var state = { mode:"A", mw:30, racks:64, preset:"gb200", kw:120, pue:1.2, margin:15, units:"ft" };
+
+  var SQM_PER_SQFT = 0.09290304;
+  function area(v){ return state.units==="m" ? v*SQM_PER_SQFT : v; }
+  function areaUnit(){ return state.units==="m" ? "SQ M" : "SQ FT"; }
+  function areaUnitLc(){ return state.units==="m" ? "sq m" : "sq ft"; }
 
   // tweened headline number
   var bigCur = null, bigRaf = null;
@@ -654,6 +694,12 @@
 
     $("mA").setAttribute("aria-pressed", state.mode==="A");
     $("mB").setAttribute("aria-pressed", state.mode==="B");
+    $("uFt").setAttribute("aria-pressed", state.units==="ft");
+    $("uM2").setAttribute("aria-pressed", state.units==="m");
+    var refRows = $("refBody").children;
+    for(var ri=0; ri<refRows.length; ri++){
+      refRows[ri].classList.toggle("on", refRows[ri].getAttribute("data-p")===state.preset);
+    }
     $("fPower").hidden = state.mode!=="A";
     $("fRacks").hidden = state.mode!=="B";
     $("fCustom").hidden = state.preset!=="custom";
@@ -704,8 +750,8 @@
     var cells = [
       ["Heat to reject", fmt(r.tons), "TONS"],
       [r.liquid?"Liquid loop / room air":"All air-cooled", r.liquid? fmt(r.tonsLiquid)+" / "+fmt(r.tonsAir) : fmt(r.tonsAir), "TONS"],
-      ["White space", fmt(r.sqft), "SQ FT"],
-      ["Total shell", fmt(r.shell), "SQ FT"],
+      ["White space", fmt(area(r.sqft)), areaUnit()],
+      ["Total shell", fmt(area(r.shell)), areaUnit()],
       ["Energy per year", fmt(r.annualMwh/1000,1), "GWh"],
       ["Homes equivalent", fmt(r.homes), "US HOMES"]
     ];
@@ -726,7 +772,7 @@
     } else if(r.rackKw>=40){
       f = "At "+r.rackKw+" kW per rack you are at the edge of what contained air can do. Expect rear-door heat exchangers, and price the liquid retrofit now rather than in year three.";
     } else {
-      f = "At "+r.rackKw+" kW per rack, air still works and floor area is the binding constraint, not the loop. You need roughly "+fmt(r.shell)+" sq ft of building.";
+      f = "At "+r.rackKw+" kW per rack, air still works and floor area is the binding constraint, not the loop. You need roughly "+fmt(area(r.shell))+" "+areaUnitLc()+" of building.";
     }
     if(state.mode==="B" && r.facilityMw>100){
       f += " A "+fmt(r.facilityMw,0)+" MW service is a multi-year utility conversation, not a purchase order.";
@@ -876,7 +922,7 @@
       var info = drawHall(r.racks, r.sqft, r.liquid);
       show(hall,true); show(marks,false);
       $("fleetCap").textContent = fmt(r.racks) + " racks · " + info.rows + " rows of " + info.perRow +
-        " · floor plate " + (info.capped ? "indicative" : "to scale") + " at " + fmt(r.sqft) + " sq ft";
+        " · floor plate " + (info.capped ? "indicative" : "to scale") + " at " + fmt(area(r.sqft)) + " " + areaUnitLc();
     } else {
       var scale = 1, steps = [1,2,5,10,20,50,100];
       for(var si=0; si<steps.length; si++){ if(r.racks/steps[si] <= 420){ scale = steps[si]; break; } scale = steps[steps.length-1]; }
@@ -890,7 +936,7 @@
 
   function buildRef(){
     $("refBody").innerHTML = PRESETS.filter(function(p){return p.id!=="custom";}).map(function(p){
-      return '<tr><td class="name">'+p.name+'</td><td class="m">'+p.kw+'</td><td class="m">'+(p.gpus||"&mdash;")+
+      return '<tr data-p="'+p.id+'" title="Load into the calculator"><td class="name">'+p.name+'</td><td class="m">'+p.kw+'</td><td class="m">'+(p.gpus||"&mdash;")+
              '</td><td><span class="tag'+(p.liquid?" l":"")+'">'+(p.liquid?"LIQUID":"AIR")+'</span></td><td>'+p.note+'</td></tr>';
     }).join("");
     var sel = $("preset");
@@ -908,6 +954,7 @@
     q.set("mg", state.margin);
     if(state.mode==="A") q.set("mw", state.mw); else q.set("r", state.racks);
     if(state.preset==="custom") q.set("kw", state.kw);
+    if(state.units==="m") q.set("u", "m");
     // sandboxed previews (srcdoc iframes) forbid history writes; degrade to no-op there
     try{ history.replaceState(null,"","#"+q.toString()); }
     catch(e){ try{ location.hash = q.toString(); }catch(e2){} }
@@ -924,6 +971,7 @@
     if(q.get("mw")) state.mw = parseFloat(q.get("mw"))||30;
     if(q.get("r")) state.racks = parseInt(q.get("r"),10)||64;
     if(q.get("kw")) state.kw = parseFloat(q.get("kw"))||120;
+    if(q.get("u")==="m") state.units = "m";
     return true;
   }
   function syncInputs(){
@@ -976,7 +1024,7 @@
     L.push("Racks: "+fmt(r.racks)+(r.gpus?"   GPUs: "+fmt(r.gpus):""));
     L.push("Facility power: "+fmt(r.facilityMw,1)+" MW   (IT "+fmt(r.itMw,1)+" MW, overhead "+fmt(r.overheadMw,1)+" MW)");
     L.push("Heat to reject: "+fmt(r.tons)+" tons"+(r.liquid?"   (liquid "+fmt(r.tonsLiquid)+", air "+fmt(r.tonsAir)+")":""));
-    L.push("White space: "+fmt(r.sqft)+" sq ft   Total shell: "+fmt(r.shell)+" sq ft");
+    L.push("White space: "+fmt(area(r.sqft))+" "+areaUnitLc()+"   Total shell: "+fmt(area(r.shell))+" "+areaUnitLc());
     L.push("Energy: "+fmt(r.annualMwh/1000,1)+" GWh/yr, about "+fmt(r.homes)+" US homes");
     L.push("");
     L.push("Run your own: "+location.href);
@@ -990,6 +1038,18 @@
 
     $("mA").addEventListener("click", function(){ state.mode="A"; render(); });
     $("mB").addEventListener("click", function(){ state.mode="B"; render(); });
+    $("refBody").addEventListener("click", function(ev){
+      var tr = ev.target.closest ? ev.target.closest("tr[data-p]") : null;
+      if(!tr) return;
+      state.preset = tr.getAttribute("data-p");
+      state.kw = preset().kw;
+      syncInputs();
+      render();
+      var top = $("calc").getBoundingClientRect().top + window.pageYOffset - 60;
+      window.scrollTo(0, top);
+    });
+    $("uFt").addEventListener("click", function(){ state.units="ft"; render(); });
+    $("uM2").addEventListener("click", function(){ state.units="m"; render(); });
     $("preset").addEventListener("change", function(){
       state.preset = this.value;
       if(state.preset!=="custom"){ state.kw = preset().kw; syncInputs(); }
@@ -1003,6 +1063,9 @@
 
     $("copyLink").addEventListener("click", function(){ copy(location.href, "Link copied"); });
     $("copySummary").addEventListener("click", function(){ copy(summary(), "Summary copied"); });
+    window.addEventListener("beforeprint", function(){
+      $("printUrl").textContent = "Reproduce this configuration: " + location.href;
+    });
 
     render();
 
