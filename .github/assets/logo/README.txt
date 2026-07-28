@@ -3,19 +3,19 @@ INFRABENCH LOGO KIT
 
 One object, three renderings: STAMPED, DRAWN, BUILT.
 
-STAMPED, the primary mark. infrabench-glyph-solid.svg is one path:
-the site's header square with the derate carved out below the rim.
-The interior is 18 units, the cavity 5.2, so 71.1 percent of the
-envelope stays solid, the derate the Rack Budget defaults produce
-(30 MW at PUE 1.2 with a 15 percent margin keeps 71 percent of
-nameplate). The empty unit sits at the top, where an unpopulated U
-sits in a real rack face. 207 bytes, single color, works stamped,
-etched, embroidered, inverted.
+DRAWN, the primary mark. infrabench-glyph.svg is a technical
+drawing: outline envelope, seated block, 10 of 14 grid units, the
+derate the Rack Budget defaults produce (30 MW at PUE 1.2 with a
+15 percent margin keeps 71 percent of nameplate). The empty units
+sit at the top, where an unpopulated U sits in a real rack face.
+This is the rendering the site header, favicons and README use.
+The suite family in glyph/family/ shares this grammar
+(rack-budget, crash-cart, power-map, outage-replay).
 
-DRAWN, the alternate mark. infrabench-glyph.svg renders the same
-idea as a technical drawing: outline envelope, seated block, 10 of
-14 grid units. The suite family in glyph/family/ shares this
-grammar (rack-budget, crash-cart, power-map, outage-replay).
+STAMPED, the heavyweight rendering. infrabench-glyph-solid.svg is
+one path: the same envelope as a solid block with the derate carved
+out below the rim. 207 bytes, single color, best where mass helps:
+avatars, stickers, etching, embroidery.
 
 BUILT, the hero mark. hero/ holds the isometric rack cell in the
 Rack Budget hall's own projection and paint: the spec as a glass

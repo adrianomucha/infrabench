@@ -1,6 +1,6 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/logo/glyph/infrabench-logo-solid.svg">
-  <img alt="Infrabench" src=".github/assets/logo/glyph/infrabench-logo-solid-light.svg" height="44">
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/logo/glyph/infrabench-logo-glyph.svg">
+  <img alt="Infrabench" src=".github/assets/logo/glyph/infrabench-logo-glyph-light.svg" height="44">
 </picture>
 
 <p><strong>Published specs, corrected for reality.</strong><br>
