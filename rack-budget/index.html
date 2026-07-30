@@ -276,12 +276,39 @@
   .cta .kicker{color:var(--ink60)}
   .cta .kicker .p{color:var(--cobalt)}
   .cta h2{color:var(--ink);max-width:22ch}
-  .cta p{color:var(--ink60);max-width:60ch;font-size:var(--fs-2xl)}
+  .cta .hl{background:linear-gradient(var(--chartreuse),var(--chartreuse));background-size:100% 42%;background-position:0 78%;background-repeat:no-repeat;color:var(--ink);padding:0 2px}
+  .cta p{color:var(--ink60);max-width:54ch;font-size:var(--fs-2xl);margin:0}
+  /* the track record reads as three measurements rather than a paragraph of claims */
+  .proof{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);margin:34px 0 32px}
+  @media(max-width:820px){.proof{grid-template-columns:1fr}}
+  .proof > div{padding:22px 24px 24px 0;border-inline-end:1px solid var(--hair)}
+  .proof > div + div{padding-inline-start:24px}
+  .proof > div:last-child{border-inline-end:0;padding-inline-end:0}
+  @media(max-width:820px){
+    .proof > div{border-inline-end:0;border-bottom:1px solid var(--hair);padding:18px 0 20px}
+    .proof > div + div{padding-inline-start:0}
+    .proof > div:last-child{border-bottom:0}
+  }
+  .proof .n{font-family:var(--mono);font-weight:700;font-size:var(--fs-4xl);letter-spacing:-.02em;line-height:1.1;color:var(--ink);font-variant-numeric:tabular-nums}
+  /* the space that separates value from unit lives in the markup, so a screen reader
+     reads "$10M a month" rather than one run-together token */
+  .proof .n em{font-style:normal;font-size:.36em;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--ink60);margin-inline-start:3px}
+  .proof .n i{font-style:normal;color:var(--cobalt)}
+  .proof .l{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.13em;text-transform:uppercase;color:var(--ink60);margin-top:11px;line-height:1.5}
+  /* the two ways to hire me: a spec line, deliberately not styled like the buttons below it */
+  .offer{display:flex;flex-wrap:wrap;gap:12px 30px;margin-top:26px;font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:.09em;text-transform:uppercase;color:var(--ink60)}
+  .offer span{display:flex;align-items:center;gap:10px}
+  .offer span:before{content:"";width:7px;height:7px;background:var(--cobalt);flex:none}
   .cta .btn{background:var(--cobalt);border-color:var(--cobalt);color:#fff;font-weight:400}
   .cta .btn.ghost{background:transparent;color:var(--ink);border-color:var(--ink)}
   .cta .btn.ghost:hover{color:var(--cobalt);border-color:var(--cobalt)}
-  .cta .sec{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:.08em;color:var(--ink60);margin-top:26px}
-  .cta .sec a{color:var(--cobalt)}
+  .next{margin-top:44px;padding-top:22px;border-top:1px solid var(--hair);font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:.08em;color:var(--ink60)}
+  .next .l{text-transform:uppercase;letter-spacing:.14em;font-size:var(--fs-xs);color:var(--ink60);margin-bottom:14px}
+  .next ol{list-style:none;margin:0;padding:0;counter-reset:bench 1}
+  .next li{counter-increment:bench;position:relative;padding-inline-start:36px;margin-bottom:9px;line-height:1.5}
+  .next li:before{content:counter(bench,decimal-leading-zero);position:absolute;inset-inline-start:0;color:var(--cobalt);font-weight:700}
+  .next b{color:var(--ink);font-weight:700}
+  .next a{color:var(--cobalt);display:inline-block;margin-top:6px;text-decoration:underline;text-decoration-thickness:from-font;text-underline-offset:3px}
 
   footer{background:var(--bg);color:var(--tx2);padding:40px 0 64px;font-size:var(--fs-md);border-top:1px solid var(--rule)}
   footer a{color:var(--tx2)}
@@ -601,15 +628,41 @@
   <div class="wrap">
     <div class="box">
       <div class="kicker"><span class="p">&gt;&gt;&gt;</span> 06 / Work with me</div>
-      <h2>I design the console and ship it to production myself</h2>
-      <p>I am Adrian Mucha, a product designer for the software most designers avoid: data centers, AI tooling, operator consoles. Recent work: a repair console saving around $10M a month, a data-access portal cut from 10 days to 48 hours, production code shipped as pull requests.</p>
-      <p>If your engineers are drawing your operator UI because you have not hired a designer yet, that is the gap I fill. Two-week console sprints or an embedded retainer.</p>
+      <h2>I design the console and <span class="hl">ship it to production</span> myself</h2>
+      <p>If your engineers are drawing the operator UI because nobody has hired a designer yet, that is the gap I fill.</p>
+
+      <div class="proof">
+        <div>
+          <div class="n">$10M<em> a month</em></div>
+          <div class="l">Saved by a repair console I designed</div>
+        </div>
+        <div>
+          <div class="n">10d <i aria-hidden="true">&rarr;</i><span class="sr">to</span> 48h</div>
+          <div class="l">Data-access portal turnaround</div>
+        </div>
+        <div>
+          <div class="n">0<em> handoffs</em></div>
+          <div class="l">The design ships as pull requests</div>
+        </div>
+      </div>
+
+      <div class="offer">
+        <span>Two-week console sprint</span>
+        <span>Embedded retainer</span>
+      </div>
+
       <div class="btns">
         <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Get in touch &rarr;</a>
         <a class="btn ghost" href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">See the work &rarr;</a>
       </div>
-      <div class="sec">
-        Rack Budget is the first of a series of public data center tools. Next up: a fleet failure console built on 13 years of public drive telemetry, and a power-constrained siting map. <a href="https://portfolio-repo-gilt.vercel.app">Follow along &rarr;</a>
+
+      <div class="next">
+        <div class="l">Next on the bench</div>
+        <ol start="2">
+          <li><b>Crash Cart</b> &middot; fleet failure console on 13 years of public drive telemetry</li>
+          <li><b>Where the power is</b> &middot; siting map under a power constraint</li>
+        </ol>
+        <a href="https://portfolio-repo-gilt.vercel.app">Follow along &rarr;</a>
       </div>
     </div>
   </div>
