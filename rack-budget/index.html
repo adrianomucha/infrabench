@@ -25,10 +25,10 @@
     --rule:#232A34;        /* hairline */
     --rule2:#2E3743;       /* stronger rule */
     --tx:#E6EAF0;          /* primary text */
-    --tx2:#8B97A8;         /* secondary text */
-    --tx3:#798597;         /* tertiary / labels: 5.06:1 on --bg, 4.71:1 on --panel */
+    --tx2:#C2CEE0;         /* secondary text: Lc 76 on --bg, clears the APCA body floor */
+    --tx3:#A8B4C7;         /* tertiary / labels: Lc 61, non-body use only */
     --sig:#3DDC97;         /* signal green, UI accent */
-    --sigd:#12A97A;        /* chart green, primary mark */
+    --sigd:#40C493;        /* filled controls: Lc 60 for its #04120C label */
     --ramp1:#4FE3A5;       /* ordinal step 1: compute */
     --ramp2:#1E9E73;       /* ordinal step 2: held back */
     --ramp3:#125C46;       /* ordinal step 3: cooling + overhead */
@@ -87,6 +87,10 @@
   h2{font-family:var(--mono);font-weight:700;font-size:var(--fs-display-sm);line-height:1.15;letter-spacing:-.02em;margin:0 0 14px;max-width:30ch;text-wrap:balance}
   h3{font-family:var(--mono);font-weight:700;font-size:var(--fs-lg);letter-spacing:-.01em;margin:0 0 8px}
   .lede{font-size:var(--fs-2xl);color:var(--tx2);max-width:64ch;margin:0}
+  /* the accent green sits at Lc 70: fine for labels, short of the body floor, so links in prose
+     take the primary text colour and carry an underline instead of relying on hue */
+  .lede a{color:var(--tx);text-decoration:underline;text-decoration-thickness:from-font;text-underline-offset:3px}
+  .lede a:hover{color:var(--sig);text-decoration-color:var(--sig)}
   .hl{color:var(--sig)}
   .cursor{display:inline-block;width:.5em;height:.92em;background:var(--sig);vertical-align:-.08em;margin-inline-start:.08em}
   @keyframes blink{50%{opacity:0}}
@@ -149,7 +153,7 @@
   .idx{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.18em;text-transform:uppercase;color:var(--tx3);margin-bottom:24px}
   .field{margin-bottom:26px}
   .field label{display:block;font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx2);margin-bottom:9px}
-  .hint{font-size:var(--fs-base);color:var(--tx3);margin-top:7px;line-height:1.45}
+  .hint{font-size:var(--fs-base);color:var(--tx2);margin-top:7px;line-height:1.45}
   .row{display:flex;align-items:baseline;gap:8px}
   input[type=number]{font-family:var(--mono);font-size:var(--fs-5xl);font-weight:700;letter-spacing:-.02em;width:100%;border:0;border-bottom:2px solid var(--rule2);background:transparent;color:var(--tx);padding:2px 0 6px}
   /* the green underline marks the edited field for everyone; the keyboard ring is added below */
@@ -279,7 +283,7 @@
   .cta .sec{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:.08em;color:var(--ink60);margin-top:26px}
   .cta .sec a{color:var(--cobalt)}
 
-  footer{background:var(--bg);color:var(--tx3);padding:40px 0 64px;font-size:var(--fs-md);border-top:1px solid var(--rule)}
+  footer{background:var(--bg);color:var(--tx2);padding:40px 0 64px;font-size:var(--fs-md);border-top:1px solid var(--rule)}
   footer a{color:var(--tx2)}
   footer .lbl{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--tx2);margin-bottom:12px}
 
@@ -302,7 +306,7 @@
     section,footer,.toast{display:none}
     #calc{display:block;padding:12px 0 0}
     #calc .kicker{margin-bottom:10px}
-    .modes,.actions,.uswitch,input[type="range"],.hint,.cursor{display:none}
+    .modes,.actions,.uswitch,input[type="range"],.hint,.cursor,.skip{display:none}
     .hero{padding:20px 0 8px}
     .app{margin-top:8px}
     .app .panel:not(.out){position:static}
