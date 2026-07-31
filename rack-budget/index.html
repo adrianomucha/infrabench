@@ -288,37 +288,28 @@
 
   /* ---------- cta: Adrian's brand, the one white band on the page ---------- */
   .cta{background:#FFFFFF;color:var(--ink);border-bottom:0}
-  .cta .kicker{display:flex;align-items:center;gap:14px;color:var(--ink60);margin-bottom:36px}
+  .cta .kicker{color:var(--ink60)}
   .cta .kicker .p{color:var(--cobalt)}
-  .cta .kicker .krule{flex:1;height:1px;background:var(--hair);min-width:24px}
-  .cta .kicker .kwho{white-space:nowrap}
-  @media(max-width:640px){.cta .kicker .kwho{display:none}}
-  .cta-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:44px 64px;align-items:start}
-  @media(max-width:880px){.cta-grid{grid-template-columns:1fr}}
-  .cta h2{color:var(--ink);max-width:24ch}
-  .cta .hlb{background:linear-gradient(var(--chartreuse),var(--chartreuse)) 0 78%/100% 42% no-repeat;padding:0 2px}
-  .cta p{color:var(--ink60);max-width:56ch;font-size:var(--fs-2xl);text-wrap:pretty}
-  .cta .btns{margin-top:28px}
+  .cta h2{font-size:var(--fs-display);line-height:1.08;max-width:28ch;margin:0 0 42px;color:var(--ink)}
+  .cta .cursor{background:var(--cobalt)}
+  /* the highlighter mark: painted on by default; when motion is allowed a script below
+     starts it at zero width and sweeps it in the first time the band scrolls into view */
+  .cta .hlb{background:linear-gradient(var(--chartreuse),var(--chartreuse)) 0 76%/100% 44% no-repeat;padding:0 3px}
+  .cta.js-hl .hlb{background-size:0% 44%;transition:background-size .9s cubic-bezier(.2,0,0,1) .25s}
+  .cta.js-hl.on .hlb{background-size:100% 44%}
+  .cta-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:36px 72px;border-top:1px solid var(--hair);padding-top:40px;align-items:start}
+  @media(max-width:880px){.cta-grid{grid-template-columns:1fr;gap:0;padding-top:32px}}
+  .cta p{color:var(--ink60);max-width:56ch;font-size:var(--fs-2xl);text-wrap:pretty;margin:0 0 18px}
+  .cta .pitch p:last-child{margin-bottom:0}
+  .cta .m{font-family:var(--mono);font-weight:700;font-size:.88em;color:var(--ink);white-space:nowrap}
+  .cta .btns{margin-top:6px}
   .cta .btn{background:var(--cobalt);border-color:var(--cobalt);color:#fff;font-weight:400}
   .cta .btn:hover{filter:brightness(1.18)}
   .cta .btn.ghost{background:transparent;color:var(--ink);border-color:var(--ink)}
   .cta .btn.ghost:hover{color:var(--cobalt);border-color:var(--cobalt);filter:none}
-  /* the receipts: shipped results, set in the same cell grid the calculator prints its output in */
-  @media(min-width:881px){.proof{padding-top:12px}}
-  .proof .pt{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.15em;text-transform:uppercase;color:var(--ink60);margin-bottom:14px}
-  .pgrid{display:grid;grid-template-columns:1fr 1fr;border-top:2px solid var(--ink);border-inline-start:1px solid var(--hair)}
-  @media(max-width:460px){.pgrid{grid-template-columns:1fr}}
-  .pcell{border-inline-end:1px solid var(--hair);border-bottom:1px solid var(--hair);padding:18px 18px 20px}
-  .pcell .pk{font-family:var(--mono);font-size:var(--fs-2xs);letter-spacing:.13em;text-transform:uppercase;color:var(--ink60);margin-bottom:10px}
-  .pcell .pv{font-family:var(--mono);font-weight:700;font-size:var(--fs-3xl);letter-spacing:-.02em;line-height:1.1;color:var(--ink);font-variant-numeric:tabular-nums}
-  .pcell .pv .a{color:var(--cobalt);font-weight:400}
-  .pcell .pv small{display:block;font-size:var(--fs-xs);font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--ink60);margin-top:8px}
-  .next{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px 28px;margin-top:52px;padding-top:24px;border-top:1px solid var(--hair);font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:.04em;color:var(--ink60)}
-  .next .nlbl{font-size:var(--fs-xs);letter-spacing:.15em;text-transform:uppercase}
-  .next b{color:var(--ink);font-weight:700}
-  .next .ntag{font-size:var(--fs-2xs);letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--hair);padding:3px 7px;color:var(--ink60);white-space:nowrap;margin-inline-start:8px}
-  .next .ntag.on{border-color:var(--cobalt);color:var(--cobalt)}
-  .next a{color:var(--cobalt);white-space:nowrap;margin-inline-start:auto}
+  .cta .sec{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:.06em;line-height:1.9;color:var(--ink60);margin-top:28px;max-width:44ch}
+  .cta .sec a{color:var(--cobalt)}
+  @media(max-width:880px){.cta .btns{margin-top:28px}.cta .sec{max-width:56ch}}
 
   footer{background:var(--bg);color:var(--tx2);padding:40px 0 64px;font-size:var(--fs-md);border-top:1px solid var(--rule)}
   footer a{color:var(--tx2)}
@@ -599,32 +590,22 @@
 <!-- ================= CTA ================= -->
 <section class="cta">
   <div class="wrap">
-    <div class="kicker"><span class="p">&gt;&gt;&gt;</span> 05 / Work with me <span class="krule"></span><span class="kwho">Adrian Mucha &middot; FruitBat Design</span></div>
+    <div class="kicker"><span class="p">&gt;&gt;&gt;</span> 05 / Work with me</div>
+    <h2>I design the console and <span class="hlb">ship it to production</span> myself<span class="cursor"></span></h2>
     <div class="cta-grid">
-      <div>
-        <h2>I design the console and <span class="hlb">ship it to production</span> myself</h2>
-        <p>I am Adrian Mucha, a product designer for the software most designers avoid: data centers, AI tooling, operator consoles where a wrong click costs real money. The receipts are from shipped work, not projections.</p>
-        <p>If your engineers are drawing your operator UI because you have not hired a designer yet, that is the gap I fill.</p>
+      <div class="pitch">
+        <p>I am Adrian Mucha, a product designer for the software most designers avoid: data centers, AI tooling, operator consoles. Recent work: a repair console saving around <span class="m">$10M</span> a month, a data-access portal cut from <span class="m">10 days</span> to <span class="m">48 hours</span>, production code shipped as pull requests.</p>
+        <p>If your engineers are drawing your operator UI because you have not hired a designer yet, that is the gap I fill. Two-week console sprints or an embedded retainer.</p>
+      </div>
+      <div class="side">
         <div class="btns">
           <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Get in touch &rarr;</a>
           <a class="btn ghost" href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">See the work &rarr;</a>
         </div>
-      </div>
-      <div class="proof">
-        <div class="pt">The receipts</div>
-        <div class="pgrid">
-          <div class="pcell"><div class="pk">Repair console</div><div class="pv">~$10M<small>Saved per month</small></div></div>
-          <div class="pcell"><div class="pk">Data-access portal</div><div class="pv">10 d <span class="a">&rarr;</span> 48 h<small>Request turnaround</small></div></div>
-          <div class="pcell"><div class="pk">Production code</div><div class="pv">PRs<small>Not handoff docs</small></div></div>
-          <div class="pcell"><div class="pk">Engagement</div><div class="pv">2 weeks<small>Console sprint or retainer</small></div></div>
+        <div class="sec">
+          Rack Budget is the first of a series of public data center tools. Next up: a fleet failure console built on 13 years of public drive telemetry, and a power-constrained siting map. <a href="https://portfolio-repo-gilt.vercel.app">Follow along &rarr;</a>
         </div>
       </div>
-    </div>
-    <div class="next">
-      <span class="nlbl">Next on the bench</span>
-      <span><b>02 Crash Cart</b> &middot; drive-failure triage on 13 years of fleet telemetry<span class="ntag on">In progress</span></span>
-      <span><b>03 Where the power is</b> &middot; power-constrained siting<span class="ntag">Planned</span></span>
-      <a href="https://portfolio-repo-gilt.vercel.app">Follow along &rarr;</a>
     </div>
   </div>
 </section>
@@ -1259,6 +1240,22 @@
       setTimeout(function(){ html.style.scrollBehavior = ""; }, 60);
     }
   });
+})();
+</script>
+<script>
+(function(){
+  "use strict";
+  // the highlighter sweep is decoration: skip it without JS, without IO, or when motion is unwanted
+  var cta = document.querySelector(".cta");
+  if(!cta || !("IntersectionObserver" in window)) return;
+  if(!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: no-preference)").matches)) return;
+  cta.classList.add("js-hl");
+  var io = new IntersectionObserver(function(entries){
+    for(var i=0;i<entries.length;i++){
+      if(entries[i].isIntersecting){ cta.classList.add("on"); io.disconnect(); return; }
+    }
+  }, {threshold:0.25});
+  io.observe(cta);
 })();
 </script>
 </body>
