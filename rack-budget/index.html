@@ -305,7 +305,7 @@
      already made the argument, so this only has to say who and offer a way through. */
   .p-body{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:22px 44px;padding-top:22px}
   .p-name{font-family:var(--mono);font-weight:700;font-size:var(--fs-3xl);letter-spacing:-.01em;line-height:1.15;color:var(--tx)}
-  .p-role{font-family:var(--mono);font-size:var(--fs-md);letter-spacing:.06em;color:var(--tx2);margin-top:9px}
+  .p-role{font-family:var(--mono);font-size:var(--fs-md);letter-spacing:.06em;color:var(--tx2);margin-top:9px;line-height:1.65;text-wrap:pretty}
   .p-act{display:flex;align-items:center;flex-wrap:wrap;gap:12px 24px}
   .cta .btn{background:var(--cobalt);border-color:var(--cobalt);color:#fff;font-weight:700;text-align:center}
   .cta .btn:hover{filter:brightness(1.25)}
@@ -598,7 +598,8 @@
       <div class="p-body">
         <div>
           <div class="p-name">Adrian Mucha</div>
-          <div class="p-role">Product designer &middot; Los Angeles</div>
+          <!-- bound terms: on a narrow screen the line may only break between items, never inside one -->
+          <div class="p-role">Product&nbsp;designer &middot; Data&nbsp;centers, AI&nbsp;tooling, operator&nbsp;consoles &middot; Los&nbsp;Angeles</div>
         </div>
         <div class="p-act">
           <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Get in touch &rarr;</a>
