@@ -222,18 +222,13 @@
   .big em{font-style:normal;font-size:.32em;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-inline-start:10px;font-weight:500}
   .headline-out .note{font-size:var(--fs-md);color:var(--tx2);margin-top:14px}
 
-  /* ---------- the bay wall: one mark per drive, or per N when the fleet is large ---------- */
+  /* ---------- the bay wall ----------
+     The fleet drawn the way it sits: 3.5 inch drives standing on end in chassis rows, the
+     same isometric projection and upper-left light the hall uses. One drive per mark, or per
+     N when the fleet is large. Decorative, so it is hidden from assistive tech and the caption
+     below carries the counts as text. */
   .wall-wrap{margin-top:20px;padding-top:18px;border-top:1px solid var(--rule)}
-  .wall{display:flex;flex-wrap:wrap;gap:3px}
-  /* the drive mark is a platter stack seen edge on: a body, and a cap that reads as the
-     activity light. Band colour fills the body; the flagged state adds the cap, so the
-     drives you have to act on differ from the rest in shape as well as in hue. */
-  .wall i{width:8px;height:22px;display:block;background:var(--r-hold);position:relative}
-  .wall i.b-watch{background:var(--r-watch)}
-  .wall i.b-sched{background:var(--r-sched)}
-  .wall i.b-pull{background:var(--r-pull)}
-  .wall i.flagged:after{content:"";position:absolute;inset-inline:1px;top:2px;height:3px;background:#0E1116}
-  .wall i.b-hold{opacity:.34}
+  .wall{width:100%;height:auto;display:block;max-height:320px;margin:2px 0 0}
   .wall-cap{font-family:var(--mono);font-size:var(--fs-2xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3);margin-top:12px;line-height:1.6}
 
   /* ---------- the queue ---------- */
@@ -484,7 +479,7 @@
           <div class="lbl" id="outLabel">Pull this week</div>
           <div class="big" id="outBig"><span id="bigNum">&mdash;</span><em id="bigUnit"></em></div>
           <div class="note" id="outNote"></div>
-          <div class="wall-wrap"><div class="wall" id="wall" aria-hidden="true"></div><div class="wall-cap" id="wallCap"></div></div>
+          <div class="wall-wrap"><svg class="wall" id="wall" aria-hidden="true"></svg><div class="wall-cap" id="wallCap"></div></div>
         </div>
 
         <div class="q-head">
@@ -965,38 +960,149 @@
   var BANDNAME = { pull:"Pull this week", sched:"Schedule", watch:"Watch", hold:"Hold" };
   var BANDCLASS = { pull:"b-pull", sched:"b-sched", watch:"b-watch", hold:"b-hold" };
 
-  /* ---------- the bay wall ---------- */
-  var WALL_MAX = 420;
+  /* ---------- the bay wall ----------
+     Drives standing on end in chassis rows, drawn in the same isometric projection as the
+     hall in Rack Budget: light from the upper left, so every box carries a lit top, a mid
+     front and a dark side. Painted back to front, which in this projection means ascending
+     x plus y. */
+  var WALL_MAX = 380, ISO_COS = 0.866, ISO_SIN = 0.5;
+  var BANDFILL = { pull:"#FF5B5B", sched:"#FF9802", watch:"#FFEA6B", hold:"#3DDC97" };
+
+  // the three faces of one band, and a dimmer set for hold so the work reads first
+  function shade(hex, k){
+    var n = parseInt(hex.slice(1),16), out = "#";
+    var ch = [(n>>16)&255, (n>>8)&255, n&255];
+    for(var i=0;i<3;i++){
+      var v = Math.max(0, Math.min(255, Math.round(ch[i]*k))).toString(16);
+      out += (v.length<2 ? "0" : "") + v;
+    }
+    return out;
+  }
+  var FACES = (function(){
+    var f = {};
+    for(var b in BANDFILL){
+      var dim = b === "hold" ? 0.54 : 1;
+      f[b] = { top: shade(BANDFILL[b], 1.00*dim), front: shade(BANDFILL[b], 0.60*dim), side: shade(BANDFILL[b], 0.40*dim) };
+    }
+    return f;
+  })();
+
   function renderWall(r){
     var wall = $("wall");
-    if(r.totalDrives === 0){ wall.innerHTML = ""; $("wallCap").textContent = "No drives in this fleet"; return; }
-    var scale = 1, steps = [1,2,5,10,20,50,100,200,500,1000];
+    if(r.totalDrives === 0){
+      wall.style.display = "none"; wall.innerHTML = ""; wall.removeAttribute("viewBox");
+      $("wallCap").textContent = "No drives in this fleet";
+      return;
+    }
+    wall.style.display = "";
+
+    var scale = 1, steps = [1,2,5,10,20,50,100,200,500,1000,2000];
     for(var si=0; si<steps.length; si++){
       if(r.totalDrives/steps[si] <= WALL_MAX){ scale = steps[si]; break; }
       scale = steps[steps.length-1];
     }
-    // marks are allocated by band, worst first, so the work sits at the front of the wall.
+
+    // marks are allocated by band, worst first, and rows fill from the front, so the work
+    // stands at the near edge of the bank where it reads before anything else.
     // The notch marks a SMART canary, which is not the same thing as the band: an old clean
     // drive can earn a band on age alone, and a young flagged one on evidence alone.
-    var order = ["pull","sched","watch","hold"], html = "", drawn = 0, counts = {}, flags = {};
+    var order = ["pull","sched","watch","hold"], counts = {}, flags = {}, marks = [];
     order.forEach(function(b){ counts[b] = 0; flags[b] = 0; });
     r.rows.forEach(function(row){
       counts[row.band] += row.n;
       if(row.flagged) flags[row.band] += row.n;
     });
     order.forEach(function(b){
-      var marks = Math.round(counts[b]/scale);
-      var notched = counts[b] > 0 ? Math.round(marks*flags[b]/counts[b]) : 0;
-      for(var i=0;i<marks && drawn<WALL_MAX+40;i++,drawn++){
-        html += '<i class="'+BANDCLASS[b]+(i<notched?" flagged":"")+'"></i>';
-      }
+      var n = Math.round(counts[b]/scale);
+      var notched = counts[b] > 0 ? Math.round(n*flags[b]/counts[b]) : 0;
+      for(var i=0;i<n && marks.length<WALL_MAX+60;i++) marks.push({ band:b, flag:i<notched });
     });
-    wall.innerHTML = html;
+    if(!marks.length) marks.push({ band:"hold", flag:false });
+
+    drawBank(marks, wall);
+
     var lines = order.filter(function(b){ return counts[b] > 0; }).map(function(b){
       return fmt(counts[b])+" "+BANDNAME[b].toLowerCase();
     });
-    $("wallCap").textContent = fmt(r.totalDrives)+" drives · one mark = "+(scale>1 ? fmt(scale)+" drives" : "one drive")+
-      " · "+lines.join(" · ");
+    $("wallCap").textContent = fmt(r.totalDrives)+" drives · one drive drawn = "+
+      (scale>1 ? fmt(scale)+" drives" : "one drive")+" · "+lines.join(" · ");
+  }
+
+  function drawBank(marks, svg){
+    /* A 3.5 inch drive standing on end is 26 x 147 x 102 mm. Held to that it would draw as a
+       hairline, so the width is exaggerated to roughly 1 : 4 : 3 and it still reads as a drive
+       rather than a rack. */
+    var DW = 0.20, DD = 0.78, DH = 0.56, GAP = 0.07, ROWGAP = 0.34, S = 11;
+    var M = marks.length;
+    // wide and shallow: drives are thin, so a bank runs long before it runs deep
+    var perRow = Math.max(6, Math.min(46, Math.round(Math.sqrt(M*3.2))));
+    var rows = Math.ceil(M/perRow);
+    // the canary notch is one polygon, so it survives at every fleet size; the label edge and
+    // the activity light are only legible while the drives are still large
+    var LOD = M <= 130 ? 2 : 1;
+
+    var pitch = DW + GAP, rowPitch = DD + ROWGAP;
+    var bankW = perRow*pitch, bankD = rows*rowPitch;
+    var padX = 0.5, padY = 0.42;
+    var pts = [], out = [];
+
+    function iso(x,y,z){ return [(x-y)*ISO_COS*S, (x+y)*ISO_SIN*S - z*S]; }
+    function poly(p, fill, stroke, sw, op){
+      for(var i=0;i<p.length;i++) pts.push(p[i]);
+      return '<polygon points="' + p.map(function(q){ return q[0].toFixed(1)+','+q[1].toFixed(1); }).join(' ') +
+             '" fill="'+fill+'"' + (stroke ? ' stroke="'+stroke+'" stroke-width="'+(sw||0.6)+'" stroke-linejoin="round"' : '') +
+             (op!==undefined ? ' opacity="'+op+'"' : '') + '/>';
+    }
+    function line(a,b,stroke,sw,op){
+      return '<line x1="'+a[0].toFixed(1)+'" y1="'+a[1].toFixed(1)+'" x2="'+b[0].toFixed(1)+'" y2="'+b[1].toFixed(1)+
+             '" stroke="'+stroke+'" stroke-width="'+sw+'"'+(op!==undefined?' opacity="'+op+'"':'')+'/>';
+    }
+
+    // ---- floor plate, then a chassis rail under each row ----
+    var fw = bankW + padX*2, fd = bankD + padY*2;
+    out.push(poly([iso(0,0,0),iso(fw,0,0),iso(fw,fd,0),iso(0,fd,0)], "#141C22", "#232A34"));
+    for(var rr=0; rr<rows; rr++){
+      var ry = padY + rr*rowPitch, rw = Math.min(perRow, M - rr*perRow)*pitch;
+      out.push(poly([iso(padX-0.08,ry-0.07,0.02),iso(padX+rw+0.02,ry-0.07,0.02),
+                     iso(padX+rw+0.02,ry+DD+0.07,0.02),iso(padX-0.08,ry+DD+0.07,0.02)], "#1A242C", "#232E38", 0.5));
+      // contact shadow, laid down before anything stands up on it
+      out.push(poly([iso(padX+0.16,ry+0.16,0.02),iso(padX+rw+0.2,ry+0.16,0.02),
+                     iso(padX+rw+0.2,ry+DD+0.2,0.02),iso(padX+0.16,ry+DD+0.2,0.02)], "#080C10", null, 0, 0.5));
+    }
+
+    // ---- the drives, back to front ----
+    var cells = [];
+    for(var i=0;i<M;i++){
+      // rows fill from the front, so the worst band sits nearest the viewer and the ragged
+      // part-filled row ends up at the back where it reads as depth rather than as damage
+      var rw2 = rows - 1 - Math.floor(i/perRow), cl = i % perRow;
+      cells.push({ x: padX + cl*pitch, y: padY + rw2*rowPitch, m: marks[i] });
+    }
+    cells.sort(function(a,b){ return (a.x+a.y) - (b.x+b.y); });
+
+    cells.forEach(function(c){
+      var x = c.x, y = c.y, f = FACES[c.m.band];
+      out.push(poly([iso(x,y,DH),iso(x+DW,y,DH),iso(x+DW,y+DD,DH),iso(x,y+DD,DH)], f.top, "#0E1116", 0.5));
+      out.push(poly([iso(x,y+DD,DH),iso(x+DW,y+DD,DH),iso(x+DW,y+DD,0),iso(x,y+DD,0)], f.front, "#0E1116", 0.5));
+      out.push(poly([iso(x+DW,y,DH),iso(x+DW,y+DD,DH),iso(x+DW,y+DD,0),iso(x+DW,y,0)], f.side, "#0E1116", 0.5));
+      // the SMART canary: a slot bitten out of the lit top face, so a flagged drive differs
+      // in shape as well as in hue wherever there is room to draw it
+      if(c.m.flag && LOD >= 1)
+        out.push(poly([iso(x+0.03,y+0.10,DH+0.004),iso(x+DW-0.03,y+0.10,DH+0.004),
+                       iso(x+DW-0.03,y+0.30,DH+0.004),iso(x+0.03,y+0.30,DH+0.004)], "#0E1116", null));
+      if(LOD === 2){
+        // the label edge and the activity light on the front face
+        out.push(line(iso(x+0.035,y+DD,DH-0.06), iso(x+DW-0.035,y+DD,DH-0.06), f.top, 0.5, 0.5));
+        out.push(poly([iso(x+0.05,y+DD,0.10),iso(x+DW-0.05,y+DD,0.10),
+                       iso(x+DW-0.05,y+DD,0.05),iso(x+0.05,y+DD,0.05)], f.top, null, 0, 0.85));
+      }
+    });
+
+    var xs = pts.map(function(q){return q[0];}), ys = pts.map(function(q){return q[1];});
+    var minx = Math.min.apply(null,xs), maxx = Math.max.apply(null,xs);
+    var miny = Math.min.apply(null,ys), maxy = Math.max.apply(null,ys), pad = 7;
+    svg.setAttribute("viewBox", (minx-pad)+" "+(miny-pad)+" "+(maxx-minx+2*pad)+" "+(maxy-miny+2*pad));
+    svg.innerHTML = out.join("");
   }
 
   /* ---------- the queue ---------- */

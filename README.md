@@ -117,9 +117,17 @@ thing that will actually stop you, because that is the part someone has to act o
 ## Technical notes
 
 Plain HTML, CSS and vanilla JavaScript. One file per tool. No framework, no bundler,
-no build step, no dependencies at runtime or at deploy time. The isometric hall is
-SVG polygons generated in about sixty lines rather than a 3D library. The whole
-model is readable with view-source.
+no build step, no dependencies at runtime or at deploy time. The whole model is
+readable with view-source.
+
+Both tools draw their subject rather than charting it, in the same isometric
+projection and upper-left light, as SVG polygons generated in about sixty lines
+rather than by a 3D library. Rack Budget draws the hall: racks in rows the way they
+really sit, hot and cold aisles, row-end CDUs. Crash Cart draws the fleet as 3.5 inch
+drives standing on end in chassis rows, ordered worst band first and filled from the
+front, so the work stands at the near edge and a fleet that has aged into the queue
+is a wall of colour before you have read a number. Both paint back to front, which in
+this projection means ascending x plus y.
 
 Chart colour is validated rather than eyeballed. The megawatt split is a single-hue
 ordinal ramp (`#4FE3A5` to `#1E9E73` to `#125C46`) checked for monotone lightness,
