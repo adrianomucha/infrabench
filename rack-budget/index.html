@@ -286,29 +286,47 @@
   ul.plain li:before{content:">";position:absolute;left:0;font-family:var(--mono);color:var(--sig)}
   ul.plain li b{color:var(--tx);font-weight:600}
 
-  /* ---------- cta: Adrian's brand, the one white band on the page ---------- */
-  .cta{background:#FFFFFF;color:var(--ink);border-bottom:0}
-  .cta .kicker{color:var(--ink60)}
-  .cta .kicker .p{color:var(--cobalt)}
-  .cta h2{font-size:var(--fs-display);line-height:1.08;max-width:28ch;margin:0 0 42px;color:var(--ink)}
-  .cta .cursor{background:var(--cobalt)}
-  /* the highlighter mark: painted on by default; when motion is allowed a script below
-     starts it at zero width and sweeps it in the first time the band scrolls into view */
-  .cta .hlb{background:linear-gradient(var(--chartreuse),var(--chartreuse)) 0 76%/100% 44% no-repeat;padding:0 3px}
-  .cta.js-hl .hlb{background-size:0% 44%;transition:background-size .9s cubic-bezier(.2,0,0,1) .25s}
-  .cta.js-hl.on .hlb{background-size:100% 44%}
-  .cta-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:36px 72px;border-top:1px solid var(--hair);padding-top:40px;align-items:start}
-  @media(max-width:880px){.cta-grid{grid-template-columns:1fr;gap:0;padding-top:32px}}
-  .cta p{color:var(--ink60);max-width:56ch;font-size:var(--fs-2xl);text-wrap:pretty;margin:0 0 18px}
-  .cta .pitch p:last-child{margin-bottom:0}
-  .cta .btns{margin-top:6px}
-  .cta .btn{background:var(--cobalt);border-color:var(--cobalt);color:#fff;font-weight:400}
+  /* ---------- closing plate ----------
+     Not a second hero. Real gear carries a nameplate: a small plate fixed to the
+     chassis saying who made it and what it is rated for. This whole page is an
+     argument about nameplate ratings, so the tool signs itself the same way. One
+     contained object in Adrian's brand white, fixed to the dark chassis, sized as
+     page furniture rather than as another opening statement. */
+  .cta{background:var(--bg);border-bottom:0;padding-bottom:76px}
+  /* the 3px accent edge is the page's own box vocabulary (.flag, .formula), in
+     Adrian's cobalt rather than the instrument's green: same kind of object, the human one */
+  .plate{position:relative;background:#FFFFFF;color:var(--ink);padding:30px 36px 0;
+    border-inline-start:3px solid var(--cobalt);box-shadow:0 22px 54px rgba(0,0,0,.45)}
+  @media(max-width:700px){.plate{padding:26px 22px 0}}
+  .p-hd{display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--ink60)}
+  .p-hd .dot{width:9px;height:9px;background:var(--cobalt);flex:none}
+  .p-hd .rule{flex:1;height:1px;background:var(--hair);min-width:16px}
+  .p-hd .org{white-space:nowrap}
+  @media(max-width:620px){.p-hd .org{display:none}}
+  /* fielded like a real plate: identity, then what it does, then how to raise it */
+  .p-body{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1fr) auto;gap:26px 40px;align-items:start;padding:24px 0 28px}
+  @media(max-width:980px){.p-body{grid-template-columns:minmax(0,1fr) auto;gap:22px 36px}}
+  @media(max-width:820px){.p-body{grid-template-columns:1fr;padding-bottom:24px}}
+  .p-id{padding-inline-end:36px;border-inline-end:1px solid var(--hair)}
+  @media(max-width:980px){.p-id{padding-inline-end:0;border-inline-end:0}}
+  .p-name{font-family:var(--mono);font-weight:700;font-size:var(--fs-3xl);letter-spacing:-.01em;line-height:1.15;color:var(--ink)}
+  .p-claim{font-family:var(--mono);font-weight:700;font-size:var(--fs-lg);line-height:1.6;color:var(--ink);margin:12px 0 0;max-width:30ch}
+  /* the highlighter mark: painted on by default; when motion is allowed the script
+     below starts it at zero width and sweeps it in as the plate comes into view */
+  /* the phrase stays one unit so the mark never breaks across a line ragged */
+  .cta .hlb{background:linear-gradient(var(--chartreuse),var(--chartreuse)) 0 74%/100% 46% no-repeat;padding:0 3px;white-space:nowrap}
+  .cta.js-hl .hlb{background-size:0% 46%;transition:background-size .8s cubic-bezier(.2,0,0,1) .2s}
+  .cta.js-hl.on .hlb{background-size:100% 46%}
+  .p-body p{margin:0;color:var(--ink60);font-size:var(--fs-md);max-width:60ch;text-wrap:pretty}
+  .p-act{display:flex;flex-direction:column;gap:10px}
+  @media(max-width:820px){.p-act{flex-direction:row;flex-wrap:wrap}}
+  .cta .btn{background:var(--cobalt);border-color:var(--cobalt);color:#fff;font-weight:400;text-align:center}
   .cta .btn:hover{filter:brightness(1.18)}
   .cta .btn.ghost{background:transparent;color:var(--ink);border-color:var(--ink)}
   .cta .btn.ghost:hover{color:var(--cobalt);border-color:var(--cobalt);filter:none}
-  .cta .sec{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:.06em;line-height:1.9;color:var(--ink60);margin-top:28px;max-width:44ch}
-  .cta .sec a{color:var(--cobalt)}
-  @media(max-width:880px){.cta .btns{margin-top:28px}.cta .sec{max-width:56ch}}
+  .p-ft{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;border-top:1px solid var(--hair);
+    padding:15px 0 19px;font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:.05em;color:var(--ink60)}
+  .p-ft a{color:var(--cobalt);white-space:nowrap;margin-inline-start:auto}
 
   footer{background:var(--bg);color:var(--tx2);padding:40px 0 64px;font-size:var(--fs-md);border-top:1px solid var(--rule)}
   footer a{color:var(--tx2)}
@@ -589,21 +607,23 @@
 <!-- ================= CTA ================= -->
 <section class="cta">
   <div class="wrap">
-    <div class="kicker"><span class="p">&gt;&gt;&gt;</span> 05 / Work with me</div>
-    <h2>I design the console and <span class="hlb">ship it to production</span> myself<span class="cursor"></span></h2>
-    <div class="cta-grid">
-      <div class="pitch">
-        <p>I am Adrian Mucha, a product designer for the software most designers avoid: data centers, AI tooling, operator consoles.</p>
-        <p>If your engineers are drawing your operator UI because you have not hired a designer yet, that is the gap I fill. Two-week console sprints or an embedded retainer.</p>
-      </div>
-      <div class="side">
-        <div class="btns">
+    <div class="kicker"><span class="p">&gt;&gt;</span> 05 / Work with me</div>
+    <div class="plate">
+      <div class="p-hd"><span class="dot"></span> Built by <span class="rule"></span> <span class="org">FruitBat Design &middot; Los Angeles</span></div>
+      <div class="p-body">
+        <div class="p-id">
+          <div class="p-name">Adrian Mucha</div>
+          <div class="p-claim">I design the console and <span class="hlb">ship it to production</span> myself.</div>
+        </div>
+        <p>A product designer for the software most designers avoid: data centers, AI tooling, operator consoles. If your engineers are drawing your operator UI because you have not hired a designer yet, that is the gap I fill. Two-week console sprints or an embedded retainer.</p>
+        <div class="p-act">
           <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Get in touch &rarr;</a>
           <a class="btn ghost" href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">See the work &rarr;</a>
         </div>
-        <div class="sec">
-          Rack Budget is the first of a series of public data center tools. Next up: a fleet failure console built on 13 years of public drive telemetry, and a power-constrained siting map. <a href="https://portfolio-repo-gilt.vercel.app">Follow along &rarr;</a>
-        </div>
+      </div>
+      <div class="p-ft">
+        <span>First of a series of public data center tools. Next: a fleet failure console, and a power-constrained siting map.</span>
+        <a href="https://portfolio-repo-gilt.vercel.app">Follow along &rarr;</a>
       </div>
     </div>
   </div>
