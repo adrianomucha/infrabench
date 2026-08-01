@@ -37,9 +37,9 @@ In Vercel: **Add New Project**, import `adrianomucha/infrabench`, framework pres
 **Other**, no build command, root directory `./`, deploy. Pushes to `main` publish;
 pushes to any other branch get a preview URL.
 
-### Pointing infrabench.io at it
+### Pointing infrabench.dev at it
 
-In the Vercel project, **Settings > Domains > Add**, enter `infrabench.io`. Vercel
+In the Vercel project, **Settings > Domains > Add**, enter `infrabench.dev`. Vercel
 then shows the exact records for your project. The general-purpose values are:
 
 | Host  | Type  | Value                    |
@@ -49,15 +49,29 @@ then shows the exact records for your project. The general-purpose values are:
 
 Add those at whichever registrar holds the domain. Confirm with:
 
-    vercel domains inspect infrabench.io
+    vercel domains inspect infrabench.dev
     vercel certs ls
 
 DNS propagation is usually minutes. The TLS certificate provisions automatically
 once verification succeeds. If you add both apex and `www`, set a redirect between
-them in project settings so there is one canonical URL.
+them in project settings so there is one canonical URL. The tags in both pages
+declare the apex as canonical, so point `www` at the apex rather than the reverse.
 
-If `rackbudget.com` also gets registered, add it as a second domain on the same
-project and redirect it to `/rack-budget`.
+### What is different about a .dev domain
+
+The whole `.dev` TLD ships on the HSTS preload list, which is baked into browsers.
+Every visit is forced to HTTPS before a request leaves the machine. Two consequences
+worth knowing before launch day:
+
+- There is no plain HTTP fallback. Until the certificate provisions, the site does
+  not load at all. It does not degrade to an insecure version, it fails. A `.com`
+  would have served over HTTP in that window and looked half-working instead.
+- Any absolute URL in the pages has to be `https://`. Both pages ship `og:url`,
+  `og:image` and `canonical` on `https://infrabench.dev`, so this is already true.
+
+Nothing here needs configuring. Vercel provisions the certificate automatically.
+Just do not read the gap between DNS resolving and the certificate landing as a
+broken deploy.
 
 ### Alternatives
 
@@ -75,8 +89,10 @@ project and redirect it to `/rack-budget`.
 2. The suite mark in the tool header returns to `/`, and the index "Open tool"
    button reaches the calculator.
 3. Social cards unfurl. Paste both URLs into a card validator and confirm the
-   images resolve at `/og.png` and `/rack-budget/og.png`. A broken unfurl is the
-   most common launch-day mistake and it fails silently.
+   images resolve. A broken unfurl is the most common launch-day mistake and it
+   fails silently. The `og:image` values are absolute on purpose, because Slack,
+   LinkedIn, X and iMessage will not resolve a root-relative path. If the domain
+   ever changes, those four tags per page change with it.
 4. Copy a shareable link out of the calculator, open it in a private window, and
    confirm it restores the configuration and lands on the numbers.
 
@@ -86,7 +102,10 @@ project and redirect it to `/rack-budget`.
 
 1. `mkdir crash-cart` and copy `rack-budget/index.html` as the starting shell.
 2. Keep the header block as-is. It carries the suite mark and links back to `/`.
-3. Change the tool name in the header, the `<title>`, and the og tags.
+3. Change the tool name in the header, the `<title>`, and the og tags. Three of
+   those tags carry an absolute URL that still points at the copied tool:
+   `og:url`, `og:image` and the `canonical` link. Repoint all three, and rewrite
+   `og:image:alt` to describe the new card.
 4. Add a card to the `.tools` grid in the root `index.html` and flip its tag to Live.
 5. Keep the white maker band at the bottom. It is the same on every page by design.
 
