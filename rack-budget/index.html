@@ -297,7 +297,9 @@
      Adrian's cobalt rather than the instrument's green: same object, the human one */
   .plate{position:relative;background:var(--panel);border:1px solid var(--rule2);
     border-inline-start:3px solid var(--cobalt);padding:28px 36px 30px}
-  .p-hd{display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+  /* a real heading, so the section keeps its place in the outline; the h2 base is undone here */
+  .p-hd{display:flex;align-items:center;gap:14px;margin:0;max-width:none;font-family:var(--mono);
+    font-weight:400;font-size:var(--fs-xs);line-height:1.6;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
   .p-hd .dot{width:9px;height:9px;background:var(--cobaltlt);flex:none}
   .p-hd .rule{flex:1;height:1px;background:var(--rule);min-width:16px}
   /* identity on one side, the two actions on the other. No prose: the page has
@@ -606,7 +608,7 @@
   <div class="wrap">
     <div class="kicker"><span class="p">&gt;&gt;</span> 05 / Work with me</div>
     <div class="plate">
-      <div class="p-hd"><span class="dot"></span> Built by <span class="rule"></span></div>
+      <h2 class="p-hd"><span class="dot"></span> Built by <span class="rule"></span></h2>
       <div class="p-body">
         <div>
           <div class="p-name">Adrian Mucha</div>
