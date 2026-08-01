@@ -5,6 +5,7 @@ as-is.
 
     /                    suite index
     /og.png              suite social card
+    /assets/site.css     shared stylesheet, loaded by every page
     /rack-budget/        Rack Budget
     /rack-budget/og.png  tool social card
 

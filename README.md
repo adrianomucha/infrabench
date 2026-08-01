@@ -72,7 +72,9 @@ thing that will actually stop you, because that is the part someone has to act o
 
 ## Technical notes
 
-Plain HTML, CSS and vanilla JavaScript. One file per tool. No framework, no bundler,
+Plain HTML, CSS and vanilla JavaScript. One file per tool, over a single shared
+stylesheet (`/assets/site.css`) holding the palette, the page chrome and the closing
+signature, so those cannot drift apart as tools are added. No framework, no bundler,
 no build step, no dependencies at runtime or at deploy time. The isometric hall is
 SVG polygons generated in about sixty lines rather than a 3D library. The whole
 model is readable with view-source.
