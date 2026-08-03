@@ -205,7 +205,7 @@
   .bandbar .b-sched{background:var(--r-sched)}
   .bandbar .b-watch{background:var(--r-watch)}
   .bandbar .b-hold{background:var(--r-hold)}
-  .bar-cap{font-family:var(--mono);font-size:var(--fs-2xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3);margin-top:12px;line-height:1.6}
+  .bar-cap{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3);margin-top:12px;line-height:1.6}
 
   /* ---------- progressive disclosure ----------
      The advanced inputs and the deep-dive material sit behind native <details>, so the
@@ -222,31 +222,33 @@
 
   /* ---------- the queue ---------- */
   .q-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:44px 0 12px}
-  .q-t{font-family:var(--mono);font-size:var(--fs-2xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3)}
+  .q-t{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3)}
   .queue{border-top:1px solid var(--rule);margin-bottom:26px}
-  .qrow{display:grid;grid-template-columns:26px 1fr auto;gap:14px;align-items:baseline;padding:14px 14px 15px;border-bottom:1px solid var(--rule);border-inline-start:3px solid var(--rule2)}
+  .qrow{display:grid;grid-template-columns:26px 1fr auto;gap:14px;align-items:baseline;padding:16px 16px 17px;border-bottom:1px solid var(--rule);border-inline-start:3px solid var(--rule2)}
   .qrow.b-watch{border-inline-start-color:var(--r-watch);background:var(--w-watch)}
   .qrow.b-sched{border-inline-start-color:var(--r-sched);background:var(--w-sched)}
   .qrow.b-pull{border-inline-start-color:var(--r-pull);background:var(--w-pull)}
   .qrow.b-hold{border-inline-start-color:var(--r-hold);background:var(--w-hold)}
-  /* everything below the crew's capacity for the week is real work that is not getting done */
-  .qrow.past{opacity:.62}
-  .qrow .rk{font-family:var(--mono);font-size:var(--fs-base);font-weight:700;color:var(--tx3);font-variant-numeric:tabular-nums}
-  .qrow .nm{font-family:var(--mono);font-size:var(--fs-md);font-weight:700;color:var(--tx);letter-spacing:-.01em}
-  .qrow .sub{font-size:var(--fs-base);color:var(--tx2);margin-top:5px;line-height:1.5}
-  .qrow .ev{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.04em;color:var(--tx2);margin-top:7px;line-height:1.7}
+  /* Everything below the crew's capacity for the week is real work that is not getting done.
+     The wash goes quiet and the band line says 'waits' in words; the text itself never dims,
+     because a row that waits still has to be read. */
+  .qrow.past{background:transparent}
+  .qrow .rk{font-family:var(--mono);font-size:var(--fs-md);font-weight:700;color:var(--tx3);font-variant-numeric:tabular-nums}
+  .qrow .nm{font-family:var(--mono);font-size:var(--fs-lg);font-weight:700;color:var(--tx);letter-spacing:-.01em}
+  .qrow .sub{font-size:var(--fs-md);color:var(--tx2);margin-top:5px;line-height:1.5}
+  .qrow .ev{font-family:var(--mono);font-size:var(--fs-base);letter-spacing:.02em;color:var(--tx2);margin-top:8px;line-height:1.7}
   .qrow .ev b{color:var(--tx);font-weight:700}
-  .qrow .amt{font-family:var(--mono);font-size:var(--fs-lg);font-weight:700;color:var(--tx);text-align:end;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .qrow .amt small{display:block;font-size:var(--fs-2xs);font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-top:5px}
+  .qrow .amt{font-family:var(--mono);font-size:var(--fs-2xl);font-weight:700;color:var(--tx);text-align:end;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .qrow .amt small{display:block;font-size:var(--fs-xs);font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-top:6px}
   /* the band is named in words next to its mark: hue is a second channel here, never the only one */
-  .band{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:var(--fs-2xs);letter-spacing:.12em;text-transform:uppercase;color:var(--tx2);margin-top:9px}
+  .band{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.12em;text-transform:uppercase;color:var(--tx2);margin-top:10px}
   .band .mk{width:9px;height:9px;flex:none;background:var(--rule2)}
   .band.b-watch .mk{background:var(--r-watch)}
   .band.b-sched .mk{background:var(--r-sched)}
   .band.b-pull .mk{background:var(--r-pull)}
   .band.b-hold .mk{background:var(--r-hold)}
-  .cut{display:flex;align-items:center;gap:14px;padding:11px 14px;border-bottom:1px solid var(--rule);
-    font-family:var(--mono);font-size:var(--fs-2xs);letter-spacing:.14em;text-transform:uppercase;color:var(--tx3)}
+  .cut{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--rule);
+    font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--tx3)}
   .cut .rule{flex:1;height:1px;background:var(--rule2)}
   @media(max-width:520px){
     .qrow{grid-template-columns:22px 1fr;padding-inline:11px}
@@ -258,7 +260,7 @@
   @media(max-width:820px){.grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:420px){.grid{grid-template-columns:1fr}}
   .cell{border-inline-end:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:18px 16px 20px}
-  .cell .k{font-family:var(--mono);font-size:var(--fs-2xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;line-height:1.4;min-height:2.6em}
+  .cell .k{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;line-height:1.4;min-height:2.6em}
   .cell .v{font-family:var(--mono);font-weight:700;font-size:var(--fs-3xl);letter-spacing:-.02em;line-height:1.1;color:var(--tx);font-variant-numeric:tabular-nums}
   .cell .v small{font-size:var(--fs-xs);font-weight:500;letter-spacing:.08em;color:var(--tx3);margin-inline-start:5px}
   .flag{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--rule);border-inline-start:3px solid var(--sigd);background:var(--panel);padding:16px 18px;margin-top:26px;font-size:var(--fs-md);color:var(--tx2)}
@@ -984,7 +986,8 @@
             (row.flagged ? 'flagged by SMART' : 'no SMART canaries')+'</div>'+
           '<div class="ev">'+ev+'</div>'+
           '<div class="band '+BANDCLASS[row.band]+'"><span class="mk"></span>'+BANDNAME[row.band]+
-            (covered > 0 && covered < row.n ? ' · '+fmt(covered)+' of '+fmt(row.n)+' fit this week' : '')+'</div>'+
+            (covered > 0 && covered < row.n ? ' · '+fmt(covered)+' of '+fmt(row.n)+' fit this week' : '')+
+            (past ? ' · waits for crew capacity' : '')+'</div>'+
         '</div>'+
         '<div class="amt">'+fmtSmall(row.tb)+'<small>TB at risk / 30d</small></div>'+
       '</div>';
