@@ -112,6 +112,8 @@
     .toast{transition:opacity .22s ease, transform .22s ease}
     .caret{transition:transform .18s ease, color .18s ease}
     .sel-list{animation:drop .14s ease-out}
+    .btn{transition:scale 120ms cubic-bezier(.2,0,0,1)}
+    .btn:active{scale:.96}
   }
   section{padding:72px 0;border-bottom:1px solid var(--rule);scroll-margin-top:70px}
   @media(max-width:700px){section{padding:52px 0}}
@@ -124,7 +126,6 @@
   .btn:hover{text-decoration:none;filter:brightness(1.12)}
   .btn.ghost{background:transparent;color:var(--tx);border-color:var(--rule2);font-weight:400}
   .btn.ghost:hover{border-color:var(--sig);color:var(--sig);filter:none}
-  .btn:active{transform:translateY(1px)}
   /* ---------- console ---------- */
   .app{display:grid;grid-template-columns:minmax(300px,360px) 1fr;gap:0;margin-top:22px;border-top:1px solid var(--rule)}
   @media(min-width:1680px){.app{grid-template-columns:minmax(300px,410px) 1fr}}
@@ -201,6 +202,12 @@
   .bar-wrap{margin-top:20px;padding-top:18px;border-top:1px solid var(--rule)}
   .bandbar{display:flex;height:14px;background:var(--rule)}
   .bandbar span{display:block;height:100%;min-width:2px}
+  /* the segments take the same risk tokens as the queue rows and band chips:
+     one colour, one meaning, everywhere it appears */
+  .bandbar .b-pull{background:var(--r-pull)}
+  .bandbar .b-sched{background:var(--r-sched)}
+  .bandbar .b-watch{background:var(--r-watch)}
+  .bandbar .b-hold{background:var(--r-hold)}
   .bar-cap{font-family:var(--mono);font-size:var(--fs-2xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3);margin-top:12px;line-height:1.6}
 
   /* ---------- progressive disclosure ----------
@@ -212,7 +219,7 @@
   details.more>summary::-webkit-details-marker{display:none}
   details.more>summary::before{content:"+";font-family:var(--mono);font-weight:700;color:var(--sig);width:1ch}
   details.more[open]>summary::before{content:"\2212"}
-  details.more>summary:hover{color:var(--tx);border-color:var(--sig)}
+  details.more>summary:hover{color:var(--tx)}
   details.more>summary:focus-visible{outline:2px solid var(--sig);outline-offset:-2px}
   details.more>.d-body{padding:4px 18px 20px}
   details.more>.d-body>.field:last-child{margin-bottom:0}
@@ -585,7 +592,7 @@
     <h2>Published lifetime rates</h2>
     <p class="lede">Every model the console can queue, with its published failure rate and the drive days behind it.</p>
     <details class="more">
-    <summary>Show the table</summary>
+    <summary>The full drive table</summary>
     <div class="d-body">
     <div class="tscroll" tabindex="0" role="region" aria-label="Drive model table, scrolls horizontally">
       <table>
@@ -946,9 +953,8 @@
 
   /* ---------- the band bar ----------
      The whole fleet as one stacked bar, worst band first, so the share of the fleet that is
-     actually work reads at a glance. The caption carries the counts as text. */
-  var BANDFILL = { pull:"#FF5B5B", sched:"#FF9802", watch:"#FFEA6B", hold:"#1E5C46" };
-
+     actually work reads at a glance. The caption carries the counts as text. Colour comes
+     from the same CSS risk tokens the queue rows use, never from values coined here. */
   function renderBand(r){
     var order = ["pull","sched","watch","hold"], counts = {};
     order.forEach(function(b){ counts[b] = 0; });
@@ -958,7 +964,7 @@
     if(r.totalDrives > 0){
       order.forEach(function(b){
         if(counts[b] > 0)
-          html += '<span style="width:'+(100*counts[b]/r.totalDrives).toFixed(2)+'%;background:'+BANDFILL[b]+'"></span>';
+          html += '<span class="b-'+b+'" style="width:'+(100*counts[b]/r.totalDrives).toFixed(2)+'%"></span>';
       });
     }
     $("bandbar").innerHTML = html;
