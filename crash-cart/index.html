@@ -201,11 +201,13 @@
   .headline-out .note{font-size:var(--fs-md);color:var(--tx2);margin-top:14px}
 
   /* ---------- the fleet graphic ----------
-     Two renderings of the same shares, switchable: a stacked bar, or a waffle map with
-     one square per drive (per N when the fleet is large). Both are decorative, so they
-     are hidden from assistive tech and the caption below carries the counts as text. */
-  .out-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-  .out-head .lbl{margin-bottom:0}
+     Its own full-width strip between the console and the queue, so neither console
+     column has to make room for it. Two renderings of the same shares, switchable: a
+     stacked bar, or a waffle map with one square per drive (per N when the fleet is
+     large). Both are decorative, so they are hidden from assistive tech and the caption
+     below carries the counts as text. */
+  .fleet-strip{margin-top:44px}
+  .out-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
   .vswitch{display:flex;border:1px solid var(--rule2)}
   .vswitch button{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.1em;text-transform:uppercase;background:transparent;color:var(--tx2);border:0;padding:8px 12px;cursor:pointer}
   .vswitch button:hover{color:var(--tx)}
@@ -213,7 +215,6 @@
   .vswitch button[aria-pressed="true"]{background:var(--sigd);color:#04120C;font-weight:700}
   .vswitch button:focus-visible{outline:2px solid var(--sig);outline-offset:2px}
   @media(pointer:coarse){.vswitch button{padding:12px 14px}}
-  .bar-wrap{margin-top:20px;padding-top:18px;border-top:1px solid var(--rule)}
   .bandbar{display:flex;height:14px;background:var(--rule)}
   .bandbar span{display:block;height:100%;min-width:2px}
   /* small cells and a capped cell count keep the map a compact block inside the plate,
@@ -416,13 +417,13 @@
     section,footer,.toast{display:none}
     #console{display:block;padding:12px 0 0}
     #console .kicker{margin-bottom:10px}
-    .actions,.hint,.cursor,.skip,.caret,.sel-list,details.more,.config-note{display:none}
+    .actions,.hint,.cursor,.skip,.caret,.sel-list,details.more,.config-note,.vswitch{display:none}
     .hero{padding:20px 0 8px}
     .console-grid{display:block}
     .config{font-size:var(--fs-lg);line-height:1.7;margin-top:4px}
     .headline-out{margin-top:14px;padding:14px 16px 12px}
     .headline-out,.grid,.flag,.qrow{break-inside:avoid}
-    .bar-wrap{max-width:390px}
+    .fleet-strip{max-width:420px;margin-top:14px}
     .print-url{display:block;margin-top:14px;font-family:var(--mono);font-size:var(--fs-2xs);color:var(--tx3);word-break:break-all}
   }
 </style>
@@ -493,21 +494,23 @@
       </div>
 
       <div class="headline-out">
-        <div class="out-head">
-          <div class="lbl">The answer</div>
-          <div class="vswitch" role="group" aria-label="Fleet graphic style">
-            <button id="vBar" aria-pressed="true">Bar</button>
-            <button id="vMap" aria-pressed="false">Fleet map</button>
-          </div>
-        </div>
+        <div class="lbl">The answer</div>
         <div class="big"><span class="a">&rarr;</span> Pull <span class="v"><span id="bigNum">&mdash;</span> <span id="bigUnit"></span></span> this week.</div>
         <div class="note" id="outNote"></div>
-        <div class="bar-wrap">
-          <div class="bandbar" id="bandbar" aria-hidden="true"></div>
-          <div class="waffle" id="waffle" aria-hidden="true" hidden></div>
-          <div class="bar-cap" id="barCap"></div>
+      </div>
+    </div>
+
+    <div class="fleet-strip">
+      <div class="out-head">
+        <div class="q-t">The fleet</div>
+        <div class="vswitch" role="group" aria-label="Fleet graphic style">
+          <button id="vBar" aria-pressed="true">Bar</button>
+          <button id="vMap" aria-pressed="false">Fleet map</button>
         </div>
       </div>
+      <div class="bandbar" id="bandbar" aria-hidden="true"></div>
+      <div class="waffle" id="waffle" aria-hidden="true" hidden></div>
+      <div class="bar-cap" id="barCap"></div>
     </div>
 
     <div class="q-head">
@@ -974,7 +977,7 @@
     $("waffle").hidden = !map;
 
     if(map){
-      var MAX = 320, steps = [1,2,5,10,20,50,100,200,500,1000,2000], scale = steps[steps.length-1];
+      var MAX = 800, steps = [1,2,5,10,20,50,100,200,500,1000,2000], scale = steps[steps.length-1];
       for(var i=0;i<steps.length;i++){ if(r.totalDrives/steps[i] <= MAX){ scale = steps[i]; break; } }
       var html = "";
       order.forEach(function(b){
