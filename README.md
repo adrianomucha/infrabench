@@ -29,7 +29,7 @@ with every constant shown on the page. No accounts, no tracking, no lead forms.
 | # | Tool | What it answers | Status |
 |---|------|-----------------|--------|
 | 01 | **[Rack Budget](rack-budget/)** | You have the megawatts. What actually fits, what heat comes off it, and how much floor it needs. | **Live** |
-| 02 | **Crash Cart** | Which drives to pull this week, ranked by risk times blast radius, on 13 years of public fleet telemetry. | In progress |
+| 02 | **[Crash Cart](crash-cart/)** | Which drives to pull this week, ranked by risk times blast radius, on 13 years of public fleet telemetry. | **Live** |
 | 03 | **Where the power is** | Where you can actually energize a few hundred megawatts before the end of the decade. | Planned |
 | 04 | **Outage replay** | What the console showed during a real cloud incident, and how long the truth took to surface. | Planned |
 
