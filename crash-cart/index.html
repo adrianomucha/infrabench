@@ -298,13 +298,14 @@
   .tscroll{overflow-x:auto;margin-top:30px;overscroll-behavior-x:contain}
   .tscroll table{margin-top:0}
   table{width:100%;border-collapse:collapse;font-size:var(--fs-md);margin-top:30px}
-  th,td{text-align:start;padding:12px 14px 12px 0;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--tx2)}
-  th{font-family:var(--mono);font-size:var(--fs-2xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3);font-weight:500}
-  td.m{font-family:var(--mono);font-size:var(--fs-base);white-space:nowrap;color:var(--tx)}
-  td.name{font-family:var(--mono);font-size:var(--fs-base);font-weight:700;color:var(--tx);white-space:nowrap}
+  th,td{text-align:start;padding:14px 16px 14px 0;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--tx2)}
+  thead th{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3);font-weight:500}
+  td.m{font-family:var(--mono);font-size:var(--fs-md);white-space:nowrap;color:var(--tx)}
+  /* the model is the row's header: a real <th scope="row">, styled as the row's anchor */
+  th.name{font-family:var(--mono);font-size:var(--fs-md);font-weight:700;color:var(--tx);white-space:nowrap}
   /* the AFR bar is a length, so the comparison down the column survives without colour */
-  .afrbar{display:block;height:6px;background:var(--sigd);margin-top:6px;min-width:2px}
-  .ci{font-family:var(--mono);font-size:var(--fs-2xs);color:var(--tx3);white-space:nowrap}
+  .afrbar{display:block;height:6px;background:var(--sigd);margin-top:7px;min-width:2px}
+  .ci{font-family:var(--mono);font-size:var(--fs-sm);color:var(--tx3);white-space:nowrap}
   @media(max-width:700px){
     table th:last-child, table td:last-child{display:none}
     th,td{padding-inline-end:10px}
@@ -566,7 +567,8 @@
     <div class="d-body">
     <div class="tscroll" tabindex="0" role="region" aria-label="Drive model table, scrolls horizontally">
       <table>
-        <thead><tr><th>Model</th><th>Capacity</th><th>Lifetime AFR</th><th>95% interval</th><th>Drive days</th><th>Notes</th></tr></thead>
+        <caption class="sr">Drive models the console can queue, with published lifetime annualized failure rates, 95 percent confidence intervals and drive days observed, from Backblaze Drive Stats</caption>
+        <thead><tr><th scope="col">Model</th><th scope="col">Capacity</th><th scope="col">Lifetime AFR</th><th scope="col">95% interval</th><th scope="col">Drive days</th><th scope="col">Notes</th></tr></thead>
         <tbody id="refBody"></tbody>
       </table>
     </div>
@@ -1127,10 +1129,10 @@
     $("refBody").innerHTML = MODELS.map(function(m){
       var iv = interval(m.afr, m.days);
       return '<tr>'+
-        '<td class="name">'+m.model+'<br><span class="ci">'+m.brand+'</span></td>'+
+        '<th scope="row" class="name">'+m.model+'<br><span class="ci">'+m.brand+'</span></th>'+
         '<td class="m">'+m.tb+' TB</td>'+
         '<td class="m">'+m.afr.toFixed(1)+'%<span class="afrbar" style="width:'+(100*m.afr/maxAfr).toFixed(1)+'%"></span></td>'+
-        '<td class="m"><span class="ci">'+ivText(iv)+'</span></td>'+
+        '<td class="m">'+ivText(iv)+'</td>'+
         '<td class="m">'+fmt(m.days)+'M<br><span class="ci">'+fmt(iv[2])+' failures</span></td>'+
         '<td>'+m.note+'</td></tr>';
     }).join("");
