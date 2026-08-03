@@ -43,10 +43,11 @@
     --w-watch:#26271E;     /* still clears Lc 90 on every one of them */
     --w-sched:#261E14;
     --w-pull:#26181D;
-    /* --- Adrian's brand, used only in the closing band --- */
+    /* --- Adrian's brand, used only in the closing plate --- */
     --ink:#1A1A1A;
     --ink60:#55595E;
-    --cobalt:#1743E8;
+    --cobalt:#1743E8;      /* filled controls: carries white at 7:1 */
+    --cobaltlt:#7E9BFF;    /* the same blue, lifted for text on the dark surface: 6.7:1 */
     --mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     --sans:"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     /* type scale: every size on the page comes from one of these steps */
@@ -119,7 +120,6 @@
   .hero{padding:66px 0 36px;border-bottom:0}
   #console{padding-top:36px}
   #console .kicker{margin-bottom:18px}
-  .btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
   .btn{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:.1em;text-transform:uppercase;padding:14px 20px;border:1px solid var(--sigd);background:var(--sigd);color:#04120C;font-weight:700;cursor:pointer;display:inline-block}
   .btn:hover{text-decoration:none;filter:brightness(1.12)}
   .btn.ghost{background:transparent;color:var(--tx);border-color:var(--rule2);font-weight:400}
@@ -311,17 +311,47 @@
   ul.plain li:before{content:">";position:absolute;left:0;font-family:var(--mono);color:var(--sig)}
   ul.plain li b{color:var(--tx);font-weight:600}
 
-  /* ---------- cta: Adrian's brand, the one white band on the page ---------- */
-  .cta{background:#FFFFFF;color:var(--ink);border-bottom:0}
-  .cta .kicker{color:var(--ink60)}
-  .cta .kicker .p{color:var(--cobalt)}
-  .cta h2{color:var(--ink);max-width:22ch}
-  .cta p{color:var(--ink60);max-width:60ch;font-size:var(--fs-2xl)}
-  .cta .btn{background:var(--cobalt);border-color:var(--cobalt);color:#fff;font-weight:400}
-  .cta .btn.ghost{background:transparent;color:var(--ink);border-color:var(--ink)}
-  .cta .btn.ghost:hover{color:var(--cobalt);border-color:var(--cobalt)}
-  .cta .sec{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:.08em;color:var(--ink60);margin-top:26px}
-  .cta .sec a{color:var(--cobalt)}
+  /* ---------- closing plate ----------
+     Real gear carries a nameplate: a small plate fixed to the chassis saying who
+     made it. This page is an argument about nameplate ratings, so the tool signs
+     itself the same way. It is raised exactly the way every other panel here is
+     raised (.worked, .headline-out) and never inverts the page: Adrian's colours
+     arrive as accents on the instrument's own surface, so the close resolves the
+     page instead of interrupting it. */
+  .cta{background:var(--bg);border-bottom:0;padding-bottom:76px}
+  /* the 3px accent edge is the page's own box vocabulary (.flag, .formula), in
+     Adrian's cobalt rather than the instrument's green: same object, the human one */
+  .plate{position:relative;background:var(--panel);border:1px solid var(--rule2);
+    border-inline-start:3px solid var(--cobalt);padding:28px 36px 30px}
+  /* a real heading, so the section keeps its place in the outline; the h2 base is undone here */
+  .p-hd{display:flex;align-items:center;gap:14px;margin:0;max-width:none;font-family:var(--mono);
+    font-weight:400;font-size:var(--fs-xs);line-height:1.6;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+  .p-hd .dot{width:9px;height:9px;background:var(--cobaltlt);flex:none}
+  .p-hd .rule{flex:1;height:1px;background:var(--rule);min-width:16px}
+  /* identity on one side, the two actions on the other. No prose: the page has
+     already made the argument, so this only has to say who and offer a way through. */
+  .p-body{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:22px 36px;padding-top:22px}
+  .p-name{font-family:var(--mono);font-weight:700;font-size:var(--fs-3xl);letter-spacing:-.01em;line-height:1.15;color:var(--tx)}
+  .p-role{font-family:var(--mono);font-size:var(--fs-md);letter-spacing:.06em;color:var(--tx2);margin-top:9px;line-height:1.65;text-wrap:pretty}
+  .p-role span + span::before{content:"\00b7";color:var(--tx3);margin:0 .5em}
+  .p-act{display:flex;align-items:center;flex-wrap:wrap;gap:12px 24px}
+  .cta .btn{background:var(--cobalt);border-color:var(--cobalt);color:#fff;font-weight:700;text-align:center}
+  .cta .btn:hover{filter:brightness(1.25)}
+  .lnk{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:.1em;text-transform:uppercase;
+    color:var(--cobaltlt);white-space:nowrap}
+  .lnk:hover{text-decoration:underline;text-underline-offset:4px}
+  /* phone: the dot-separated run becomes a short stack, so no separator strands at a
+     line end, and the actions go full width in reading order instead of half-wrapping.
+     Declared after the base rules so it actually wins the cascade. */
+  @media(max-width:700px){
+    .plate{padding:24px 22px 26px}
+    .p-role{display:flex;flex-direction:column}
+    .p-role span + span::before{content:none}
+    .p-body{gap:24px}
+    .p-act{width:100%;flex-direction:column;align-items:stretch;gap:4px}
+    /* the label stays small; padding takes the tap target past the 44px floor */
+    .lnk{text-align:center;padding:13px 0}
+  }
 
   footer{background:var(--bg);color:var(--tx2);padding:40px 0 64px;font-size:var(--fs-md);border-top:1px solid var(--rule)}
   footer a{color:var(--tx2)}
@@ -600,16 +630,21 @@
 <!-- ================= CTA ================= -->
 <section class="cta">
   <div class="wrap">
-    <div class="box">
-      <div class="kicker"><span class="p">&gt;&gt;&gt;</span> 04 / Work with me</div>
-      <h2>I design the console and ship it to production myself</h2>
-      <p>I am Adrian Mucha, a product designer for the software most designers avoid: data centers, AI tooling, operator consoles. If your engineers are drawing your operator UI because you have not hired a designer yet, that is the gap I fill.</p>
-      <div class="btns">
-        <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Get in touch &rarr;</a>
-        <a class="btn ghost" href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">See the work &rarr;</a>
-      </div>
-      <div class="sec">
-        Crash Cart is the second of a series of public data center tools. The first is <a href="/rack-budget/">Rack Budget</a>, a power and cooling calculator. Next up: a power-constrained siting map. <a href="https://portfolio-repo-gilt.vercel.app">Follow along &rarr;</a>
+    <div class="kicker"><span class="p">&gt;&gt;</span> 04 / Work with me</div>
+    <div class="plate">
+      <h2 class="p-hd"><span class="dot"></span> Built by <span class="rule"></span></h2>
+      <div class="p-body">
+        <div>
+          <div class="p-name">Adrian Mucha</div>
+          <!-- one run on a wide screen, a short stack on a phone: see .p-role. The spans
+               are butted together on purpose: whitespace between them would add a text
+               node either side of every generated separator. -->
+          <div class="p-role"><span>Product&nbsp;designer</span><span>Data&nbsp;centers, AI&nbsp;tooling, operator&nbsp;consoles</span><span>Los&nbsp;Angeles</span></div>
+        </div>
+        <div class="p-act">
+          <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Get in touch &rarr;</a>
+          <a class="lnk" href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">See the work &rarr;</a>
+        </div>
       </div>
     </div>
   </div>
