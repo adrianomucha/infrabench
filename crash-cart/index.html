@@ -200,18 +200,32 @@
   .big .v{color:var(--sig)}
   .headline-out .note{font-size:var(--fs-md);color:var(--tx2);margin-top:14px}
 
-  /* ---------- the band bar ----------
-     The fleet as one stacked bar, worst band first. Decorative, so it is hidden from
-     assistive tech and the caption below carries the counts as text. */
+  /* ---------- the fleet graphic ----------
+     Two renderings of the same shares, switchable: a stacked bar, or a waffle map with
+     one square per drive (per N when the fleet is large). Both are decorative, so they
+     are hidden from assistive tech and the caption below carries the counts as text. */
+  .out-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  .out-head .lbl{margin-bottom:0}
+  .vswitch{display:flex;border:1px solid var(--rule2)}
+  .vswitch button{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.1em;text-transform:uppercase;background:transparent;color:var(--tx2);border:0;padding:8px 12px;cursor:pointer}
+  .vswitch button:hover{color:var(--tx)}
+  .vswitch button + button{border-inline-start:1px solid var(--rule2)}
+  .vswitch button[aria-pressed="true"]{background:var(--sigd);color:#04120C;font-weight:700}
+  .vswitch button:focus-visible{outline:2px solid var(--sig);outline-offset:2px}
+  @media(pointer:coarse){.vswitch button{padding:12px 14px}}
   .bar-wrap{margin-top:20px;padding-top:18px;border-top:1px solid var(--rule)}
   .bandbar{display:flex;height:14px;background:var(--rule)}
   .bandbar span{display:block;height:100%;min-width:2px}
-  /* the segments take the same risk tokens as the queue rows and band chips:
+  .waffle{display:grid;grid-template-columns:repeat(auto-fill,minmax(13px,1fr));gap:3px}
+  .waffle span{display:block;aspect-ratio:1}
+  /* display:grid/flex would beat the hidden attribute's UA rule without these */
+  .bandbar[hidden],.waffle[hidden]{display:none}
+  /* the marks take the same risk tokens as the queue rows and band chips:
      one colour, one meaning, everywhere it appears */
-  .bandbar .b-pull{background:var(--r-pull)}
-  .bandbar .b-sched{background:var(--r-sched)}
-  .bandbar .b-watch{background:var(--r-watch)}
-  .bandbar .b-hold{background:var(--r-hold)}
+  .bandbar .b-pull,.waffle .b-pull{background:var(--r-pull)}
+  .bandbar .b-sched,.waffle .b-sched{background:var(--r-sched)}
+  .bandbar .b-watch,.waffle .b-watch{background:var(--r-watch)}
+  .bandbar .b-hold,.waffle .b-hold{background:var(--r-hold)}
   .bar-cap{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3);margin-top:12px;line-height:1.6}
 
   /* ---------- progressive disclosure ----------
@@ -477,10 +491,20 @@
       </div>
 
       <div class="headline-out">
-        <div class="lbl">The answer</div>
+        <div class="out-head">
+          <div class="lbl">The answer</div>
+          <div class="vswitch" role="group" aria-label="Fleet graphic style">
+            <button id="vBar" aria-pressed="true">Bar</button>
+            <button id="vMap" aria-pressed="false">Fleet map</button>
+          </div>
+        </div>
         <div class="big"><span class="a">&rarr;</span> Pull <span class="v"><span id="bigNum">&mdash;</span> <span id="bigUnit"></span></span> this week.</div>
         <div class="note" id="outNote"></div>
-        <div class="bar-wrap"><div class="bandbar" id="bandbar" aria-hidden="true"></div><div class="bar-cap" id="barCap"></div></div>
+        <div class="bar-wrap">
+          <div class="bandbar" id="bandbar" aria-hidden="true"></div>
+          <div class="waffle" id="waffle" aria-hidden="true" hidden></div>
+          <div class="bar-cap" id="barCap"></div>
+        </div>
       </div>
     </div>
 
@@ -723,7 +747,7 @@
   var WEAROUT = 0.015, SCHED_BAND = 0.05, PULL_BAND = 0.15;
 
   var $ = function(id){ return document.getElementById(id); };
-  var state = { profile:"mixed", drives:3000, scheme:"ec173", smart:4.2, rebuild:150, pulls:12 };
+  var state = { profile:"mixed", drives:3000, scheme:"ec173", smart:4.2, rebuild:150, pulls:12, view:"bar" };
 
   function fmt(n, d){
     if(!isFinite(n)) return "0";
@@ -933,30 +957,48 @@
   var BANDNAME = { pull:"Pull this week", sched:"Schedule", watch:"Watch", hold:"Hold" };
   var BANDCLASS = { pull:"b-pull", sched:"b-sched", watch:"b-watch", hold:"b-hold" };
 
-  /* ---------- the band bar ----------
-     The whole fleet as one stacked bar, worst band first, so the share of the fleet that is
-     actually work reads at a glance. The caption carries the counts as text. Colour comes
-     from the same CSS risk tokens the queue rows use, never from values coined here. */
+  /* ---------- the fleet graphic ----------
+     The whole fleet, worst band first, in whichever rendering the switch has picked: a
+     stacked bar of shares, or a waffle map with one square per drive (per N when the
+     fleet outgrows the grid). The caption carries the counts as text either way. Colour
+     comes from the same CSS risk tokens the queue rows use, never from values coined here. */
   function renderBand(r){
     var order = ["pull","sched","watch","hold"], counts = {};
     order.forEach(function(b){ counts[b] = 0; });
     r.rows.forEach(function(row){ counts[row.band] += row.n; });
 
-    var html = "";
-    if(r.totalDrives > 0){
+    var map = state.view === "map", scaleTxt = "";
+    $("bandbar").hidden = map;
+    $("waffle").hidden = !map;
+
+    if(map){
+      var MAX = 600, steps = [1,2,5,10,20,50,100,200,500,1000,2000], scale = steps[steps.length-1];
+      for(var i=0;i<steps.length;i++){ if(r.totalDrives/steps[i] <= MAX){ scale = steps[i]; break; } }
+      var html = "";
       order.forEach(function(b){
-        if(counts[b] > 0)
-          html += '<span class="b-'+b+'" style="width:'+(100*counts[b]/r.totalDrives).toFixed(2)+'%"></span>';
+        // a band with any drives at all keeps at least one square, so rounding never hides work
+        var n = counts[b] > 0 ? Math.max(1, Math.round(counts[b]/scale)) : 0;
+        for(var k=0;k<n;k++) html += '<span class="b-'+b+'"></span>';
       });
+      $("waffle").innerHTML = html;
+      if(r.totalDrives > 0) scaleTxt = " · one square = "+(scale === 1 ? "one drive" : fmt(scale)+" drives");
+    } else {
+      var bhtml = "";
+      if(r.totalDrives > 0){
+        order.forEach(function(b){
+          if(counts[b] > 0)
+            bhtml += '<span class="b-'+b+'" style="width:'+(100*counts[b]/r.totalDrives).toFixed(2)+'%"></span>';
+        });
+      }
+      $("bandbar").innerHTML = bhtml;
     }
-    $("bandbar").innerHTML = html;
 
     var lines = order.filter(function(b){ return counts[b] > 0; }).map(function(b){
       return fmt(counts[b])+" "+BANDNAME[b].toLowerCase();
     });
     $("barCap").textContent = r.totalDrives === 0
       ? "No drives in this fleet"
-      : fmt(r.totalDrives)+" drives · "+lines.join(" · ");
+      : fmt(r.totalDrives)+" drives"+scaleTxt+" · "+lines.join(" · ");
   }
 
   /* ---------- the queue ---------- */
@@ -1262,6 +1304,7 @@
 
   function writeUrl(){
     var q = new URLSearchParams();
+    if(state.view === "map") q.set("v", "map");
     q.set("f", state.profile);
     q.set("n", state.drives);
     q.set("s", state.scheme);
@@ -1277,6 +1320,7 @@
     var h = location.hash.slice(1);
     if(h.indexOf("=")===-1) return false;     // plain anchor link, not state
     var q = new URLSearchParams(h);
+    if(q.get("v") === "map") state.view = "map";
     if(q.get("f")) state.profile = q.get("f");
     if(q.get("n")) state.drives = parseInt(q.get("n"),10)||3000;
     if(q.get("s")) state.scheme = q.get("s");
@@ -1370,6 +1414,18 @@
     profPicker.init(function(id){ state.profile = id; render(); });
     schemePicker.init(function(id){ state.scheme = id; render(); });
     syncInputs();
+
+    function setView(v){
+      state.view = v;
+      $("vBar").setAttribute("aria-pressed", v === "bar");
+      $("vMap").setAttribute("aria-pressed", v === "map");
+      render();
+    }
+    $("vBar").addEventListener("click", function(){ setView("bar"); });
+    $("vMap").addEventListener("click", function(){ setView("map"); });
+    // a shared link may arrive already in map view
+    $("vBar").setAttribute("aria-pressed", state.view === "bar");
+    $("vMap").setAttribute("aria-pressed", state.view === "map");
 
     bindNum("drives","drives",20,500000,true);
     bindNum("smart","smart",0,40,false);
