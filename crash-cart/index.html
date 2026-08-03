@@ -200,6 +200,20 @@
   .big .v{color:var(--sig)}
   .headline-out .note{font-size:var(--fs-md);color:var(--tx2);margin-top:14px}
 
+  /* ---------- the band bar ----------
+     The fleet as one stacked bar under the answer, worst band first. Decorative, so it
+     is hidden from assistive tech and the caption below carries the counts as text. */
+  .bar-wrap{margin-top:20px;padding-top:18px;border-top:1px solid var(--rule)}
+  .bandbar{display:flex;height:14px;background:var(--rule)}
+  .bandbar span{display:block;height:100%;min-width:2px}
+  /* the segments take the same risk tokens as the queue rows and band chips:
+     one colour, one meaning, everywhere it appears */
+  .bandbar .b-pull{background:var(--r-pull)}
+  .bandbar .b-sched{background:var(--r-sched)}
+  .bandbar .b-watch{background:var(--r-watch)}
+  .bandbar .b-hold{background:var(--r-hold)}
+  .bar-cap{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3);margin-top:12px;line-height:1.6}
+
   /* ---------- progressive disclosure ----------
      The advanced inputs and the deep-dive material sit behind native <details>, so the
      default view stays short and nothing is more than one click away. */
@@ -392,6 +406,7 @@
     .config{font-size:var(--fs-lg);line-height:1.7;margin-top:4px}
     .headline-out{margin-top:14px;padding:14px 16px 12px}
     .headline-out,.grid,.flag,.qrow{break-inside:avoid}
+    .bar-wrap{max-width:390px}
     .print-url{display:block;margin-top:14px;font-family:var(--mono);font-size:var(--fs-2xs);color:var(--tx3);word-break:break-all}
   }
 </style>
@@ -465,6 +480,7 @@
         <div class="lbl">The answer</div>
         <div class="big"><span class="a">&rarr;</span> Pull <span class="v"><span id="bigNum">&mdash;</span> <span id="bigUnit"></span></span> this week.</div>
         <div class="note" id="outNote"></div>
+        <div class="bar-wrap"><div class="bandbar" id="bandbar" aria-hidden="true"></div><div class="bar-cap" id="barCap"></div></div>
       </div>
     </div>
 
@@ -917,6 +933,32 @@
   var BANDNAME = { pull:"Pull this week", sched:"Schedule", watch:"Watch", hold:"Hold" };
   var BANDCLASS = { pull:"b-pull", sched:"b-sched", watch:"b-watch", hold:"b-hold" };
 
+  /* ---------- the band bar ----------
+     The whole fleet as one stacked bar, worst band first, so the share of the fleet that
+     is actually work reads at a glance. The caption carries the counts as text. Colour
+     comes from the same CSS risk tokens the queue rows use, never from values coined here. */
+  function renderBand(r){
+    var order = ["pull","sched","watch","hold"], counts = {};
+    order.forEach(function(b){ counts[b] = 0; });
+    r.rows.forEach(function(row){ counts[row.band] += row.n; });
+
+    var html = "";
+    if(r.totalDrives > 0){
+      order.forEach(function(b){
+        if(counts[b] > 0)
+          html += '<span class="b-'+b+'" style="width:'+(100*counts[b]/r.totalDrives).toFixed(2)+'%"></span>';
+      });
+    }
+    $("bandbar").innerHTML = html;
+
+    var lines = order.filter(function(b){ return counts[b] > 0; }).map(function(b){
+      return fmt(counts[b])+" "+BANDNAME[b].toLowerCase();
+    });
+    $("barCap").textContent = r.totalDrives === 0
+      ? "No drives in this fleet"
+      : fmt(r.totalDrives)+" drives · "+lines.join(" · ");
+  }
+
   /* ---------- the queue ---------- */
   function renderQueue(r){
     if(r.queue.length === 0){
@@ -1026,6 +1068,7 @@
           ? "Your crew clears "+fmt(state.pulls)+" a week, so "+fmt(r.queueDrives-r.thisWeek)+" wait."
           : "That clears the queue.");
 
+    renderBand(r);
     renderQueue(r);
     renderCurve();
 
