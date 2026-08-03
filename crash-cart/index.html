@@ -308,10 +308,23 @@
     th,td{padding-inline-end:10px}
   }
 
-  .formula{font-family:var(--mono);font-size:var(--fs-base);line-height:2;margin-top:26px;overflow-x:auto;border-inline-start:3px solid var(--sigd);padding-inline-start:18px;color:var(--tx2)}
-  .formula b{color:var(--sig);font-weight:700}
-  ul.plain{padding-inline-start:0;list-style:none;margin:26px 0 0;max-width:78ch}
-  ul.plain li{position:relative;padding-inline-start:26px;margin-bottom:12px;font-size:var(--fs-md);color:var(--tx2)}
+  /* ---------- method ----------
+     The model on the left, the judgement calls on the right, so the section fills its
+     width the way the console does instead of hugging the margin. */
+  .method-grid{display:grid;grid-template-columns:minmax(0,11fr) minmax(0,9fr);gap:12px 72px;align-items:start;margin-top:4px}
+  @media(max-width:980px){.method-grid{grid-template-columns:1fr;gap:0}}
+  /* the model as a ledger: one term, one expression per row, at reading size, instead
+     of nine equations run together in small type */
+  .formula{margin-top:24px;border-top:1px solid var(--rule)}
+  .frow{display:grid;grid-template-columns:minmax(150px,200px) 1fr;gap:4px 24px;padding:13px 0 14px;
+    border-bottom:1px solid var(--rule);font-family:var(--mono);font-size:var(--fs-lg);line-height:1.7}
+  @media(max-width:640px){.frow{grid-template-columns:1fr}}
+  .frow .ft{color:var(--sig);font-weight:700}
+  .frow .fx{color:var(--tx2);overflow-wrap:break-word}
+  .frow .fx var{font-style:italic;color:var(--tx)}
+  .frow .fn{color:var(--tx3);font-style:italic}
+  ul.plain{padding-inline-start:0;list-style:none;margin:24px 0 0}
+  ul.plain li{position:relative;padding-inline-start:26px;margin-bottom:16px;font-size:var(--fs-lg);line-height:1.65;color:var(--tx2)}
   ul.plain li:before{content:">";position:absolute;left:0;font-family:var(--mono);color:var(--sig)}
   ul.plain li b{color:var(--tx);font-weight:600}
 
@@ -567,25 +580,27 @@
     <h2>Every constant, in the open</h2>
     <p class="lede">This is the whole model. If you disagree with a constant, you know exactly which one to argue with.</p>
 
-    <div class="formula">
-      <b>Annual rate</b> = lifetime AFR x age multiplier x evidence ratio<br>
-      <b>Evidence ratio</b> = 18.26 if flagged, 0.24 if clean, normalized to the prevalence you set<br>
-      <b>P(fail in 30 days)</b> = 1 - exp(-annual rate x 30 / 365)<br>
-      <b>Rebuild hours</b> = drive capacity TB x 10^6 / rebuild MB per s / 3600<br>
-      <b>Exposure per survivor</b> = 1 - exp(-cohort rate x rebuild hours / 8760)<br>
-      <b>P(group loses data)</b> = P(at least <i>m</i> of the <i>k+m-1</i> survivors fail inside that window)<br>
-      <b>Blast radius</b> = <i>k</i> x drive capacity, the data the group is holding<br>
-      <b>TB at risk, 30 days</b> = drives x P(fail in 30 days) x blast radius &nbsp; <i>the sort key</i><br>
-      <b>TB actually lost</b> = the same, times P(group loses data) &nbsp; <i>the fleet total</i>
-    </div>
+    <div class="method-grid">
+      <div class="formula">
+        <div class="frow"><span class="ft">Annual rate</span><span class="fx">lifetime AFR &times; age multiplier &times; evidence ratio</span></div>
+        <div class="frow"><span class="ft">Evidence ratio</span><span class="fx">18.26 if flagged, 0.24 if clean, normalized to the prevalence you set</span></div>
+        <div class="frow"><span class="ft">P(fail in 30 days)</span><span class="fx">1 &minus; exp(&minus;annual rate &times; 30 / 365)</span></div>
+        <div class="frow"><span class="ft">Rebuild hours</span><span class="fx">drive capacity TB &times; 10^6 / rebuild MB per s / 3600</span></div>
+        <div class="frow"><span class="ft">Exposure per survivor</span><span class="fx">1 &minus; exp(&minus;cohort rate &times; rebuild hours / 8760)</span></div>
+        <div class="frow"><span class="ft">P(group loses data)</span><span class="fx">P(at least <var>m</var> of the <var>k</var>+<var>m</var>&minus;1 survivors fail inside that window)</span></div>
+        <div class="frow"><span class="ft">Blast radius</span><span class="fx"><var>k</var> &times; drive capacity, the data the group is holding</span></div>
+        <div class="frow"><span class="ft">TB at risk, 30 days</span><span class="fx">drives &times; P(fail in 30 days) &times; blast radius &nbsp;<span class="fn">the sort key</span></span></div>
+        <div class="frow"><span class="ft">TB actually lost</span><span class="fx">the same, &times; P(group loses data) &nbsp;<span class="fn">the fleet total</span></span></div>
+      </div>
 
-    <ul class="plain">
-      <li><b>The SMART evidence is Bayes, not a threshold.</b> Flagged drives carry an 18x likelihood ratio, clean ones 0.24x, renormalized to the prevalence you set so total expected failures are preserved.</li>
-      <li><b>The age multiplier</b> follows the published bathtub shape, normalized so a mixed-age fleet averages 1.0.</li>
-      <li><b>Rebuild rate is the effective rate on a live system,</b> not the drive's spec sheet; 150 MB/s is an honest default. Unrecoverable read errors are counted only where no parity is left.</li>
-      <li><b>The queue holds drives with a reason.</b> The bands sit at 1.5 percent a year (watch), 5 (schedule) and 15 (pull). A clean drive is usually fine even at six years.</li>
-      <li><b>A triage heuristic, not a warranty model.</b> Figures are the published lifetime table, rounded; re-pull the current quarter before you spend money, and nothing here replaces watching your own fleet.</li>
-    </ul>
+      <ul class="plain">
+        <li><b>The SMART evidence is Bayes, not a threshold.</b> Flagged drives carry an 18x likelihood ratio, clean ones 0.24x, renormalized to the prevalence you set so total expected failures are preserved.</li>
+        <li><b>The age multiplier</b> follows the published bathtub shape, normalized so a mixed-age fleet averages 1.0.</li>
+        <li><b>Rebuild rate is the effective rate on a live system,</b> not the drive's spec sheet; 150 MB/s is an honest default. Unrecoverable read errors are counted only where no parity is left.</li>
+        <li><b>The queue holds drives with a reason.</b> The bands sit at 1.5 percent a year (watch), 5 (schedule) and 15 (pull). A clean drive is usually fine even at six years.</li>
+        <li><b>A triage heuristic, not a warranty model.</b> Figures are the published lifetime table, rounded; re-pull the current quarter before you spend money, and nothing here replaces watching your own fleet.</li>
+      </ul>
+    </div>
   </div>
 </section>
 
