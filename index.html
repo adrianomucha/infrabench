@@ -92,6 +92,8 @@
   .tool .meta{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.06em;color:var(--tx3);margin-top:2px}
   .btn{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:.1em;text-transform:uppercase;padding:12px 18px;border:1px solid var(--sigd);background:var(--sigd);color:#04120C;font-weight:700;cursor:pointer;display:inline-block;align-self:flex-start;margin-top:6px}
   .btn:hover{text-decoration:none;filter:brightness(1.12)}
+  /* the label stays small; padding takes the tap target past the 44px floor */
+  @media(pointer:coarse){.btn{padding:14px 20px}}
 
   /* ---------- method ---------- */
   .three{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule);border-inline-start:1px solid var(--rule);margin-top:8px}
