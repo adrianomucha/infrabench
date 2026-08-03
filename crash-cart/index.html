@@ -125,34 +125,7 @@
   .btn.ghost{background:transparent;color:var(--tx);border-color:var(--rule2);font-weight:400}
   .btn.ghost:hover{border-color:var(--sig);color:var(--sig);filter:none}
   .btn:active{transform:translateY(1px)}
-  .strip{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule);margin-top:44px}
-  @media(max-width:700px){.strip{grid-template-columns:1fr}}
-  .strip > div{padding:22px 22px 24px 0;border-inline-end:1px solid var(--rule)}
-  .strip > div + div{padding-inline-start:22px}
-  .strip > div:last-child{border-inline-end:0;padding-inline-end:0}
-  @media(max-width:700px){
-    .strip > div{border-inline-end:0;border-bottom:1px solid var(--rule);padding:18px 0 20px}
-    .strip > div + div{padding-inline-start:0}
-    .strip > div:last-child{border-bottom:0}
-  }
-  .strip .n{font-family:var(--mono);font-weight:700;font-size:var(--fs-4xl);letter-spacing:-.02em;line-height:1.1;color:var(--tx)}
-  .strip .l{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3);margin-top:8px}
-
-  /* ---------- three up ---------- */
-  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--rule);border-inline-start:1px solid var(--rule);margin-top:36px}
-  @media(max-width:820px){.three{grid-template-columns:1fr}}
-  .three .c{border-inline-end:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:26px 24px 30px}
-  .three .c .i{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.14em;color:var(--sig);margin-bottom:14px}
-  .three .c p{margin:0;font-size:var(--fs-md);color:var(--tx2)}
-
   /* ---------- console ---------- */
-  .modes{display:flex;flex-wrap:wrap;border:1px solid var(--rule2);width:fit-content;max-width:100%;margin-bottom:0}
-  .modes button{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:.1em;text-transform:uppercase;background:transparent;color:var(--tx2);border:0;padding:13px 20px;cursor:pointer}
-  .modes button:hover{color:var(--tx)}
-  .modes button + button{border-inline-start:1px solid var(--rule2)}
-  .modes button[aria-pressed="true"]{background:var(--sigd);color:#04120C;font-weight:700}
-  .modes-note{font-size:var(--fs-base);color:var(--tx2);margin-top:10px;max-width:70ch}
-
   .app{display:grid;grid-template-columns:minmax(300px,360px) 1fr;gap:0;margin-top:22px;border-top:1px solid var(--rule)}
   @media(min-width:1680px){.app{grid-template-columns:minmax(300px,410px) 1fr}}
   /* a grid item's automatic minimum is its min-content width, and the profile name is a long
@@ -222,14 +195,27 @@
   .big em{font-style:normal;font-size:.32em;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-inline-start:10px;font-weight:500}
   .headline-out .note{font-size:var(--fs-md);color:var(--tx2);margin-top:14px}
 
-  /* ---------- the bay wall ----------
-     The fleet drawn the way it sits: 3.5 inch drives standing on end in chassis rows, the
-     same isometric projection and upper-left light the hall uses. One drive per mark, or per
-     N when the fleet is large. Decorative, so it is hidden from assistive tech and the caption
-     below carries the counts as text. */
-  .wall-wrap{margin-top:20px;padding-top:18px;border-top:1px solid var(--rule)}
-  .wall{width:100%;height:auto;display:block;max-height:320px;margin:2px 0 0}
-  .wall-cap{font-family:var(--mono);font-size:var(--fs-2xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3);margin-top:12px;line-height:1.6}
+  /* ---------- the band bar ----------
+     The fleet as one stacked bar, worst band first. Decorative, so it is hidden from
+     assistive tech and the caption below carries the counts as text. */
+  .bar-wrap{margin-top:20px;padding-top:18px;border-top:1px solid var(--rule)}
+  .bandbar{display:flex;height:14px;background:var(--rule)}
+  .bandbar span{display:block;height:100%;min-width:2px}
+  .bar-cap{font-family:var(--mono);font-size:var(--fs-2xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3);margin-top:12px;line-height:1.6}
+
+  /* ---------- progressive disclosure ----------
+     The advanced inputs and the deep-dive material sit behind native <details>, so the
+     default view stays short and nothing is more than one click away. */
+  details.more{border:1px solid var(--rule);margin-top:26px}
+  details.more>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px;padding:15px 18px;
+    font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:.12em;text-transform:uppercase;color:var(--tx2)}
+  details.more>summary::-webkit-details-marker{display:none}
+  details.more>summary::before{content:"+";font-family:var(--mono);font-weight:700;color:var(--sig);width:1ch}
+  details.more[open]>summary::before{content:"\2212"}
+  details.more>summary:hover{color:var(--tx);border-color:var(--sig)}
+  details.more>summary:focus-visible{outline:2px solid var(--sig);outline-offset:-2px}
+  details.more>.d-body{padding:4px 18px 20px}
+  details.more>.d-body>.field:last-child{margin-bottom:0}
 
   /* ---------- the queue ---------- */
   .q-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
@@ -265,8 +251,8 @@
     .qrow .amt small{display:inline;margin-inline-start:6px}
   }
 
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule);border-inline-start:1px solid var(--rule)}
-  @media(max-width:620px){.grid{grid-template-columns:repeat(2,1fr)}}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);border-top:1px solid var(--rule);border-inline-start:1px solid var(--rule)}
+  @media(max-width:420px){.grid{grid-template-columns:1fr}}
   .cell{border-inline-end:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:18px 16px 20px}
   .cell .k{font-family:var(--mono);font-size:var(--fs-2xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;line-height:1.4;min-height:2.6em}
   .cell .v{font-family:var(--mono);font-weight:700;font-size:var(--fs-3xl);letter-spacing:-.02em;line-height:1.1;color:var(--tx);font-variant-numeric:tabular-nums}
@@ -310,7 +296,6 @@
   th{font-family:var(--mono);font-size:var(--fs-2xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3);font-weight:500}
   td.m{font-family:var(--mono);font-size:var(--fs-base);white-space:nowrap;color:var(--tx)}
   td.name{font-family:var(--mono);font-size:var(--fs-base);font-weight:700;color:var(--tx);white-space:nowrap}
-  .tag{font-family:var(--mono);font-size:var(--fs-2xs);letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--rule2);padding:3px 7px;color:var(--tx3);white-space:nowrap}
   /* the AFR bar is a length, so the comparison down the column survives without colour */
   .afrbar{display:block;height:6px;background:var(--sigd);margin-top:6px;min-width:2px}
   .ci{font-family:var(--mono);font-size:var(--fs-2xs);color:var(--tx3);white-space:nowrap}
@@ -358,7 +343,7 @@
     section,footer,.toast{display:none}
     #console{display:block;padding:12px 0 0}
     #console .kicker{margin-bottom:10px}
-    .modes,.modes-note,.actions,input[type="range"],.hint,.cursor,.skip,.caret,.sel-list{display:none}
+    .actions,input[type="range"],.hint,.cursor,.skip,.caret,.sel-list,details.more{display:none}
     .sel-btn{border-color:var(--rule2);padding:8px 10px}
     .hero{padding:20px 0 8px}
     .app{margin-top:8px;grid-template-columns:minmax(200px,240px) 1fr}
@@ -368,7 +353,7 @@
     .field{margin-bottom:12px}
     input[type=number]{font-size:var(--fs-3xl)}
     .headline-out,.grid,.flag,.qrow{break-inside:avoid}
-    .wall-wrap{max-width:390px}
+    .bar-wrap{max-width:390px}
     .print-url{display:block;margin-top:14px;font-family:var(--mono);font-size:var(--fs-2xs);color:var(--tx3);word-break:break-all}
   }
 </style>
@@ -386,8 +371,8 @@
     </div>
     <nav aria-label="Page sections">
       <a href="#console"><b>00</b> Console</a>
-      <a href="#how"><b>02</b> How it works</a>
-      <a href="#method"><b>04</b> Method</a>
+      <a href="#how"><b>01</b> How it works</a>
+      <a href="#method"><b>03</b> Method</a>
     </nav>
   </div>
 </header>
@@ -399,7 +384,7 @@
   <div class="hero">
     <div class="kicker"><span class="p">&gt;&gt;&gt;</span> Fleet failure triage</div>
     <h1>You cannot pull them all. <span class="hl">Which ones</span> this week<span class="cursor"></span></h1>
-    <p class="lede">A fleet-wide failure rate tells you how many drives will die this year. It does not tell you which ones, and it does not tell you which deaths cost you anything. This ranks your fleet into a work queue on thirteen years of public telemetry: risk times blast radius, with the evidence that flagged every row. Every constant is in the open, so <a href="#method">read the method</a> if you want to argue with one.</p>
+    <p class="lede">A failure rate says how many drives will die this year, not which ones. Crash Cart turns thirteen years of public fleet data into a short list: the drives worth a service trip this week, with the evidence behind each one. Every constant is in <a href="#method">the method</a>.</p>
   </div>
 </div>
 
@@ -407,11 +392,6 @@
 <section id="console">
   <div class="wrap">
     <div class="kicker"><span class="p">&gt;&gt;</span> 00 / The console</div>
-    <div class="modes" role="group" aria-label="Queue ranking">
-      <button id="mBlast" aria-pressed="true">Rank by risk &times; blast radius</button>
-      <button id="mRisk" aria-pressed="false">Rank by risk alone</button>
-    </div>
-    <p class="modes-note" id="modeNote"></p>
 
     <!-- stable region, populated on every recalculation so the result is announced -->
     <p class="sr" id="srStatus" role="status"></p>
@@ -452,25 +432,30 @@
         </div>
 
         <div class="field">
-          <label for="smart">SMART canaries</label>
-          <div class="row"><input type="number" id="smart" value="4.2" min="0" max="40" step="0.1"><span class="unit">% OF FLEET</span></div>
-          <input type="range" id="smartR" min="0" max="25" step="0.1" value="4.2" aria-label="SMART canary prevalence slider">
-          <div class="hint">Drives with a non-zero count on any of SMART 5, 187, 188, 197 or 198. Across the public fleet that is 4.2 percent of drives, and they account for 77 percent of the failures. Run the scan and put your own number in.</div>
-        </div>
-
-        <div class="field">
-          <label for="rebuild">Rebuild rate</label>
-          <div class="row"><input type="number" id="rebuild" value="150" min="10" max="1000" step="5"><span class="unit">MB / S</span></div>
-          <input type="range" id="rebuildR" min="20" max="600" step="5" value="150" aria-label="Rebuild rate slider">
-          <div class="hint" id="rebuildHint"></div>
-        </div>
-
-        <div class="field">
           <label for="pulls">Crew capacity</label>
           <div class="row"><input type="number" id="pulls" value="12" min="0" max="2000" step="1"><span class="unit">PULLS / WEEK</span></div>
           <input type="range" id="pullsR" min="0" max="200" step="1" value="12" aria-label="Crew capacity slider">
-          <div class="hint">Drives your hands can actually swap in a week, including the travel and the paperwork. This is the line the queue gets cut at.</div>
+          <div class="hint">Drives your crew can actually swap in a week. The queue is cut at this line.</div>
         </div>
+
+        <details class="more">
+          <summary>Advanced assumptions</summary>
+          <div class="d-body">
+            <div class="field">
+              <label for="smart">SMART canaries</label>
+              <div class="row"><input type="number" id="smart" value="4.2" min="0" max="40" step="0.1"><span class="unit">% OF FLEET</span></div>
+              <input type="range" id="smartR" min="0" max="25" step="0.1" value="4.2" aria-label="SMART canary prevalence slider">
+              <div class="hint">Share of drives with a non-zero count on SMART 5, 187, 188, 197 or 198. The public-fleet baseline is 4.2 percent.</div>
+            </div>
+
+            <div class="field">
+              <label for="rebuild">Rebuild rate</label>
+              <div class="row"><input type="number" id="rebuild" value="150" min="10" max="1000" step="5"><span class="unit">MB / S</span></div>
+              <input type="range" id="rebuildR" min="20" max="600" step="5" value="150" aria-label="Rebuild rate slider">
+              <div class="hint" id="rebuildHint"></div>
+            </div>
+          </div>
+        </details>
       </div>
 
       <div class="panel out">
@@ -479,12 +464,12 @@
           <div class="lbl" id="outLabel">Pull this week</div>
           <div class="big" id="outBig"><span id="bigNum">&mdash;</span><em id="bigUnit"></em></div>
           <div class="note" id="outNote"></div>
-          <div class="wall-wrap"><svg class="wall" id="wall" aria-hidden="true"></svg><div class="wall-cap" id="wallCap"></div></div>
+          <div class="bar-wrap"><div class="bandbar" id="bandbar" aria-hidden="true"></div><div class="bar-cap" id="barCap"></div></div>
         </div>
 
         <div class="q-head">
-          <div class="q-t" id="queueTitle">The work, ranked</div>
-          <div class="q-t" id="queueBasis"></div>
+          <div class="q-t">The work, ranked</div>
+          <div class="q-t">By data at risk</div>
         </div>
         <div class="queue" id="queue"></div>
 
@@ -500,67 +485,39 @@
   </div>
 </section>
 
-<!-- ================= WHY THIS EXISTS ================= -->
-<section>
-  <div class="wrap">
-    <div class="kicker"><span class="p">&gt;&gt;</span> 01 / Why the tool exists</div>
-    <h2>Three things a failure rate will not tell you</h2>
-    <p class="lede">Everyone quotes annualized failure rate. It is a fleet average over a population you do not own, and on its own it ranks nothing.</p>
-    <div class="three">
-      <div class="c">
-        <div class="i">01</div>
-        <h3>An average is not a drive</h3>
-        <p>A 1.4 percent AFR says fourteen drives per thousand per year. It does not say which fourteen. Sorted by AFR alone, your queue is just an inventory list in a different order.</p>
-      </div>
-      <div class="c">
-        <div class="i">02</div>
-        <h3>The failure that costs you is the second one</h3>
-        <p>One drive dying in a group with parity left is a work order. One drive dying in a group already rebuilding is an outage. The difference is a rebuild window measured in days, not the drive.</p>
-      </div>
-      <div class="c">
-        <div class="i">03</div>
-        <h3>SMART is weak evidence used as a threshold</h3>
-        <p>Most people set an alert on reallocated sectors and then ignore it. Read as a likelihood ratio instead, five attributes separate a fleet into the 4 percent worth a service trip and the rest.</p>
-      </div>
-    </div>
-    <div class="strip">
-      <div><div class="n">13 years</div><div class="l">Of public drive telemetry</div></div>
-      <div><div class="n">4.2 &rarr; 77%</div><div class="l">Of drives carrying that share of failures</div></div>
-      <div><div class="n">0</div><div class="l">Hidden assumptions</div></div>
-    </div>
-  </div>
-</section>
-
 <!-- ================= HOW IT WORKS ================= -->
 <section id="how">
   <div class="wrap">
-    <div class="kicker"><span class="p">&gt;&gt;</span> 02 / How it works</div>
+    <div class="kicker"><span class="p">&gt;&gt;</span> 01 / How it works</div>
     <h2>Four steps from a base rate to a work order</h2>
-    <p class="lede">Every row in the queue is one drive population carried through the same four multiplications. Nothing is fitted, nothing is learned, and you can do the arithmetic yourself.</p>
+    <p class="lede">Each row of the queue is one drive population carried through the same four multiplications. You can do the arithmetic yourself.</p>
 
     <div class="steps">
       <div class="step">
-        <div class="n">STEP 00 / BASE RATE</div>
-        <h3>What the model does in someone else's fleet</h3>
-        <p>Start from the published lifetime annualized failure rate for that exact model, and carry its <b>drive days</b> with it. A 0.4 percent AFR on 40 million drive days is a fact. The same number on 400,000 drive days is three failures and a rounding error, so the queue shows the confidence interval next to the rate.</p>
+        <div class="n">STEP 01 / BASE RATE</div>
+        <h3>Start from the published rate</h3>
+        <p>Each model starts at its published lifetime failure rate, carrying the <b>drive days</b> behind it, so a thin record shows up as a wide confidence interval rather than as false certainty.</p>
       </div>
       <div class="step">
-        <div class="n">STEP 01 / AGE</div>
-        <h3>Where the drive sits on the bathtub</h3>
-        <p>Lifetime AFR averages over every age at once. The published rate by age is a shallow bathtub: a bump in the first months, a floor around year two, and a climb that gets serious after year five. Your cohort gets the <b>multiplier for its age</b>, not the fleet average.</p>
+        <div class="n">STEP 02 / AGE</div>
+        <h3>Adjust for age</h3>
+        <p>Failure rates follow a bathtub: a bump in the first months, a floor near year two, a climb that gets serious after year five. Each cohort gets the <b>multiplier for its age</b>, not the fleet average.</p>
       </div>
       <div class="step">
-        <div class="n">STEP 02 / EVIDENCE</div>
-        <h3>SMART as a likelihood ratio, not an alarm</h3>
-        <p>Across the public fleet, 76.7 percent of failed drives had a non-zero count on at least one of the five canary attributes, against 4.2 percent of healthy ones. That is a <b>likelihood ratio of about 18</b> for a flagged drive and 0.24 for a clean one. Multiply, do not threshold.</p>
+        <div class="n">STEP 03 / EVIDENCE</div>
+        <h3>Weigh the SMART evidence</h3>
+        <p>In the public fleet, 77 percent of failed drives showed one of five SMART warnings, against 4 percent of healthy ones. A flagged drive is about <b>18 times</b> likelier to fail; a clean one, a quarter as likely.</p>
       </div>
       <div class="step">
-        <div class="n">STEP 03 / BLAST RADIUS</div>
-        <h3>What this particular death costs</h3>
-        <p>A failure starts a rebuild. Its length is capacity over rebuild rate, and every surviving drive in the group is exposed for that whole window. Multiply the chance the group runs out of parity by the <b>data sitting in it</b>, and the queue sorts itself.</p>
+        <div class="n">STEP 04 / BLAST RADIUS</div>
+        <h3>Weigh what a failure costs</h3>
+        <p>Every failure starts a rebuild that exposes the whole group. Multiply the chance of failure by the <b>data sitting behind it</b>, and the queue sorts itself: risk times blast radius.</p>
       </div>
     </div>
 
+    <details class="more">
+    <summary>The wear curve and a worked example</summary>
+    <div class="d-body">
     <div class="curve">
       <div class="t">The bathtub, with your fleet on it</div>
       <p class="s">The age multiplier applied at step 01, drawn against drive age. Each dot is one cohort in the profile you picked, sized by drive count. A fleet sitting on the right-hand climb is not a maintenance problem, it is a refresh decision.</p>
@@ -584,32 +541,39 @@
         <span class="a">&rarr;</span> <b>133 TB</b> drops to two parity units in the next 30 days, and that is the sort key<br>
         <span class="a">&rarr;</span> chance any of it is actually lost, about 1 in 12 billion
       </div>
-      <div class="out">Note what moved it up the queue. Not the AFR, which is unremarkable, and not the age on its own. The SMART flag multiplied the risk eighteen fold, and a 238 TB group multiplied the consequence. Note also the last line: three parity units means the work is real and the danger is not. Switch the geometry to RAID 5 and that number moves eleven orders of magnitude, which is the argument for parity that no pull schedule can win.</div>
+      <div class="out">What moved this row up the queue was not the AFR, which is unremarkable. The SMART flag multiplied the risk eighteen-fold, and a 238&nbsp;TB group multiplied the consequence.</div>
     </div>
+    </div>
+    </details>
   </div>
 </section>
 
 <!-- ================= DRIVE TABLE ================= -->
 <section>
   <div class="wrap">
-    <div class="kicker"><span class="p">&gt;&gt;</span> 03 / The drive table</div>
+    <div class="kicker"><span class="p">&gt;&gt;</span> 02 / The drive table</div>
     <h2>Published lifetime rates</h2>
-    <p class="lede">Every model the console can put in a queue, with the lifetime annualized failure rate and the drive days behind it. The interval is the 95 percent Poisson range on that rate: where it is wide, the model has not run long enough to have an opinion about.</p>
+    <p class="lede">Every model the console can queue, with its published failure rate and the drive days behind it.</p>
+    <details class="more">
+    <summary>Show the table</summary>
+    <div class="d-body">
     <div class="tscroll" tabindex="0" role="region" aria-label="Drive model table, scrolls horizontally">
       <table>
         <thead><tr><th>Model</th><th>Capacity</th><th>Lifetime AFR</th><th>95% interval</th><th>Drive days</th><th>Notes</th></tr></thead>
         <tbody id="refBody"></tbody>
       </table>
     </div>
+    </div>
+    </details>
   </div>
 </section>
 
 <!-- ================= METHOD ================= -->
 <section id="method">
   <div class="wrap">
-    <div class="kicker"><span class="p">&gt;&gt;</span> 04 / The method</div>
+    <div class="kicker"><span class="p">&gt;&gt;</span> 03 / The method</div>
     <h2>Every constant, in the open</h2>
-    <p class="lede">A triage tool that hides its priors is a vendor dashboard. Here is the whole model. If you disagree with a constant, you now know exactly which one to argue with.</p>
+    <p class="lede">This is the whole model. If you disagree with a constant, you know exactly which one to argue with.</p>
 
     <div class="formula">
       <b>Annual rate</b> = lifetime AFR x age multiplier x evidence ratio<br>
@@ -619,21 +583,16 @@
       <b>Exposure per survivor</b> = 1 - exp(-cohort rate x rebuild hours / 8760)<br>
       <b>P(group loses data)</b> = P(at least <i>m</i> of the <i>k+m-1</i> survivors fail inside that window)<br>
       <b>Blast radius</b> = <i>k</i> x drive capacity, the data the group is holding<br>
-      <b>TB unprotected, 30 days</b> = drives x P(fail in 30 days) x blast radius &nbsp; <i>the sort key</i><br>
+      <b>TB at risk, 30 days</b> = drives x P(fail in 30 days) x blast radius &nbsp; <i>the sort key</i><br>
       <b>TB actually lost</b> = the same, times P(group loses data) &nbsp; <i>the fleet total</i>
     </div>
 
     <ul class="plain">
-      <li><b>The evidence ratio is Bayes, not a threshold.</b> 76.7 percent of failed drives carried a non-zero count on SMART 5, 187, 188, 197 or 198, against 4.2 percent of operational drives. At the published prevalence the two ratios reconcile to the fleet rate exactly; move the prevalence slider and both are renormalized so total expected failures are preserved.</li>
-      <li><b>The age multiplier</b> runs 1.45 at three months, 1.05 at one year, 0.80 at two, 1.10 at four, 1.45 at five, 2.00 at six, 2.75 at seven and 3.40 at eight, interpolated between. It is a curve fitted to the shape of published failure rate by age, normalized so a mixed-age fleet averages 1.0.</li>
-      <li><b>Unrecoverable read errors count only where there is no parity left.</b> At a rated 1 in 10^15 bits, reading 238 TB to rebuild carries a real chance of a bad sector. With two or more parity units that is survivable, so it is added only for single-parity and mirrored schemes, where it dominates everything else above about 8 TB.</li>
-      <li><b>Rebuild rate is the effective rate on a live system,</b> not the drive's sequential specification. 150 MB per second is an honest default for a rebuild competing with production traffic. A 22 TB drive at that rate is a 41 hour window, and every drive in the group is exposed for all of it.</li>
-      <li><b>Two consequences, ranked differently.</b> Data that drops a parity unit is the work: it happens on every failure and it is what a queue is for. Data actually lost is the danger, and in a three-parity vault it is a one in billions event. Sorting on the second would rank nothing, so the queue sorts on the first and reports the second as a fleet total. Conflating them is how storage vendors sell parity you already have.</li>
-      <li><b>Survivors rebuild at the cohort rate, not the flagged rate.</b> The other drives in a group are ordinary members of the population. Carrying the failed drive's own eighteen-fold multiplier across its whole group would assume the rest are sick too, and would inflate every rebuild risk on the page.</li>
-      <li><b>The queue holds drives with a reason.</b> Anything whose age and evidence adjusted rate clears 1.5 percent a year: watch at 1.5, schedule at 5, pull at 15. A clean drive with no canaries is likely to be fine even at six years, which is the part of this that surprises people.</li>
-      <li><b>Arrivals are estimated</b> as expected failures divided by the 0.767 detection rate: the rate at which drives newly enter the queue, whether or not you get to them. If that exceeds your crew capacity the queue is growing and no amount of ranking fixes it.</li>
-      <li><b>Figures are the published lifetime table, rounded.</b> Backblaze republishes it every quarter and the decimals move. Re-pull the current one before you spend money against a number in here.</li>
-      <li><b>A triage heuristic, not a warranty model.</b> Your workload, enclosure, vibration and thermals are not in this data and they matter. Nothing here replaces watching your own fleet.</li>
+      <li><b>The SMART evidence is Bayes, not a threshold.</b> Flagged drives carry an 18x likelihood ratio, clean ones 0.24x, renormalized to the prevalence you set so total expected failures are preserved.</li>
+      <li><b>The age multiplier</b> follows the published bathtub shape, normalized so a mixed-age fleet averages 1.0.</li>
+      <li><b>Rebuild rate is the effective rate on a live system,</b> not the drive's spec sheet; 150 MB/s is an honest default. Unrecoverable read errors are counted only where no parity is left.</li>
+      <li><b>The queue holds drives with a reason.</b> The bands sit at 1.5 percent a year (watch), 5 (schedule) and 15 (pull). A clean drive is usually fine even at six years.</li>
+      <li><b>A triage heuristic, not a warranty model.</b> Figures are the published lifetime table, rounded; re-pull the current quarter before you spend money, and nothing here replaces watching your own fleet.</li>
     </ul>
   </div>
 </section>
@@ -642,10 +601,9 @@
 <section class="cta">
   <div class="wrap">
     <div class="box">
-      <div class="kicker"><span class="p">&gt;&gt;&gt;</span> 05 / Work with me</div>
+      <div class="kicker"><span class="p">&gt;&gt;&gt;</span> 04 / Work with me</div>
       <h2>I design the console and ship it to production myself</h2>
-      <p>I am Adrian Mucha, a product designer for the software most designers avoid: data centers, AI tooling, operator consoles. Recent work: a repair console saving around $10M a month, a data-access portal cut from 10 days to 48 hours, production code shipped as pull requests.</p>
-      <p>If your engineers are drawing your operator UI because you have not hired a designer yet, that is the gap I fill. Two-week console sprints or an embedded retainer.</p>
+      <p>I am Adrian Mucha, a product designer for the software most designers avoid: data centers, AI tooling, operator consoles. If your engineers are drawing your operator UI because you have not hired a designer yet, that is the gap I fill.</p>
       <div class="btns">
         <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Get in touch &rarr;</a>
         <a class="btn ghost" href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">See the work &rarr;</a>
@@ -661,7 +619,7 @@
 
 <footer>
   <div class="wrap">
-    <div class="lbl">06 / Sources and fine print</div>
+    <div class="lbl">05 / Sources and fine print</div>
     Drive models, lifetime annualized failure rates and drive day counts from
     <a href="https://www.backblaze.com/cloud-storage/resources/hard-drive-test-data" target="_blank" rel="noopener">Backblaze Drive Stats</a>,
     published quarterly since 2013 and released under a permissive licence for any use with attribution.
@@ -741,7 +699,7 @@
   var WEAROUT = 0.015, SCHED_BAND = 0.05, PULL_BAND = 0.15;
 
   var $ = function(id){ return document.getElementById(id); };
-  var state = { rank:"blast", profile:"mixed", drives:3000, scheme:"ec173", smart:4.2, rebuild:150, pulls:12 };
+  var state = { profile:"mixed", drives:3000, scheme:"ec173", smart:4.2, rebuild:150, pulls:12 };
 
   function fmt(n, d){
     if(!isFinite(n)) return "0";
@@ -897,22 +855,13 @@
       }
     }
 
-    var key = state.rank === "blast" ? "tb" : "expFail";
-    rows.sort(function(a,b){ return b[key]-a[key]; });
+    // risk times blast radius: the data likely to drop a layer of protection sorts the queue
+    rows.sort(function(a,b){ return b.tb-a.tb; });
 
     // the queue holds rows with a reason to be there; the rest is inventory
     var queue = rows.filter(function(r){ return r.band !== "hold"; });
     var queueDrives = 0;
     for(i=0;i<queue.length;i++) queueDrives += queue[i].n;
-
-    /* How much the two rankings actually disagree on this fleet. Claiming they differ without
-       checking would be the same sin the tool is about, so the number is measured and printed,
-       including when it is zero. */
-    var other = queue.slice().sort(function(a,b){
-      return state.rank === "blast" ? b.expFail-a.expFail : b.tb-a.tb;
-    });
-    var moved = 0;
-    for(i=0;i<queue.length;i++){ if(other.indexOf(queue[i]) !== i) moved++; }
 
     // arrivals: the rate at which drives newly earn a place in the queue
     var arrivals = (totalFail30/0.767) * (7/30);
@@ -930,7 +879,7 @@
     return {
       rows:rows, queue:queue, queueDrives:queueDrives, thisWeek:thisWeek,
       totalDrives:totalDrives, totalFail30:totalFail30, totalTb:totalTb, totalFlag:totalFlag,
-      pLossYear: 1 - Math.exp(-lossPerYear), moved:moved, tbCovered:tbCovered,
+      pLossYear: 1 - Math.exp(-lossPerYear), tbCovered:tbCovered,
       arrivals:arrivals, group:group, sc:sc,
       backlogWeeks: state.pulls > arrivals ? queueDrives/Math.max(state.pulls-arrivals, 1e-9) : Infinity
     };
@@ -960,157 +909,39 @@
   var BANDNAME = { pull:"Pull this week", sched:"Schedule", watch:"Watch", hold:"Hold" };
   var BANDCLASS = { pull:"b-pull", sched:"b-sched", watch:"b-watch", hold:"b-hold" };
 
-  /* ---------- the bay wall ----------
-     Drives standing on end in chassis rows, drawn in the same isometric projection as the
-     hall in Rack Budget: light from the upper left, so every box carries a lit top, a mid
-     front and a dark side. Painted back to front, which in this projection means ascending
-     x plus y. */
-  var WALL_MAX = 380, ISO_COS = 0.866, ISO_SIN = 0.5;
-  var BANDFILL = { pull:"#FF5B5B", sched:"#FF9802", watch:"#FFEA6B", hold:"#3DDC97" };
+  /* ---------- the band bar ----------
+     The whole fleet as one stacked bar, worst band first, so the share of the fleet that is
+     actually work reads at a glance. The caption carries the counts as text. */
+  var BANDFILL = { pull:"#FF5B5B", sched:"#FF9802", watch:"#FFEA6B", hold:"#1E5C46" };
 
-  // the three faces of one band, and a dimmer set for hold so the work reads first
-  function shade(hex, k){
-    var n = parseInt(hex.slice(1),16), out = "#";
-    var ch = [(n>>16)&255, (n>>8)&255, n&255];
-    for(var i=0;i<3;i++){
-      var v = Math.max(0, Math.min(255, Math.round(ch[i]*k))).toString(16);
-      out += (v.length<2 ? "0" : "") + v;
+  function renderBand(r){
+    var order = ["pull","sched","watch","hold"], counts = {};
+    order.forEach(function(b){ counts[b] = 0; });
+    r.rows.forEach(function(row){ counts[row.band] += row.n; });
+
+    var html = "";
+    if(r.totalDrives > 0){
+      order.forEach(function(b){
+        if(counts[b] > 0)
+          html += '<span style="width:'+(100*counts[b]/r.totalDrives).toFixed(2)+'%;background:'+BANDFILL[b]+'"></span>';
+      });
     }
-    return out;
-  }
-  var FACES = (function(){
-    var f = {};
-    for(var b in BANDFILL){
-      var dim = b === "hold" ? 0.54 : 1;
-      f[b] = { top: shade(BANDFILL[b], 1.00*dim), front: shade(BANDFILL[b], 0.60*dim), side: shade(BANDFILL[b], 0.40*dim) };
-    }
-    return f;
-  })();
-
-  function renderWall(r){
-    var wall = $("wall");
-    if(r.totalDrives === 0){
-      wall.style.display = "none"; wall.innerHTML = ""; wall.removeAttribute("viewBox");
-      $("wallCap").textContent = "No drives in this fleet";
-      return;
-    }
-    wall.style.display = "";
-
-    var scale = 1, steps = [1,2,5,10,20,50,100,200,500,1000,2000];
-    for(var si=0; si<steps.length; si++){
-      if(r.totalDrives/steps[si] <= WALL_MAX){ scale = steps[si]; break; }
-      scale = steps[steps.length-1];
-    }
-
-    // marks are allocated by band, worst first, and rows fill from the front, so the work
-    // stands at the near edge of the bank where it reads before anything else.
-    // The notch marks a SMART canary, which is not the same thing as the band: an old clean
-    // drive can earn a band on age alone, and a young flagged one on evidence alone.
-    var order = ["pull","sched","watch","hold"], counts = {}, flags = {}, marks = [];
-    order.forEach(function(b){ counts[b] = 0; flags[b] = 0; });
-    r.rows.forEach(function(row){
-      counts[row.band] += row.n;
-      if(row.flagged) flags[row.band] += row.n;
-    });
-    order.forEach(function(b){
-      var n = Math.round(counts[b]/scale);
-      var notched = counts[b] > 0 ? Math.round(n*flags[b]/counts[b]) : 0;
-      for(var i=0;i<n && marks.length<WALL_MAX+60;i++) marks.push({ band:b, flag:i<notched });
-    });
-    if(!marks.length) marks.push({ band:"hold", flag:false });
-
-    drawBank(marks, wall);
+    $("bandbar").innerHTML = html;
 
     var lines = order.filter(function(b){ return counts[b] > 0; }).map(function(b){
       return fmt(counts[b])+" "+BANDNAME[b].toLowerCase();
     });
-    $("wallCap").textContent = fmt(r.totalDrives)+" drives · one drive drawn = "+
-      (scale>1 ? fmt(scale)+" drives" : "one drive")+" · "+lines.join(" · ");
-  }
-
-  function drawBank(marks, svg){
-    /* A 3.5 inch drive standing on end is 26 x 147 x 102 mm. Held to that it would draw as a
-       hairline, so the width is exaggerated to roughly 1 : 4 : 3 and it still reads as a drive
-       rather than a rack. */
-    var DW = 0.20, DD = 0.78, DH = 0.56, GAP = 0.07, ROWGAP = 0.34, S = 11;
-    var M = marks.length;
-    // wide and shallow: drives are thin, so a bank runs long before it runs deep
-    var perRow = Math.max(6, Math.min(46, Math.round(Math.sqrt(M*3.2))));
-    var rows = Math.ceil(M/perRow);
-    // the canary notch is one polygon, so it survives at every fleet size; the label edge and
-    // the activity light are only legible while the drives are still large
-    var LOD = M <= 130 ? 2 : 1;
-
-    var pitch = DW + GAP, rowPitch = DD + ROWGAP;
-    var bankW = perRow*pitch, bankD = rows*rowPitch;
-    var padX = 0.5, padY = 0.42;
-    var pts = [], out = [];
-
-    function iso(x,y,z){ return [(x-y)*ISO_COS*S, (x+y)*ISO_SIN*S - z*S]; }
-    function poly(p, fill, stroke, sw, op){
-      for(var i=0;i<p.length;i++) pts.push(p[i]);
-      return '<polygon points="' + p.map(function(q){ return q[0].toFixed(1)+','+q[1].toFixed(1); }).join(' ') +
-             '" fill="'+fill+'"' + (stroke ? ' stroke="'+stroke+'" stroke-width="'+(sw||0.6)+'" stroke-linejoin="round"' : '') +
-             (op!==undefined ? ' opacity="'+op+'"' : '') + '/>';
-    }
-    function line(a,b,stroke,sw,op){
-      return '<line x1="'+a[0].toFixed(1)+'" y1="'+a[1].toFixed(1)+'" x2="'+b[0].toFixed(1)+'" y2="'+b[1].toFixed(1)+
-             '" stroke="'+stroke+'" stroke-width="'+sw+'"'+(op!==undefined?' opacity="'+op+'"':'')+'/>';
-    }
-
-    // ---- floor plate, then a chassis rail under each row ----
-    var fw = bankW + padX*2, fd = bankD + padY*2;
-    out.push(poly([iso(0,0,0),iso(fw,0,0),iso(fw,fd,0),iso(0,fd,0)], "#141C22", "#232A34"));
-    for(var rr=0; rr<rows; rr++){
-      var ry = padY + rr*rowPitch, rw = Math.min(perRow, M - rr*perRow)*pitch;
-      out.push(poly([iso(padX-0.08,ry-0.07,0.02),iso(padX+rw+0.02,ry-0.07,0.02),
-                     iso(padX+rw+0.02,ry+DD+0.07,0.02),iso(padX-0.08,ry+DD+0.07,0.02)], "#1A242C", "#232E38", 0.5));
-      // contact shadow, laid down before anything stands up on it
-      out.push(poly([iso(padX+0.16,ry+0.16,0.02),iso(padX+rw+0.2,ry+0.16,0.02),
-                     iso(padX+rw+0.2,ry+DD+0.2,0.02),iso(padX+0.16,ry+DD+0.2,0.02)], "#080C10", null, 0, 0.5));
-    }
-
-    // ---- the drives, back to front ----
-    var cells = [];
-    for(var i=0;i<M;i++){
-      // rows fill from the front, so the worst band sits nearest the viewer and the ragged
-      // part-filled row ends up at the back where it reads as depth rather than as damage
-      var rw2 = rows - 1 - Math.floor(i/perRow), cl = i % perRow;
-      cells.push({ x: padX + cl*pitch, y: padY + rw2*rowPitch, m: marks[i] });
-    }
-    cells.sort(function(a,b){ return (a.x+a.y) - (b.x+b.y); });
-
-    cells.forEach(function(c){
-      var x = c.x, y = c.y, f = FACES[c.m.band];
-      out.push(poly([iso(x,y,DH),iso(x+DW,y,DH),iso(x+DW,y+DD,DH),iso(x,y+DD,DH)], f.top, "#0E1116", 0.5));
-      out.push(poly([iso(x,y+DD,DH),iso(x+DW,y+DD,DH),iso(x+DW,y+DD,0),iso(x,y+DD,0)], f.front, "#0E1116", 0.5));
-      out.push(poly([iso(x+DW,y,DH),iso(x+DW,y+DD,DH),iso(x+DW,y+DD,0),iso(x+DW,y,0)], f.side, "#0E1116", 0.5));
-      // the SMART canary: a slot bitten out of the lit top face, so a flagged drive differs
-      // in shape as well as in hue wherever there is room to draw it
-      if(c.m.flag && LOD >= 1)
-        out.push(poly([iso(x+0.03,y+0.10,DH+0.004),iso(x+DW-0.03,y+0.10,DH+0.004),
-                       iso(x+DW-0.03,y+0.30,DH+0.004),iso(x+0.03,y+0.30,DH+0.004)], "#0E1116", null));
-      if(LOD === 2){
-        // the label edge and the activity light on the front face
-        out.push(line(iso(x+0.035,y+DD,DH-0.06), iso(x+DW-0.035,y+DD,DH-0.06), f.top, 0.5, 0.5));
-        out.push(poly([iso(x+0.05,y+DD,0.10),iso(x+DW-0.05,y+DD,0.10),
-                       iso(x+DW-0.05,y+DD,0.05),iso(x+0.05,y+DD,0.05)], f.top, null, 0, 0.85));
-      }
-    });
-
-    var xs = pts.map(function(q){return q[0];}), ys = pts.map(function(q){return q[1];});
-    var minx = Math.min.apply(null,xs), maxx = Math.max.apply(null,xs);
-    var miny = Math.min.apply(null,ys), maxy = Math.max.apply(null,ys), pad = 7;
-    svg.setAttribute("viewBox", (minx-pad)+" "+(miny-pad)+" "+(maxx-minx+2*pad)+" "+(maxy-miny+2*pad));
-    svg.innerHTML = out.join("");
+    $("barCap").textContent = r.totalDrives === 0
+      ? "No drives in this fleet"
+      : fmt(r.totalDrives)+" drives · "+lines.join(" · ");
   }
 
   /* ---------- the queue ---------- */
   function renderQueue(r){
     if(r.queue.length === 0){
       $("queue").innerHTML = '<div class="qrow b-hold"><span class="rk">&mdash;</span><div><div class="nm">Nothing in the queue</div>'+
-        '<div class="sub">Nothing is flagged and no population has aged past 1.5 percent a year. '+
-        'This is a fleet where the right number of service trips is zero, which is a finding worth having.</div></div><div class="amt"></div></div>';
+        '<div class="sub">Nothing is flagged and nothing has aged past 1.5 percent a year. '+
+        'The right number of service trips this week is zero.</div></div><div class="amt"></div></div>';
       return;
     }
     var budget = state.pulls, spent = 0, cutDrawn = false, html = "";
@@ -1129,14 +960,9 @@
       }
       spent += row.n;
 
-      var iv = interval(row.md.afr, row.md.days);
-      var ev = row.flagged
-        ? 'AFR <b>'+row.md.afr.toFixed(1)+'%</b> x age '+row.ageMul.toFixed(2)+' x SMART <b>'+row.lr.toFixed(1)+'</b> = <b>'+(row.rate*100).toFixed(1)+'%</b> a year'
-        : 'AFR <b>'+row.md.afr.toFixed(1)+'%</b> x age '+row.ageMul.toFixed(2)+' x clean '+row.lr.toFixed(2)+' = <b>'+(row.rate*100).toFixed(1)+'%</b> a year';
-      var cons = row.pLoss >= 0.999
-        ? 'no parity, so every failure loses the '+fmtSmall(row.blastTb)+' TB behind it'
-        : fmtSmall(row.rebuildH)+' h rebuild across <b>'+fmtSmall(row.blastTb)+' TB</b>, '+
-          odds(row.pLoss)+' chance it runs out of parity';
+      var ev = 'AFR <b>'+row.md.afr.toFixed(1)+'%</b> x age '+row.ageMul.toFixed(2)+
+               ' x '+(row.flagged ? 'SMART <b>'+row.lr.toFixed(1)+'</b>' : 'clean '+row.lr.toFixed(2))+
+               ' = <b>'+(row.rate*100).toFixed(1)+'%</b> a year';
 
       html += '<div class="qrow '+BANDCLASS[row.band]+(past?" past":"")+'">'+
         '<span class="rk">'+(i+1)+'</span>'+
@@ -1145,13 +971,10 @@
           '<div class="sub">'+row.md.brand+' · '+row.md.tb+' TB · '+row.age.toFixed(1)+' years · '+
             (row.flagged ? 'flagged by SMART' : 'no SMART canaries')+'</div>'+
           '<div class="ev">'+ev+'</div>'+
-          '<div class="ev">'+cons+'</div>'+
           '<div class="band '+BANDCLASS[row.band]+'"><span class="mk"></span>'+BANDNAME[row.band]+
-            ' · AFR interval '+ivText(iv)+
             (covered > 0 && covered < row.n ? ' · '+fmt(covered)+' of '+fmt(row.n)+' fit this week' : '')+'</div>'+
         '</div>'+
-        '<div class="amt">'+(state.rank==="blast" ? fmtSmall(row.tb)+'<small>TB unprotected / 30d</small>'
-                                                  : fmtSmall(row.expFail)+'<small>failures / 30d</small>')+'</div>'+
+        '<div class="amt">'+fmtSmall(row.tb)+'<small>TB at risk / 30d</small></div>'+
       '</div>';
     });
     $("queue").innerHTML = html;
@@ -1204,15 +1027,6 @@
   function render(){
     var r = compute(), p = profile(), sc = scheme();
 
-    $("mBlast").setAttribute("aria-pressed", state.rank==="blast");
-    $("mRisk").setAttribute("aria-pressed", state.rank==="risk");
-    var disagree = r.moved === 0
-      ? " On this fleet the two orders agree, which is worth knowing before you argue for a better one."
-      : " On this fleet " + r.moved + " of " + r.queue.length + " rows sit in a different place under the other ranking.";
-    $("modeNote").textContent = (state.rank==="blast"
-      ? "Ranked by the terabytes that drop a layer of protection in the next 30 days: how likely the drive is to fail, times the data sitting behind it. This is the order to work in."
-      : "Ranked by expected failures alone, the way an AFR report sorts it. Same fleet, same evidence, and the small old drives that fail most often now outrank the large new ones that cost the most when they do.") + disagree;
-
     $("profPill").innerHTML = '<span class="pill">'+profileSpan(p)+' &nbsp;&middot;&nbsp; '+p.mix.length+' cohorts</span>'+
       '<div class="hint">'+p.note+'</div>';
     $("profAge").textContent = profileAge(p).toFixed(1) + " yr";
@@ -1220,8 +1034,8 @@
     $("schemeHint").textContent = sc.note + " Groups of " + r.group + " drives.";
     $("capHint").textContent = fmt(r.totalDrives) + " drives across " + p.mix.length +
       " cohorts, " + fmt(Math.round(r.totalDrives/r.group)) + " groups.";
-    $("rebuildHint").textContent = "Effective rate on a live system, not the drive's sequential specification. " +
-      "At " + state.rebuild + " MB/s a 16 TB drive takes " + fmt(16e6/state.rebuild/3600) + " hours to rebuild.";
+    $("rebuildHint").textContent = "Effective rate on a live system. At " + state.rebuild +
+      " MB/s a 16 TB drive rebuilds in " + fmt(16e6/state.rebuild/3600) + " hours.";
 
     setBig(r.thisWeek, 0, "Drives");
     var evidence = r.totalFlag === 0
@@ -1234,17 +1048,14 @@
           ? "Your crew clears "+fmt(state.pulls)+" a week, so "+fmt(r.queueDrives-r.thisWeek)+" wait."
           : "That clears the queue.");
 
-    $("queueBasis").textContent = state.rank==="blast" ? "By TB unprotected" : "By failure count";
-    renderWall(r);
+    renderBand(r);
     renderQueue(r);
     renderCurve();
 
     var cells = [
       ["Expected failures, 30 days", fmtSmall(r.totalFail30), "DRIVES"],
-      ["Data losing a parity unit, 30 days", fmtSmall(r.totalTb), "TB"],
-      ["Flagged by SMART", fmt(r.totalFlag), "DRIVES"],
+      ["Data at risk, 30 days", fmtSmall(r.totalTb), "TB"],
       ["Chance of actual data loss, this year", odds(r.pLossYear), ""],
-      ["Rebuild window, largest drive", fmt(largestRebuild()), "HOURS"],
       ["Queue cleared in", r.backlogWeeks===Infinity ? "never" : fmt(Math.ceil(r.backlogWeeks)), r.backlogWeeks===Infinity ? "" : "WEEKS"]
     ];
     $("cells").innerHTML = cells.map(function(c){
@@ -1265,30 +1076,23 @@
   function flagText(r){
     var sc = r.sc;
     if(r.queueDrives === 0)
-      return "Nothing is flagged and no population has aged into the queue. Worth knowing what a clean fleet looks like, because this is it.";
+      return "Nothing is flagged and nothing has aged into the queue. This is what a clean fleet looks like.";
     if(state.pulls === 0)
       return "At zero pulls a week the queue is a list you are not working. "+fmt(r.arrivals,1)+" drives join it every week.";
     if(r.arrivals > state.pulls)
-      return "Drives join this queue faster than you clear it: "+fmtSmall(r.arrivals)+" arrive a week against "+fmt(state.pulls)+
-             " pulls. The binding constraint is hands, not drives, and no amount of reordering fixes that. Either the crew grows or the fleet does not.";
-    if(sc.m <= 1){
-      var big = 0; profile().mix.forEach(function(c){ big = Math.max(big, model(c[0]).tb); });
-      return "With "+(sc.m===0?"no parity at all":"a single parity unit")+" at "+big+" TB, the rebuild is the risk, not the failure. "+
-             "Reading a group back at "+state.rebuild+" MB/s takes "+fmt(largestRebuild())+" hours, and at a rated 1 in 10^15 an unrecoverable "+
-             "read inside that window is likelier than a second drive dying. "+
-             (r.pLossYear >= 0.9 ? "This fleet is close to certain to lose data inside a year."
-                                 : "Odds this fleet loses data inside a year: "+odds(r.pLossYear)+".")+
-             " A second parity unit is worth more than any pull schedule you could run.";
-    }
+      return "Drives join this queue faster than you clear it: "+fmtSmall(r.arrivals)+" a week against "+fmt(state.pulls)+
+             " pulls. The binding constraint is hands, not drives, and no amount of ranking fixes that.";
+    if(sc.m <= 1)
+      return "With "+(sc.m===0?"no parity at all":"a single parity unit")+", the rebuild is the risk, not the failure: "+
+             "the largest drive rebuilds in "+fmt(largestRebuild())+" hours, and the odds this fleet loses data inside a year are "+
+             odds(r.pLossYear)+". A second parity unit is worth more than any pull schedule.";
     if(r.backlogWeeks <= 2)
-      return "You are ahead of this fleet. "+fmt(state.pulls)+" pulls a week clears the queue in "+fmt(Math.ceil(r.backlogWeeks))+
-             " week"+(Math.ceil(r.backlogWeeks)===1?"":"s")+" against "+fmtSmall(r.arrivals)+" arriving, and the geometry means actual data loss runs at "+
-             odds(r.pLossYear)+" a year. The useful question is no longer which drives, it is whether "+
-             fmt(state.pulls)+" service trips a week is what you want to be spending.";
+      return "You are ahead of this fleet: "+fmt(state.pulls)+" pulls a week clears the queue in "+fmt(Math.ceil(r.backlogWeeks))+
+             " week"+(Math.ceil(r.backlogWeeks)===1?"":"s")+", and actual data loss runs at "+odds(r.pLossYear)+
+             " a year. The real question is whether "+fmt(state.pulls)+" service trips a week is worth spending.";
     var share = r.totalTb > 0 ? Math.round(100*r.tbCovered/r.totalTb) : 0;
-    return "The queue clears in "+fmt(Math.ceil(r.backlogWeeks))+" weeks at "+fmt(state.pulls)+" pulls, against "+fmtSmall(r.arrivals)+
-           " arriving each week. Working it top down, this week's "+fmt(r.thisWeek)+" pulls cover "+fmtSmall(r.tbCovered)+" TB of the "+
-           fmtSmall(r.totalTb)+" TB dropping a parity unit this month, or "+share+" percent of the exposure for "+
+    return "The queue clears in "+fmt(Math.ceil(r.backlogWeeks))+" weeks at "+fmt(state.pulls)+" pulls a week. "+
+           "Worked top down, this week's "+fmt(r.thisWeek)+" pulls cover "+share+" percent of the exposure with "+
            Math.round(100*r.thisWeek/r.queueDrives)+" percent of the drives.";
   }
 
@@ -1300,7 +1104,7 @@
     clearTimeout(srTimer);
     srTimer = setTimeout(function(){
       var top = r.queue.length ? " Top of the queue: "+fmt(r.queue[0].n)+" "+r.queue[0].md.model+
-                ", "+(r.queue[0].flagged?"flagged by SMART":"clean")+", "+fmtSmall(r.queue[0].tb)+" terabytes unprotected." : "";
+                ", "+(r.queue[0].flagged?"flagged by SMART":"clean")+", "+fmtSmall(r.queue[0].tb)+" terabytes at risk." : "";
       // outNote already ends in a full stop, so the sentences are joined rather than punctuated again
       $("srStatus").textContent = "Pull this week: "+fmt(r.thisWeek)+" drives. "+$("outNote").textContent+top;
     }, 500);
@@ -1438,7 +1242,6 @@
 
   function writeUrl(){
     var q = new URLSearchParams();
-    q.set("k", state.rank);
     q.set("f", state.profile);
     q.set("n", state.drives);
     q.set("s", state.scheme);
@@ -1454,7 +1257,6 @@
     var h = location.hash.slice(1);
     if(h.indexOf("=")===-1) return false;     // plain anchor link, not state
     var q = new URLSearchParams(h);
-    if(q.get("k")==="risk") state.rank = "risk";
     if(q.get("f")) state.profile = q.get("f");
     if(q.get("n")) state.drives = parseInt(q.get("n"),10)||3000;
     if(q.get("s")) state.scheme = q.get("s");
@@ -1510,17 +1312,17 @@
     L.push("");
     L.push("Pull this week: "+fmt(r.thisWeek)+" of "+fmt(r.queueDrives)+" in the queue, at "+fmt(state.pulls)+" pulls a week.");
     L.push("Expected failures next 30 days: "+fmtSmall(r.totalFail30)+
-           "   Data dropping a parity unit: "+fmtSmall(r.totalTb)+" TB"+
+           "   Data at risk: "+fmtSmall(r.totalTb)+" TB"+
            "   Chance of actual data loss this year: "+odds(r.pLossYear));
     L.push("");
-    L.push("Ranked by "+(state.rank==="blast" ? "risk times blast radius" : "failure probability alone")+":");
+    L.push("Ranked by risk times blast radius:");
     var spent = 0;
     r.queue.forEach(function(row,i){
       var cut = spent >= state.pulls ? "  (waits)" : "";
       spent += row.n;
       L.push("  "+(i+1)+". "+fmt(row.n)+" x "+row.md.model+"  "+row.md.tb+"TB  "+row.age.toFixed(1)+"y  "+
              (row.flagged?"SMART flagged":"clean")+"  "+(row.rate*100).toFixed(1)+"%/yr  "+
-             fmtSmall(row.tb)+" TB unprotected"+cut);
+             fmtSmall(row.tb)+" TB at risk"+cut);
     });
     L.push("");
     L.push(flagText(r));
@@ -1536,8 +1338,6 @@
     schemePicker.init(function(id){ state.scheme = id; render(); });
     syncInputs();
 
-    $("mBlast").addEventListener("click", function(){ state.rank="blast"; render(); });
-    $("mRisk").addEventListener("click", function(){ state.rank="risk"; render(); });
     pair("drives","drivesR","drives",20,500000,true);
     pair("smart","smartR","smart",0,40,false);
     pair("rebuild","rebuildR","rebuild",10,1000,false);
