@@ -232,7 +232,9 @@
   .bandbar .b-sched{background:var(--r-sched)}
   .bandbar .b-watch{background:var(--r-watch)}
   .bandbar .b-hold{background:var(--r-hold)}
-  .bar-cap{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.13em;text-transform:uppercase;color:var(--tx3);margin-top:12px;line-height:1.6}
+  /* one size down from the label step with tighter tracking, so the four-band caption
+     holds one line even at the narrowest width the two-column console reaches */
+  .bar-cap{font-family:var(--mono);font-size:var(--fs-2xs);letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-top:12px;line-height:1.6}
 
   /* ---------- progressive disclosure ----------
      The advanced inputs and the deep-dive material sit behind native <details>, so the
@@ -973,15 +975,19 @@
     }
     $("bandbar").innerHTML = html;
 
-    // each count is welded to its band name with no-break spaces, so the caption can
-    // only wrap after a separator: never a lone word stranded on the next line
+    // One line: the fleet total lives in the meta line across the gutter, so the caption
+    // carries only the four bands, with pull shortened to one word; the chips in the
+    // queue keep the full name. Counts stay welded to their band names with no-break
+    // spaces so that if a longer fleet does force a wrap, it breaks between segments,
+    // never inside one.
     var NB = "\u00A0";
     var lines = order.filter(function(b){ return counts[b] > 0; }).map(function(b){
-      return (fmt(counts[b])+" "+BANDNAME[b].toLowerCase()).split(" ").join(NB);
+      var name = b === "pull" ? "pull" : BANDNAME[b].toLowerCase();
+      return fmt(counts[b])+NB+name;
     });
     $("barCap").textContent = r.totalDrives === 0
       ? "No drives in this fleet"
-      : fmt(r.totalDrives)+NB+"drives"+NB+"· "+lines.join(NB+"· ");
+      : lines.join(NB+"· ");
   }
 
   /* ---------- the queue ---------- */
