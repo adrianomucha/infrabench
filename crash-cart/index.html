@@ -54,7 +54,7 @@
   a{color:var(--tx);text-decoration:none}
 
   /* micro-label: the only place uppercase mono is allowed */
-  .lbl{font-family:var(--mono);font-size:11px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+  .lbl{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
 
   /* first focusable element: lets keyboard and screen-reader users bypass the sticky header */
   .skip{position:absolute;inset-inline-start:-9999px;top:0;z-index:60;font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:12px 18px;background:var(--tx);color:var(--bg);font-weight:600}
@@ -75,14 +75,14 @@
   .mark .tool{color:var(--tx)}
   .sq{width:9px;height:9px;background:var(--grn);flex:none}
   nav{display:flex;gap:28px}
-  nav a{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);position:relative;display:inline-block}
+  nav a{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);position:relative;display:inline-block}
   nav a::after{content:"";position:absolute;inset:-16px -10px}
   nav a:hover{color:var(--tx)}
   @media(max-width:860px){nav{display:none}}
 
   /* ---------- shared type ---------- */
-  h1{font-weight:600;font-size:clamp(36px,4.4vw,60px);line-height:1.04;letter-spacing:-.035em;margin:22px 0 24px;max-width:22ch;text-wrap:balance;color:var(--tx)}
-  h2{font-weight:600;font-size:clamp(26px,3vw,40px);line-height:1.1;letter-spacing:-.03em;margin:18px 0 18px;max-width:28ch;text-wrap:balance}
+  h1{font-weight:500;font-size:clamp(36px,4.4vw,64px);line-height:1.04;letter-spacing:-.035em;margin:22px 0 24px;max-width:22ch;text-wrap:balance;color:var(--tx)}
+  h2{font-weight:500;font-size:clamp(26px,3vw,40px);line-height:1.1;letter-spacing:-.03em;margin:18px 0 18px;max-width:28ch;text-wrap:balance}
   h3{font-weight:600;font-size:17px;letter-spacing:-.015em;margin:0 0 8px}
   .lede{font-size:17px;color:var(--tx2);max-width:62ch;margin:0;text-wrap:pretty}
   .lede a{color:var(--tx);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:4px}
@@ -107,7 +107,7 @@
   .hero{padding:76px 0 64px}
   @media(max-width:700px){.hero{padding:52px 0 44px}}
 
-  .btn{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;
+  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;
     display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:15px 24px;
     background:var(--tx);color:var(--bg);border:1px solid var(--tx);cursor:pointer}
   .btn:hover{background:#fff;border-color:#fff}
@@ -130,18 +130,18 @@
   .iv-num:focus{outline:0;border-bottom-color:var(--grn)}
   input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   .iv-num{-moz-appearance:textfield;appearance:textfield}
-  .config-note{font-size:14px;color:var(--tx2);margin:20px 0 0;max-width:60ch}
-  .config-meta{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--tx3);margin:12px 0 0;line-height:1.9}
+  .config-note{font-size:15px;color:var(--tx2);margin:20px 0 0;max-width:60ch}
+  .config-meta{font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--tx3);margin:12px 0 0;line-height:1.9}
   details.more.assump>.d-body{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:12px 72px;
     align-items:start;padding:12px 18px 26px;padding-inline-start:37px}
   .assump .config{font-size:16px;line-height:2;margin:0}
-  .assump .hint{font-size:14px;line-height:1.7;margin-top:9px}
+  .assump .hint{font-size:15px;line-height:1.7;margin-top:9px}
   /* a value never parts from its unit at a line break */
   .assump .nb{white-space:nowrap}
   @media(max-width:980px){details.more.assump>.d-body{grid-template-columns:1fr;gap:0;padding:6px 18px 22px}
     .assump .hint{margin-top:12px}}
   .assump .iv-num{padding-block:3px}
-  .hint{font-size:13px;color:var(--tx3);margin-top:10px;line-height:1.55}
+  .hint{font-size:14px;color:var(--tx3);margin-top:10px;line-height:1.55}
 
   /* ---------- profile and scheme pickers ----------
      The ARIA select-only combobox pattern, worn inline as a word in the sentence. */
@@ -157,10 +157,10 @@
   .sel-btn[aria-expanded="true"] .caret{color:var(--grn);transform:rotate(180deg)}
   .sel-list{position:absolute;z-index:50;inset-inline-start:0;top:calc(100% + 7px);margin:0;padding:5px 0;list-style:none;
     min-width:min(300px,86vw);background:var(--bg2);border:1px solid var(--line2);box-shadow:0 22px 48px rgba(0,0,0,.62);
-    max-height:min(54vh,340px);overflow-y:auto;overscroll-behavior:contain;font-size:13px;font-weight:400}
+    max-height:min(54vh,340px);overflow-y:auto;overscroll-behavior:contain;font-size:14px;font-weight:400}
   .sel-list[hidden]{display:none}
-  .sel-opt{display:flex;align-items:center;gap:12px;padding:11px 14px;font-family:var(--mono);font-size:13px;color:var(--tx2);cursor:pointer;white-space:nowrap}
-  @media(max-width:640px){.sel-opt{padding:14px;font-size:14px}}
+  .sel-opt{display:flex;align-items:center;gap:12px;padding:11px 14px;font-family:var(--mono);font-size:14px;color:var(--tx2);cursor:pointer;white-space:nowrap}
+  @media(max-width:640px){.sel-opt{padding:14px;font-size:15px}}
   .sel-opt .mk{width:6px;height:6px;flex:none}
   .sel-opt .nm{flex:1}
   .sel-opt .kw{font-variant-numeric:tabular-nums;font-size:12px}
@@ -186,10 +186,10 @@
   .tick.br{bottom:-1px;right:-1px;border-bottom-width:1px;border-right-width:1px}
   .headline-out .lbl{margin-bottom:14px}
   .headline-out .lbl::before{content:"";display:inline-block;width:6px;height:6px;background:var(--grn);margin-right:10px;vertical-align:1px}
-  .big{font-weight:600;font-size:clamp(24px,2.6vw,34px);line-height:1.25;letter-spacing:-.025em;color:var(--tx);font-variant-numeric:tabular-nums;text-wrap:balance}
+  .big{font-weight:500;font-size:clamp(24px,2.6vw,34px);line-height:1.25;letter-spacing:-.025em;color:var(--tx);font-variant-numeric:tabular-nums;text-wrap:balance}
   .big .a{color:var(--grn2);margin-inline-end:4px;font-family:var(--mono);font-weight:400}
   .big .v{color:var(--grn);font-family:var(--mono)}
-  .headline-out .note{font-size:14px;color:var(--tx2);margin:14px 0 20px}
+  .headline-out .note{font-size:15px;color:var(--tx2);margin:14px 0 20px}
 
   /* ---------- the band bar ----------
      The fleet as one stacked bar under the answer, worst band first. Decorative, so it
@@ -201,12 +201,12 @@
   .bandbar .b-sched{background:var(--r-sched)}
   .bandbar .b-watch{background:var(--r-watch)}
   .bandbar .b-hold{background:var(--r-hold)}
-  .bar-cap{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-top:12px;line-height:1.7}
+  .bar-cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-top:12px;line-height:1.7}
 
   /* ---------- progressive disclosure ---------- */
   details.more{border:1px solid var(--line);margin-top:26px}
   details.more>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px;padding:15px 18px;
-    font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--tx2)}
+    font-family:var(--mono);font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--tx2)}
   details.more>summary::-webkit-details-marker{display:none}
   details.more>summary::before{content:"+";font-family:var(--mono);font-weight:600;color:var(--grn);width:1ch}
   details.more[open]>summary::before{content:"\2212"}
@@ -216,7 +216,7 @@
 
   /* ---------- the queue ---------- */
   .q-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:52px 0 12px}
-  .q-t{font-family:var(--mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--tx3)}
+  .q-t{font-family:var(--mono);font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--tx3)}
   .queue{border-top:1px solid var(--line);margin-bottom:34px}
   .qrow{display:grid;grid-template-columns:26px 1fr auto;gap:14px;align-items:baseline;padding:18px 18px 19px;border-bottom:1px solid var(--line);border-inline-start:2px solid var(--line2)}
   .qrow.b-watch{border-inline-start-color:var(--r-watch);background:var(--w-watch)}
@@ -227,22 +227,22 @@
      The wash goes quiet and the band line says 'waits' in words; the text itself never dims,
      because a row that waits still has to be read. */
   .qrow.past{background:transparent}
-  .qrow .rk{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--tx3);font-variant-numeric:tabular-nums}
+  .qrow .rk{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--tx3);font-variant-numeric:tabular-nums}
   .qrow .nm{font-weight:600;font-size:16px;color:var(--tx);letter-spacing:-.015em}
-  .qrow .sub{font-size:13px;color:var(--tx2);margin-top:5px;line-height:1.5}
+  .qrow .sub{font-size:14px;color:var(--tx2);margin-top:5px;line-height:1.5}
   .qrow .ev{font-family:var(--mono);font-size:12px;letter-spacing:.01em;color:var(--tx2);margin-top:9px;line-height:1.8}
   .qrow .ev b{color:var(--tx);font-weight:600}
   .qrow .amt{font-family:var(--mono);font-size:17px;font-weight:600;color:var(--tx);text-align:end;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .qrow .amt small{display:block;font-size:10px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-top:7px}
+  .qrow .amt small{display:block;font-size:11px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-top:7px}
   /* the band is named in words next to its mark: hue is a second channel here, never the only one */
-  .band{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--tx2);margin-top:12px}
+  .band{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--tx2);margin-top:12px}
   .band .mk{width:8px;height:8px;flex:none;background:var(--line2)}
   .band.b-watch .mk{background:var(--r-watch)}
   .band.b-sched .mk{background:var(--r-sched)}
   .band.b-pull .mk{background:var(--r-pull)}
   .band.b-hold .mk{background:var(--r-hold)}
   .cut{display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid var(--line);
-    font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--tx3)}
+    font-family:var(--mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--tx3)}
   .cut .rule{flex:1;height:1px;background:var(--line2)}
   @media(max-width:520px){
     .qrow{grid-template-columns:22px 1fr;padding-inline:12px}
@@ -255,11 +255,11 @@
   @media(max-width:820px){.grid{grid-template-columns:repeat(2,1fr);gap:0 24px}}
   @media(max-width:420px){.grid{grid-template-columns:1fr}}
   .cell{border-top:1px solid var(--line);padding:16px 0 22px}
-  .cell .k{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;line-height:1.5;min-height:2.6em}
+  .cell .k{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;line-height:1.5;min-height:2.6em}
   .cell .v{font-family:var(--mono);font-weight:500;font-size:24px;letter-spacing:-.02em;line-height:1.1;color:var(--tx);font-variant-numeric:tabular-nums}
-  .cell .v small{font-size:10px;font-weight:400;letter-spacing:.1em;color:var(--tx3);margin-inline-start:6px}
-  .flag{display:flex;gap:14px;align-items:flex-start;border-inline-start:2px solid var(--grn2);padding:4px 0 4px 18px;margin-top:34px;font-size:14px;color:var(--tx2);max-width:66ch}
-  .flag .t{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--grn);white-space:nowrap;padding-top:4px}
+  .cell .v small{font-size:11px;font-weight:400;letter-spacing:.1em;color:var(--tx3);margin-inline-start:6px}
+  .flag{display:flex;gap:14px;align-items:flex-start;border-inline-start:2px solid var(--grn2);padding:4px 0 4px 18px;margin-top:34px;font-size:15px;color:var(--tx2);max-width:66ch}
+  .flag .t{font-family:var(--mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--grn);white-space:nowrap;padding-top:4px}
   .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
   @media(max-width:640px){
     .flag{flex-direction:column;gap:8px}
@@ -271,7 +271,7 @@
   .steps{display:grid;grid-template-columns:repeat(2,1fr);gap:44px 48px;margin-top:52px}
   @media(max-width:820px){.steps{grid-template-columns:1fr;gap:36px}}
   .step{border-top:1px solid var(--line2);padding-top:22px}
-  .step .n{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--grn);margin-bottom:14px}
+  .step .n{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--grn);margin-bottom:14px}
   .step p{margin:0 0 10px;font-size:15px;color:var(--tx2);text-wrap:pretty}
   .step p:last-child{margin-bottom:0}
   .step b{color:var(--tx);font-weight:500}
@@ -279,19 +279,19 @@
   /* ---------- the wear curve ---------- */
   .curve{border:1px solid var(--line);background:var(--bg2);padding:30px 30px 24px;margin-top:36px}
   @media(max-width:700px){.curve{padding:22px 18px 18px}}
-  .curve .t{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin-bottom:8px}
-  .curve .s{font-size:14px;color:var(--tx2);margin:0 0 22px;max-width:74ch}
+  .curve .t{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin-bottom:8px}
+  .curve .s{font-size:15px;color:var(--tx2);margin:0 0 22px;max-width:74ch}
   .curve svg{width:100%;height:auto;display:block}
-  .curve-legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:16px;font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--tx2)}
+  .curve-legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:16px;font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--tx2)}
   .curve-legend .mk{display:inline-block;width:8px;height:8px;margin-inline-end:7px;vertical-align:-1px}
 
   .worked{border:1px solid var(--line);background:var(--bg2);padding:32px 34px;margin-top:36px}
   @media(max-width:700px){.worked{padding:24px 20px}}
-  .worked .t{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin-bottom:20px}
-  .chain{font-family:var(--mono);font-size:13px;line-height:2.2;color:var(--tx2);overflow-x:auto}
+  .worked .t{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin-bottom:20px}
+  .chain{font-family:var(--mono);font-size:14px;line-height:2.2;color:var(--tx2);overflow-x:auto}
   .chain .a{color:var(--grn)}
   .chain b{font-weight:600;color:var(--tx)}
-  .worked .out{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);font-size:14px;color:var(--tx2);max-width:72ch}
+  .worked .out{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);font-size:15px;color:var(--tx2);max-width:72ch}
 
   /* ---------- table ----------
      Six numeric columns do not fit a phone. Dropping columns would drop the drive days and the
@@ -299,15 +299,15 @@
      scrolls inside its own box instead and the page never scrolls sideways. */
   .tscroll{overflow-x:auto;margin-top:30px;overscroll-behavior-x:contain}
   .tscroll table{margin-top:0}
-  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:30px}
+  table{width:100%;border-collapse:collapse;font-size:15px;margin-top:30px}
   th,td{text-align:start;padding:14px 16px 14px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--tx2)}
-  thead th{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);font-weight:400}
-  td.m{font-family:var(--mono);font-size:13px;white-space:nowrap;color:var(--tx);font-variant-numeric:tabular-nums}
+  thead th{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);font-weight:400}
+  td.m{font-family:var(--mono);font-size:14px;white-space:nowrap;color:var(--tx);font-variant-numeric:tabular-nums}
   /* the model is the row's header: a real <th scope="row">, styled as the row's anchor */
-  th.name{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--tx);white-space:nowrap}
+  th.name{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--tx);white-space:nowrap}
   /* the AFR bar is a length, so the comparison down the column survives without colour */
   .afrbar{display:block;height:5px;background:var(--grn2);margin-top:8px;min-width:2px}
-  .ci{font-family:var(--mono);font-size:11px;font-weight:400;color:var(--tx3);white-space:nowrap}
+  .ci{font-family:var(--mono);font-size:12px;font-weight:400;color:var(--tx3);white-space:nowrap}
   @media(max-width:700px){
     table th:last-child, table td:last-child{display:none}
     th,td{padding-inline-end:10px}
@@ -321,7 +321,7 @@
   /* the model as a ledger: one term, one expression per row, at reading size */
   .formula{margin-top:32px;border-top:1px solid var(--line)}
   .frow{display:grid;grid-template-columns:minmax(150px,200px) 1fr;gap:4px 24px;padding:14px 0 15px;
-    border-bottom:1px solid var(--line);font-family:var(--mono);font-size:13px;line-height:1.8}
+    border-bottom:1px solid var(--line);font-family:var(--mono);font-size:14px;line-height:1.8}
   @media(max-width:640px){.frow{grid-template-columns:1fr}}
   .frow .ft{color:var(--grn);font-weight:500}
   .frow .fx{color:var(--tx2);overflow-wrap:break-word}
@@ -343,29 +343,37 @@
   .rv0{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
   .rv0.rvIn{opacity:1;transform:none}
 
-  /* ---------- closing plate ---------- */
-  .cta .plate{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:28px 40px;
-    border:1px solid var(--line);background:var(--bg2);padding:40px 44px}
-  @media(max-width:700px){.cta .plate{padding:28px 24px}}
-  .p-name{font-weight:600;font-size:clamp(24px,2.6vw,32px);letter-spacing:-.025em;line-height:1.15;color:var(--tx)}
-  .p-role{font-family:var(--mono);font-size:12px;letter-spacing:.02em;color:var(--tx3);margin-top:10px;line-height:1.9}
-  .p-role span + span::before{content:"\00b7";margin:0 .7em;color:var(--line2)}
-  .p-act{display:flex;align-items:center;flex-wrap:wrap;gap:12px 22px}
-  .lnk{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx2);white-space:nowrap;padding:14px 2px}
+  /* ---------- built by: the nameplate ----------
+     Real gear carries a nameplate. The credit reads like one: identity on the
+     left, a spec ledger on the right, actions along the bottom edge. */
+  .plate{position:relative;border:1px solid var(--line);background:
+    radial-gradient(70% 90% at 88% 0%, rgba(63,224,160,.06), transparent 70%) var(--bg2)}
+  .plate-main{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:40px 88px;padding:52px 52px 44px}
+  .p-name{font-weight:500;font-size:clamp(34px,3.8vw,58px);letter-spacing:-.035em;line-height:1.05;margin-top:16px;color:var(--tx)}
+  .p-bio{font-size:16px;color:var(--tx2);max-width:44ch;margin:18px 0 0;text-wrap:pretty}
+  .p-spec{margin:0;align-self:center}
+  .p-spec > div{display:grid;grid-template-columns:96px 1fr;gap:24px;padding:15px 0 16px;border-top:1px solid var(--line);align-items:baseline}
+  .p-spec > div:last-child{border-bottom:1px solid var(--line)}
+  .p-spec dt{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+  .p-spec dd{margin:0;font-family:var(--mono);font-size:14px;color:var(--tx)}
+  .p-spec dd.on{color:var(--grn)}
+  .p-spec dd.on::before{content:"";display:inline-block;width:6px;height:6px;background:var(--grn);margin-right:10px;vertical-align:1px}
+  .plate-ft{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;border-top:1px solid var(--line);padding:20px 52px}
+  .lnk{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx2);white-space:nowrap;padding:14px 2px}
   .lnk:hover{color:var(--grn)}
-  @media(max-width:700px){
-    .p-role{display:flex;flex-direction:column}
-    .p-role span + span::before{content:none}
-    .p-act{width:100%;flex-direction:column;align-items:stretch}
+  @media(max-width:860px){
+    .plate-main{grid-template-columns:1fr;gap:36px;padding:32px 24px 30px}
+    .plate-ft{padding:16px 24px;flex-direction:column;align-items:stretch}
+    .plate-ft .btn{justify-content:center}
     .lnk{text-align:center}
   }
 
-  footer{border-top:1px solid var(--line);padding:44px 0 72px;font-size:14px;color:var(--tx3)}
+  footer{border-top:1px solid var(--line);padding:44px 0 72px;font-size:15px;color:var(--tx3)}
   footer a{color:var(--tx2)}
   footer a:hover{color:var(--grn)}
   footer .lbl{margin-bottom:14px}
 
-  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--tx);color:var(--bg);font-family:var(--mono);font-weight:600;font-size:11px;letter-spacing:.13em;text-transform:uppercase;padding:13px 20px;opacity:0;pointer-events:none;z-index:60}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--tx);color:var(--bg);font-family:var(--mono);font-weight:600;font-size:12px;letter-spacing:.13em;text-transform:uppercase;padding:13px 20px;opacity:0;pointer-events:none;z-index:60}
   .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
   .print-url{display:none}
 
@@ -375,7 +383,7 @@
     :root{--bg:#fff;--bg2:#fff;--line:#c7cdd5;--line2:#a8b1bc;--tx:#12161b;--tx2:#39424d;--tx3:#66707c;--grn:#0b7f58;--grn2:#0b7f58;
       --r-hold:#0b7f58;--r-watch:#9a7d00;--r-sched:#b45309;--r-pull:#b3261e;
       --w-hold:#fff;--w-watch:#fff;--w-sched:#fff;--w-pull:#fff}
-    body{background:#fff;font-size:13px}
+    body{background:#fff;font-size:14px}
     header{position:static;background:#fff;backdrop-filter:none;box-shadow:none}
     header nav{display:none}
     section:not(#console),footer,.toast{display:none}
@@ -387,8 +395,17 @@
     .headline-out{margin-top:14px;padding:14px 16px 12px;background:#fff}
     .headline-out,.grid,.flag,.qrow{break-inside:avoid}
     .bar-wrap{max-width:390px}
-    .print-url{display:block;margin-top:14px;font-family:var(--mono);font-size:10px;color:var(--tx3);word-break:break-all}
+    .print-url{display:block;margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--tx3);word-break:break-all}
   }
+
+  /* large screens: use them */
+  @media(min-width:1680px){
+    .wrap{max-width:1520px}
+    .config{font-size:28px}
+    .lede{font-size:18px}
+    .step p{font-size:16px}
+  }
+  @media(min-width:2200px){.wrap{max-width:1720px}}
 </style>
 </head>
 <body>
@@ -603,12 +620,20 @@
 <section class="cta">
   <div class="wrap">
     <div class="plate rv">
-      <div>
-        <div class="lbl" style="margin-bottom:14px">Built by</div>
-        <div class="p-name">Adrian Mucha</div>
-        <div class="p-role"><span>Product&nbsp;designer</span><span>Data&nbsp;centers, AI&nbsp;tooling, operator&nbsp;consoles</span><span>Los&nbsp;Angeles</span></div>
+      <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+      <div class="plate-main">
+        <div>
+          <div class="lbl">Built by</div>
+          <div class="p-name">Adrian Mucha</div>
+          <p class="p-bio">Product designer for the software most designers avoid: operator consoles where a wrong click costs real money.</p>
+        </div>
+        <dl class="p-spec">
+          <div><dt>Focus</dt><dd>Data centers &middot; AI tooling</dd></div>
+          <div><dt>Base</dt><dd>Los Angeles, CA</dd></div>
+          <div><dt>Status</dt><dd class="on">Open to new work</dd></div>
+        </dl>
       </div>
-      <div class="p-act">
+      <div class="plate-ft">
         <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Get in touch</a>
         <a class="lnk" href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">See the work &rarr;</a>
       </div>
@@ -1006,16 +1031,16 @@
     for(i=0;i<=4;i++){
       var mv = i*1.1, y = Y(mv);
       out.push('<line x1="'+L+'" y1="'+y.toFixed(1)+'" x2="'+(W-R)+'" y2="'+y.toFixed(1)+'" stroke="#1C2126" stroke-width="1"/>');
-      out.push('<text x="'+(L-9)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" fill="#7B838D" font-family="Geist Mono, monospace" font-size="10">'+mv.toFixed(1)+'x</text>');
+      out.push('<text x="'+(L-9)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" fill="#7B838D" font-family="Geist Mono, monospace" font-size="11">'+mv.toFixed(1)+'x</text>');
     }
     for(i=0;i<=10;i+=2){
-      out.push('<text x="'+X(i).toFixed(1)+'" y="'+(H-14)+'" text-anchor="middle" fill="#7B838D" font-family="Geist Mono, monospace" font-size="10">'+i+'</text>');
+      out.push('<text x="'+X(i).toFixed(1)+'" y="'+(H-14)+'" text-anchor="middle" fill="#7B838D" font-family="Geist Mono, monospace" font-size="11">'+i+'</text>');
     }
-    out.push('<text x="'+((L+W-R)/2)+'" y="'+(H-1)+'" text-anchor="middle" fill="#7B838D" font-family="Geist Mono, monospace" font-size="10" letter-spacing="1.4">DRIVE AGE, YEARS</text>');
+    out.push('<text x="'+((L+W-R)/2)+'" y="'+(H-1)+'" text-anchor="middle" fill="#7B838D" font-family="Geist Mono, monospace" font-size="11" letter-spacing="1.4">DRIVE AGE, YEARS</text>');
 
     // the 1.0x line is where the lifetime average sits, so mark it
     out.push('<line x1="'+L+'" y1="'+Y(1).toFixed(1)+'" x2="'+(W-R)+'" y2="'+Y(1).toFixed(1)+'" stroke="#2A3037" stroke-width="1" stroke-dasharray="3 3"/>');
-    out.push('<text x="'+(W-R-4)+'" y="'+(Y(1)-6).toFixed(1)+'" text-anchor="end" fill="#7B838D" font-family="Geist Mono, monospace" font-size="10">'+(narrow?'AVG':'LIFETIME AVERAGE')+'</text>');
+    out.push('<text x="'+(W-R-4)+'" y="'+(Y(1)-6).toFixed(1)+'" text-anchor="end" fill="#7B838D" font-family="Geist Mono, monospace" font-size="11">'+(narrow?'AVG':'LIFETIME AVERAGE')+'</text>');
 
     var d = "";
     for(var a=0; a<=maxAge; a+=0.1) d += (d?"L":"M") + X(a).toFixed(1) + " " + Y(ageMul(a)).toFixed(1) + " ";
@@ -1029,7 +1054,7 @@
       var rr = Math.max(4, Math.min(15, Math.sqrt(n)/3.2));
       out.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+rr.toFixed(1)+'" fill="#0A0C0E" stroke="#3FE0A0" stroke-width="1.6" opacity="0.95"/>');
       out.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="2.2" fill="#3FE0A0"/>');
-      if(!narrow) out.push('<text x="'+x.toFixed(1)+'" y="'+(y-rr-7).toFixed(1)+'" text-anchor="middle" fill="#EEF1F3" font-family="Geist Mono, monospace" font-size="10">'+md.tb+' TB</text>');
+      if(!narrow) out.push('<text x="'+x.toFixed(1)+'" y="'+(y-rr-7).toFixed(1)+'" text-anchor="middle" fill="#EEF1F3" font-family="Geist Mono, monospace" font-size="11">'+md.tb+' TB</text>');
     });
 
     $("curve").innerHTML = out.join("");

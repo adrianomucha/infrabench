@@ -40,7 +40,7 @@
   a{color:var(--tx);text-decoration:none}
 
   /* micro-label: the only place uppercase mono is allowed */
-  .lbl{font-family:var(--mono);font-size:11px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+  .lbl{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
 
   /* first focusable element: lets keyboard and screen-reader users bypass the sticky header */
   .skip{position:absolute;left:-9999px;top:0;z-index:60;font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:12px 18px;background:var(--tx);color:var(--bg);font-weight:600}
@@ -54,19 +54,19 @@
   .mark{display:flex;align-items:center;gap:11px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx)}
   .sq{width:9px;height:9px;background:var(--grn);flex:none}
   .hnav{display:flex;gap:28px}
-  .hnav a{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);position:relative}
+  .hnav a{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);position:relative}
   .hnav a::after{content:"";position:absolute;inset:-16px -10px}
   .hnav a:hover{color:var(--tx)}
 
   /* ---------- hero: the statement, then the machine ---------- */
   .hero{padding:88px 0 0}
   @media(max-width:700px){.hero{padding:56px 0 0}}
-  h1{font-weight:600;font-size:clamp(44px,6.4vw,92px);line-height:1;letter-spacing:-.042em;margin:22px 0 0;max-width:24ch;text-wrap:balance}
+  h1{font-weight:500;font-size:clamp(44px,6.4vw,100px);line-height:.99;letter-spacing:-.042em;margin:22px 0 0;max-width:24ch;text-wrap:balance}
   .hero-sub{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:28px 48px;margin:42px 0 52px}
   @media(max-width:700px){.hero-sub{margin:32px 0 38px}}
   .lede{font-size:17px;color:var(--tx2);max-width:52ch;margin:0;text-wrap:pretty}
   .btns{display:flex;flex-wrap:wrap;gap:12px}
-  .btn{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;
+  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;
     display:inline-flex;align-items:center;gap:10px;padding:15px 24px;background:var(--tx);color:var(--bg);border:1px solid var(--tx);cursor:pointer}
   .btn:hover{background:#fff;border-color:#fff}
   .btn.ghost{background:transparent;color:var(--tx);border-color:var(--line2)}
@@ -100,13 +100,13 @@
   .tick.bl{bottom:-1px;left:-1px;border-bottom-width:1px;border-left-width:1px}
   .tick.br{bottom:-1px;right:-1px;border-bottom-width:1px;border-right-width:1px}
   /* HUD corner readouts */
-  .hud{position:absolute;top:16px;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+  .hud{position:absolute;top:16px;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
   .hud.tl2{left:20px}
   .hud.tr2{right:20px;color:var(--grn2)}
   @media(max-width:640px){.hud.tr2{display:none}}
   .stage svg{width:100%;height:auto;display:block;max-height:560px}
   .stage .cap{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px 16px;margin-top:24px}
-  .cap-link{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--grn);white-space:nowrap;position:relative}
+  .cap-link{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--grn);white-space:nowrap;position:relative}
   .cap-link::after{content:"";position:absolute;inset:-14px -8px}
   .cap-link:hover{text-decoration:underline;text-underline-offset:4px}
 
@@ -115,7 +115,7 @@
   @media(max-width:700px){.ticker{margin-top:48px}}
   .tk{display:flex;width:max-content;padding:15px 0}
   .half{display:flex}
-  .tk span{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-right:56px;white-space:nowrap}
+  .tk span{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-right:56px;white-space:nowrap}
   .tk b{color:var(--grn);font-weight:500;margin-left:8px}
 
   /* ---------- sections ---------- */
@@ -125,7 +125,7 @@
   .sec-num{font-family:var(--mono);font-weight:600;font-size:clamp(44px,4.8vw,70px);line-height:.9;color:var(--line2);flex:none;font-variant-numeric:tabular-nums}
   @supports (-webkit-text-stroke:1px black){.sec-num{color:transparent;-webkit-text-stroke:1px var(--line2)}}
   .sec-rule{flex:1;height:1px;background:var(--line)}
-  h2{font-weight:600;font-size:clamp(30px,3.6vw,48px);line-height:1.06;letter-spacing:-.035em;margin:0 0 44px;max-width:24ch;text-wrap:balance}
+  h2{font-weight:500;font-size:clamp(30px,3.6vw,48px);line-height:1.06;letter-spacing:-.035em;margin:0 0 44px;max-width:24ch;text-wrap:balance}
 
   /* ---------- tool index: rows, not cards ---------- */
   .tools{border-top:1px solid var(--line)}
@@ -133,11 +133,11 @@
     padding:40px 0 42px;border-bottom:1px solid var(--line);position:relative;color:inherit}
   @media(max-width:960px){.tool{grid-template-columns:56px 1fr;gap:14px 20px;padding:32px 0 34px}}
   .tool .num{font-family:var(--mono);font-size:12px;color:var(--tx3);padding-top:13px}
-  .tool h3{font-weight:600;font-size:clamp(24px,2.8vw,38px);letter-spacing:-.03em;line-height:1.08;margin:0 0 12px;display:flex;align-items:baseline;gap:16px}
+  .tool h3{font-weight:500;font-size:clamp(24px,2.8vw,38px);letter-spacing:-.03em;line-height:1.08;margin:0 0 12px;display:flex;align-items:baseline;gap:16px}
   .tool p{margin:0;font-size:15px;color:var(--tx2);max-width:54ch;text-wrap:pretty}
   .tool .meta{font-family:var(--mono);font-size:12px;line-height:1.8;color:var(--tx3);padding-top:13px}
   @media(max-width:960px){.tool .meta{grid-column:2;padding-top:2px}}
-  .tag{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--line2);padding:4px 9px;color:var(--tx3);white-space:nowrap;justify-self:end;margin-top:11px}
+  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--line2);padding:4px 9px;color:var(--tx3);white-space:nowrap;justify-self:end;margin-top:11px}
   .tag.on{border-color:rgba(63,224,160,.4);color:var(--grn)}
   .tag.on::before{content:"";display:inline-block;width:5px;height:5px;background:var(--grn);margin-right:7px;vertical-align:1px}
   @media(max-width:960px){.tag{grid-row:1;grid-column:2;justify-self:end}}
@@ -158,25 +158,32 @@
   .three .c h3{font-weight:600;font-size:18px;letter-spacing:-.015em;margin:0 0 10px}
   .three .c p{margin:0;font-size:15px;color:var(--tx2);text-wrap:pretty}
 
-  /* ---------- built by ---------- */
-  .plate{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:28px 40px;
-    border:1px solid var(--line);background:var(--bg2);padding:40px 44px}
-  @media(max-width:700px){.plate{padding:28px 24px}}
-  .p-name{font-weight:600;font-size:clamp(24px,2.6vw,32px);letter-spacing:-.025em;line-height:1.15}
-  .p-role{font-family:var(--mono);font-size:12px;letter-spacing:.02em;color:var(--tx3);margin-top:10px;line-height:1.9}
-  .p-role span + span::before{content:"\00b7";margin:0 .7em;color:var(--line2)}
-  .p-act{display:flex;align-items:center;flex-wrap:wrap;gap:12px 22px}
-  .lnk{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx2);white-space:nowrap;padding:14px 2px}
+  /* ---------- built by: the nameplate ----------
+     Real gear carries a nameplate. The credit reads like one: identity on the
+     left, a spec ledger on the right, actions along the bottom edge. */
+  .plate{position:relative;border:1px solid var(--line);background:
+    radial-gradient(70% 90% at 88% 0%, rgba(63,224,160,.06), transparent 70%) var(--bg2)}
+  .plate-main{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:40px 88px;padding:52px 52px 44px}
+  .p-name{font-weight:500;font-size:clamp(34px,3.8vw,58px);letter-spacing:-.035em;line-height:1.05;margin-top:16px;color:var(--tx)}
+  .p-bio{font-size:16px;color:var(--tx2);max-width:44ch;margin:18px 0 0;text-wrap:pretty}
+  .p-spec{margin:0;align-self:center}
+  .p-spec > div{display:grid;grid-template-columns:96px 1fr;gap:24px;padding:15px 0 16px;border-top:1px solid var(--line);align-items:baseline}
+  .p-spec > div:last-child{border-bottom:1px solid var(--line)}
+  .p-spec dt{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+  .p-spec dd{margin:0;font-family:var(--mono);font-size:14px;color:var(--tx)}
+  .p-spec dd.on{color:var(--grn)}
+  .p-spec dd.on::before{content:"";display:inline-block;width:6px;height:6px;background:var(--grn);margin-right:10px;vertical-align:1px}
+  .plate-ft{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;border-top:1px solid var(--line);padding:20px 52px}
+  .lnk{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx2);white-space:nowrap;padding:14px 2px}
   .lnk:hover{color:var(--grn)}
-  @media(max-width:700px){
-    .p-role{display:flex;flex-direction:column}
-    .p-role span + span::before{content:none}
-    .p-act{width:100%;flex-direction:column;align-items:stretch}
-    .p-act .btn{justify-content:center}
+  @media(max-width:860px){
+    .plate-main{grid-template-columns:1fr;gap:36px;padding:32px 24px 30px}
+    .plate-ft{padding:16px 24px;flex-direction:column;align-items:stretch}
+    .plate-ft .btn{justify-content:center}
     .lnk{text-align:center}
   }
 
-  footer{border-top:1px solid var(--line);padding:44px 0 72px;font-size:14px;color:var(--tx3)}
+  footer{border-top:1px solid var(--line);padding:44px 0 72px;font-size:15px;color:var(--tx3)}
   footer a{color:var(--tx2)}
   footer a:hover{color:var(--grn)}
   footer .lbl{margin-bottom:14px}
@@ -186,6 +193,16 @@
      and only when motion is welcome */
   .rv0{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
   .rv0.rvIn{opacity:1;transform:none}
+
+  /* large screens: use them */
+  @media(min-width:1680px){
+    .wrap{max-width:1520px}
+    .stage{min-height:580px}
+    .stage svg{max-height:720px}
+    .lede{font-size:18px}
+    .tool p,.three .c p{font-size:16px}
+  }
+  @media(min-width:2200px){.wrap{max-width:1720px}}
 </style>
 </head>
 <body>
@@ -331,12 +348,20 @@
 <section id="contact">
   <div class="wrap">
     <div class="plate rv">
-      <div>
-        <div class="lbl" style="margin-bottom:14px">Built by</div>
-        <div class="p-name">Adrian Mucha</div>
-        <div class="p-role"><span>Product&nbsp;designer</span><span>Data&nbsp;centers, AI&nbsp;tooling, operator&nbsp;consoles</span><span>Los&nbsp;Angeles</span></div>
+      <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+      <div class="plate-main">
+        <div>
+          <div class="lbl">Built by</div>
+          <div class="p-name">Adrian Mucha</div>
+          <p class="p-bio">Product designer for the software most designers avoid: operator consoles where a wrong click costs real money.</p>
+        </div>
+        <dl class="p-spec">
+          <div><dt>Focus</dt><dd>Data centers &middot; AI tooling</dd></div>
+          <div><dt>Base</dt><dd>Los Angeles, CA</dd></div>
+          <div><dt>Status</dt><dd class="on">Open to new work</dd></div>
+        </dl>
       </div>
-      <div class="p-act">
+      <div class="plate-ft">
         <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Get in touch</a>
         <a class="lnk" href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">See the work &rarr;</a>
       </div>
