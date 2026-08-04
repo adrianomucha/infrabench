@@ -155,10 +155,19 @@
   /* the two expert numbers ride in a second, quieter sentence behind a disclosure;
      at this size the bare input would sit under the 24px target floor, so it gets
      block padding the sentence's double line-height already has room for.
-     The disclosure spans the console below both columns, so its body gets a reading
-     measure rather than the full run of the page. */
-  .assump .config{font-size:var(--fs-xl);line-height:2;margin:0;max-width:74ch}
-  .assump .hint{max-width:88ch}
+     The disclosure spans the console below both columns, so its body borrows the
+     console's own split: the sentence on the left, the explanatory note on the right,
+     on the same 7/5 columns and gutter so the seams line up with the grid above.
+     The inline start indent seats the sentence under the summary's label, past its
+     one-character marker, instead of under the marker itself. */
+  .assump>.d-body{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:12px 72px;
+    align-items:start;padding:12px 18px 26px 37px}
+  .assump .config{font-size:var(--fs-xl);line-height:2;margin:0}
+  .assump .hint{font-size:var(--fs-md);line-height:1.7;margin-top:9px}
+  /* a value never parts from its unit at a line break */
+  .assump .nb{white-space:nowrap}
+  @media(max-width:980px){.assump>.d-body{grid-template-columns:1fr;gap:0;padding:6px 18px 22px}
+    .assump .hint{margin-top:12px}}
   .assump .iv-num{padding-block:3px}
   .hint{font-size:var(--fs-base);color:var(--tx2);margin-top:10px;line-height:1.45}
 
@@ -489,7 +498,7 @@
     <details class="more assump">
       <summary>Assumptions</summary>
       <div class="d-body">
-        <p class="config">Assume <input class="iv-num" type="number" id="smart" value="4.2" min="0" max="40" step="0.1" aria-label="Share of drives with SMART canaries, in percent"> percent of drives carry SMART canaries, and rebuilds run at <input class="iv-num" type="number" id="rebuild" value="150" min="10" max="1000" step="5" aria-label="Rebuild rate in megabytes per second"> MB/s against live traffic.</p>
+        <p class="config">Assume <span class="nb"><input class="iv-num" type="number" id="smart" value="4.2" min="0" max="40" step="0.1" aria-label="Share of drives with SMART canaries, in percent"> percent</span> of drives carry SMART canaries, and rebuilds run at <span class="nb"><input class="iv-num" type="number" id="rebuild" value="150" min="10" max="1000" step="5" aria-label="Rebuild rate in megabytes per second"> MB/s</span> against live traffic.</p>
         <p class="hint" id="assumpHint"></p>
       </div>
     </details>
