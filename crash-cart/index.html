@@ -289,7 +289,7 @@
   .chain{font-family:var(--mono);font-size:15px;line-height:2.2;color:var(--tx2b);overflow-x:auto}
   .chain .a{color:var(--grn)}
   .chain b{font-weight:600;color:var(--tx)}
-  .worked .out{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);font-size:16px;color:var(--tx2);max-width:72ch}
+  .worked .out{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);font-size:16px;color:var(--tx2)}
 
   /* ---------- table ----------
      Six numeric columns do not fit a phone. Dropping columns would drop the drive days and the
@@ -317,7 +317,7 @@
   .method-grid{display:grid;grid-template-columns:minmax(0,11fr) minmax(0,9fr);gap:12px 40px;align-items:stretch;margin-top:4px}
   @media(max-width:980px){.method-grid{grid-template-columns:1fr;gap:0}}
   /* the model as a ledger: one term, one expression per row, at reading size */
-  .formula{position:relative;margin-top:32px;border:1px solid var(--line);background:var(--bg2);padding:26px 30px 12px}
+  .formula{position:relative;margin-top:32px;border:1px solid var(--line);background:var(--bg2);padding:26px 30px 12px;display:flex;flex-direction:column}
   @media(max-width:700px){.formula{padding:20px 18px 8px}}
   .model-hd{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
   .model-hd .g{color:var(--grn2)}
@@ -331,8 +331,10 @@
   .frow .fn{color:var(--tx3);font-style:italic}
   ul.plain{padding-inline-start:0;list-style:none;margin:32px 0 0}
   /* inside a frame the list drops its dash markers and takes the ledger's row rhythm */
-  .formula ul.plain{margin:0;max-width:none}
-  .formula ul.plain li{padding:14px 0 15px;padding-inline-start:0;margin:0;border-bottom:1px solid var(--line);font-size:15px;line-height:1.7}
+  /* the notes fill the frame: rows share the height evenly, so a panel matched
+     to the taller ledger never ends in dead space */
+  .formula ul.plain{margin:0;max-width:none;flex:1;display:flex;flex-direction:column}
+  .formula ul.plain li{flex:1;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:12px 0;padding-inline-start:0;margin:0;border-bottom:1px solid var(--line);font-size:15px;line-height:1.7}
   .formula ul.plain li:last-child{border-bottom:0}
   .formula ul.plain li:before{content:none}
   ul.plain li{position:relative;padding-inline-start:28px;margin-bottom:16px;font-size:16px;line-height:1.7;color:var(--tx2)}

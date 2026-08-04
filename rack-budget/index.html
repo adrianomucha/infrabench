@@ -296,7 +296,7 @@
   .chain{font-family:var(--mono);font-size:15px;line-height:2.2;color:var(--tx2b);overflow-x:auto}
   .chain .a{color:var(--grn)}
   .chain b{font-weight:600;color:var(--tx)}
-  .worked .out{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);font-size:16px;color:var(--tx2);max-width:72ch}
+  .worked .out{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);font-size:16px;color:var(--tx2)}
 
   /* ---------- table ---------- */
   table{width:100%;border-collapse:collapse;font-size:15px;margin-top:44px}
@@ -326,7 +326,7 @@
      judgement calls alongside instead of an empty right half */
   .method-grid{display:grid;grid-template-columns:minmax(0,11fr) minmax(0,9fr);gap:24px 40px;align-items:stretch;margin-top:48px}
   @media(max-width:980px){.method-grid{grid-template-columns:1fr;gap:24px}}
-  .model{position:relative;border:1px solid var(--line);background:var(--bg2);padding:26px 30px 12px}
+  .model{position:relative;border:1px solid var(--line);background:var(--bg2);padding:26px 30px 12px;display:flex;flex-direction:column}
   @media(max-width:700px){.model{padding:20px 18px 8px}}
   .model-hd{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
   .model-hd .g{color:var(--grn2)}
@@ -338,8 +338,10 @@
   .frow .fx{color:var(--tx2b);overflow-wrap:break-word}
   ul.plain{padding-inline-start:0;list-style:none;margin:40px 0 0;max-width:78ch}
   /* inside a frame the list drops its dash markers and takes the ledger's row rhythm */
-  .model ul.plain{margin:0;max-width:none}
-  .model ul.plain li{padding:13px 0 14px;padding-inline-start:0;margin:0;border-bottom:1px solid var(--line);font-size:15px;line-height:1.7}
+  /* the notes fill the frame: rows share the height evenly, so a panel matched
+     to the taller ledger never ends in dead space */
+  .model ul.plain{margin:0;max-width:none;flex:1;display:flex;flex-direction:column}
+  .model ul.plain li{flex:1;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:12px 0;padding-inline-start:0;margin:0;border-bottom:1px solid var(--line);font-size:15px;line-height:1.7}
   .model ul.plain li:last-child{border-bottom:0}
   .model ul.plain li:before{content:none}
   ul.plain li{position:relative;padding-inline-start:28px;margin-bottom:14px;font-size:16px;color:var(--tx2)}
@@ -651,7 +653,7 @@
         <span class="a">&rarr;</span> 21.24 MW of heat / 3.517 kW per ton <span class="a">=</span> <b>6,039 tons</b>, of which 5,435 go to the liquid loop<br>
         <span class="a">&rarr;</span> 177 racks x 40 sq ft <span class="a">=</span> <b>7,080 sq ft</b> of white space, roughly 14,000 sq ft of building
       </div>
-      <div class="out">The useful surprise: 12,744 GPUs fit inside a footprint smaller than a chain drugstore. The building was never the hard part. Moving 6,039 tons of heat out of it is.</div>
+      <div class="out">The surprise: 12,744 GPUs fit inside a chain-drugstore footprint. The building was never the hard part &mdash; the 6,039 tons of heat is.</div>
     </div>
   </div>
 </section>
