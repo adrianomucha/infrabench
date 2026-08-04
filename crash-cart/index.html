@@ -973,12 +973,15 @@
     }
     $("bandbar").innerHTML = html;
 
+    // each count is welded to its band name with no-break spaces, so the caption can
+    // only wrap after a separator: never a lone word stranded on the next line
+    var NB = "\u00A0";
     var lines = order.filter(function(b){ return counts[b] > 0; }).map(function(b){
-      return fmt(counts[b])+" "+BANDNAME[b].toLowerCase();
+      return (fmt(counts[b])+" "+BANDNAME[b].toLowerCase()).split(" ").join(NB);
     });
     $("barCap").textContent = r.totalDrives === 0
       ? "No drives in this fleet"
-      : fmt(r.totalDrives)+" drives · "+lines.join(" · ");
+      : fmt(r.totalDrives)+NB+"drives"+NB+"· "+lines.join(NB+"· ");
   }
 
   /* ---------- the queue ---------- */
