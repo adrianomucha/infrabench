@@ -36,7 +36,7 @@
     --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box}
-  html{-webkit-text-size-adjust:100%}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:16px;line-height:1.65;
     -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
   .wrap{max-width:1260px;margin:0 auto;padding:0 32px}
@@ -130,6 +130,7 @@
   }
 
   .app{display:grid;grid-template-columns:minmax(290px,350px) minmax(0,1fr);align-items:stretch}
+  .app > .panel{min-width:0}
   .panel{padding:32px 30px 40px}
   .panel.out{border-inline-start:1px solid var(--line);padding:32px 36px 40px}
   @media(max-width:920px){

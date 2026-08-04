@@ -32,7 +32,7 @@
     --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box}
-  html{-webkit-text-size-adjust:100%}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:16px;line-height:1.65;
     -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
   .wrap{max-width:1260px;margin:0 auto;padding:0 32px}
@@ -57,6 +57,8 @@
   .hnav a{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);position:relative}
   .hnav a::after{content:"";position:absolute;inset:-16px -10px}
   .hnav a:hover{color:var(--tx)}
+  /* three links do not fit a 320px header next to the wordmark */
+  @media(max-width:400px){.hnav{gap:20px}.hnav a[href='#method']{display:none}}
 
   /* ---------- hero: the statement, then the machine ---------- */
   .hero{padding:88px 0 0}
@@ -131,16 +133,21 @@
   .tools{border-top:1px solid var(--line)}
   .tool{display:grid;grid-template-columns:76px minmax(0,1fr) minmax(0,320px) 120px;gap:32px;align-items:start;
     padding:40px 0 42px;border-bottom:1px solid var(--line);position:relative;color:inherit}
-  @media(max-width:960px){.tool{grid-template-columns:56px 1fr;gap:14px 20px;padding:32px 0 34px}}
   .tool .num{font-family:var(--mono);font-size:12px;color:var(--tx3);padding-top:13px}
   .tool h3{font-weight:500;font-size:clamp(24px,2.8vw,38px);letter-spacing:-.03em;line-height:1.08;margin:0 0 12px;display:flex;align-items:baseline;gap:16px}
   .tool p{margin:0;font-size:15px;color:var(--tx2);max-width:54ch;text-wrap:pretty}
   .tool .meta{font-family:var(--mono);font-size:12px;line-height:1.8;color:var(--tx3);padding-top:13px}
-  @media(max-width:960px){.tool .meta{grid-column:2;padding-top:2px}}
   .tag{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--line2);padding:4px 9px;color:var(--tx3);white-space:nowrap;justify-self:end;margin-top:11px}
   .tag.on{border-color:rgba(63,224,160,.4);color:var(--grn)}
   .tag.on::before{content:"";display:inline-block;width:5px;height:5px;background:var(--grn);margin-right:7px;vertical-align:1px}
-  @media(max-width:960px){.tag{grid-row:1;grid-column:2;justify-self:end}}
+  /* stacked tool rows: number and status on the first line, then the tool, then its data */
+  @media(max-width:960px){
+    .tool{grid-template-columns:minmax(0,1fr) auto;gap:12px 16px;padding:30px 0 32px}
+    .tool .num{grid-row:1;grid-column:1;padding-top:0}
+    .tool .tag{grid-row:1;grid-column:2;justify-self:end;margin-top:-3px}
+    .tool > div:first-of-type{grid-row:2;grid-column:1 / -1}
+    .tool .meta{grid-row:3;grid-column:1 / -1;padding-top:0}
+  }
   .tool .arr{display:inline-block;font-family:var(--mono);font-size:17px;color:var(--tx3);transform:translateX(0)}
   a.tool:hover{background:linear-gradient(90deg,transparent,rgba(238,241,243,.025),transparent)}
   a.tool:hover h3{color:var(--grn)}
