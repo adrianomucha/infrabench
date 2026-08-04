@@ -58,68 +58,96 @@
   .hnav a::after{content:"";position:absolute;inset:-16px -10px}
   .hnav a:hover{color:var(--tx)}
 
-  /* ---------- hero ---------- */
-  .hero{display:grid;grid-template-columns:minmax(0,10fr) minmax(0,9fr);gap:56px;align-items:center;padding:92px 0 84px}
-  @media(max-width:960px){.hero{grid-template-columns:1fr;gap:44px;padding:64px 0 56px}}
-  h1{font-weight:600;font-size:clamp(40px,4.6vw,68px);line-height:1.02;letter-spacing:-.035em;margin:22px 0 26px;max-width:14ch;text-wrap:balance}
-  .lede{font-size:17px;color:var(--tx2);max-width:52ch;margin:0 0 36px;text-wrap:pretty}
+  /* ---------- hero: the statement, then the machine ---------- */
+  .hero{padding:88px 0 0}
+  @media(max-width:700px){.hero{padding:56px 0 0}}
+  h1{font-weight:600;font-size:clamp(44px,6.4vw,92px);line-height:1;letter-spacing:-.042em;margin:22px 0 0;max-width:24ch;text-wrap:balance}
+  .hero-sub{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:28px 48px;margin:42px 0 52px}
+  @media(max-width:700px){.hero-sub{margin:32px 0 38px}}
+  .lede{font-size:17px;color:var(--tx2);max-width:52ch;margin:0;text-wrap:pretty}
   .btns{display:flex;flex-wrap:wrap;gap:12px}
   .btn{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;
     display:inline-flex;align-items:center;gap:10px;padding:15px 24px;background:var(--tx);color:var(--bg);border:1px solid var(--tx);cursor:pointer}
   .btn:hover{background:#fff;border-color:#fff}
   .btn.ghost{background:transparent;color:var(--tx);border-color:var(--line2)}
   .btn.ghost:hover{border-color:var(--grn);color:var(--grn)}
+  @media(max-width:640px){.btns{width:100%;flex-direction:column;align-items:stretch}.btns .btn{justify-content:center}}
   @media (prefers-reduced-motion: no-preference){
     html{scroll-behavior:smooth}
     .btn{transition:background .15s ease,border-color .15s ease,color .15s ease}
     .rise{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
-    .rise.d1{animation-delay:.06s}.rise.d2{animation-delay:.12s}.rise.d3{animation-delay:.18s}.rise.d4{animation-delay:.26s}
+    .rise.d1{animation-delay:.06s}.rise.d2{animation-delay:.12s}.rise.d3{animation-delay:.18s}.rise.d4{animation-delay:.28s}
     @keyframes rise{from{opacity:0;transform:translateY(14px)}}
+    /* a survey line sweeps the stage; pure decoration, gone under reduced motion */
+    .stage::after{content:"";position:absolute;top:0;bottom:0;left:-160px;width:140px;pointer-events:none;
+      background:linear-gradient(90deg,transparent,rgba(63,224,160,.04) 40%,rgba(63,224,160,.13) 50%,rgba(63,224,160,.04) 60%,transparent);
+      animation:scan 9s linear infinite}
+    @keyframes scan{to{left:calc(100% + 40px)}}
+    .tk{animation:tick 48s linear infinite}
+    @keyframes tick{to{transform:translateX(-50%)}}
   }
 
   /* the stage: a framed dark field with registration ticks; the viz owns it */
-  .stage{position:relative;border:1px solid var(--line);background:
-    radial-gradient(58% 48% at 50% 56%, rgba(63,224,160,.075), transparent 72%),
+  .stage{position:relative;overflow:hidden;border:1px solid var(--line);background:
+    radial-gradient(52% 56% at 50% 52%, rgba(63,224,160,.08), transparent 72%),
     radial-gradient(circle, #161B20 1px, transparent 1.1px);
-    background-size:100% 100%, 22px 22px;padding:34px 26px 20px;min-height:380px;
+    background-size:100% 100%, 22px 22px;padding:58px 34px 22px;min-height:440px;
     display:flex;flex-direction:column;justify-content:center}
+  @media(max-width:700px){.stage{min-height:300px;padding:48px 18px 16px}}
   .tick{position:absolute;width:9px;height:9px;border:0 solid var(--line2)}
   .tick.tl{top:-1px;left:-1px;border-top-width:1px;border-left-width:1px}
   .tick.tr{top:-1px;right:-1px;border-top-width:1px;border-right-width:1px}
   .tick.bl{bottom:-1px;left:-1px;border-bottom-width:1px;border-left-width:1px}
   .tick.br{bottom:-1px;right:-1px;border-bottom-width:1px;border-right-width:1px}
-  .stage svg{width:100%;height:auto;display:block;max-height:420px}
-  .stage .cap{display:flex;justify-content:space-between;gap:16px;margin-top:22px}
-  .stage .cap .g{color:var(--grn2)}
-  @media(max-width:960px){.stage{min-height:300px;padding:26px 18px 16px}}
+  /* HUD corner readouts */
+  .hud{position:absolute;top:16px;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+  .hud.tl2{left:20px}
+  .hud.tr2{right:20px;color:var(--grn2)}
+  @media(max-width:640px){.hud.tr2{display:none}}
+  .stage svg{width:100%;height:auto;display:block;max-height:560px}
+  .stage .cap{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px 16px;margin-top:24px}
+  .cap-link{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--grn);white-space:nowrap;position:relative}
+  .cap-link::after{content:"";position:absolute;inset:-14px -8px}
+  .cap-link:hover{text-decoration:underline;text-underline-offset:4px}
+
+  /* ---------- data ticker ---------- */
+  .ticker{border-top:1px solid var(--line);overflow:hidden;margin-top:72px}
+  @media(max-width:700px){.ticker{margin-top:48px}}
+  .tk{display:flex;width:max-content;padding:15px 0}
+  .half{display:flex}
+  .tk span{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-right:56px;white-space:nowrap}
+  .tk b{color:var(--grn);font-weight:500;margin-left:8px}
 
   /* ---------- sections ---------- */
-  section{padding:96px 0;border-top:1px solid var(--line)}
+  section{padding:104px 0;border-top:1px solid var(--line)}
   @media(max-width:700px){section{padding:64px 0}}
-  .sec-hd{display:flex;align-items:baseline;justify-content:space-between;gap:24px;margin-bottom:44px}
-  h2{font-weight:600;font-size:clamp(26px,3vw,40px);line-height:1.1;letter-spacing:-.03em;margin:0}
+  .sec-row{display:flex;align-items:center;gap:26px;margin-bottom:40px}
+  .sec-num{font-family:var(--mono);font-weight:600;font-size:clamp(44px,4.8vw,70px);line-height:.9;color:var(--line2);flex:none;font-variant-numeric:tabular-nums}
+  @supports (-webkit-text-stroke:1px black){.sec-num{color:transparent;-webkit-text-stroke:1px var(--line2)}}
+  .sec-rule{flex:1;height:1px;background:var(--line)}
+  h2{font-weight:600;font-size:clamp(30px,3.6vw,48px);line-height:1.06;letter-spacing:-.035em;margin:0 0 44px;max-width:24ch;text-wrap:balance}
 
   /* ---------- tool index: rows, not cards ---------- */
   .tools{border-top:1px solid var(--line)}
-  .tool{display:grid;grid-template-columns:76px minmax(0,1fr) minmax(0,340px) 120px;gap:32px;align-items:start;
-    padding:34px 0 36px;border-bottom:1px solid var(--line);position:relative;color:inherit}
-  @media(max-width:960px){.tool{grid-template-columns:56px 1fr;gap:14px 20px}}
-  .tool .num{font-family:var(--mono);font-size:12px;color:var(--tx3);padding-top:9px}
-  .tool h3{font-weight:600;font-size:clamp(22px,2.4vw,30px);letter-spacing:-.025em;line-height:1.12;margin:0 0 10px;display:flex;align-items:baseline;gap:14px}
-  .tool p{margin:0;font-size:15px;color:var(--tx2);max-width:56ch;text-wrap:pretty}
-  .tool .meta{font-family:var(--mono);font-size:12px;line-height:1.8;color:var(--tx3);padding-top:9px}
+  .tool{display:grid;grid-template-columns:76px minmax(0,1fr) minmax(0,320px) 120px;gap:32px;align-items:start;
+    padding:40px 0 42px;border-bottom:1px solid var(--line);position:relative;color:inherit}
+  @media(max-width:960px){.tool{grid-template-columns:56px 1fr;gap:14px 20px;padding:32px 0 34px}}
+  .tool .num{font-family:var(--mono);font-size:12px;color:var(--tx3);padding-top:13px}
+  .tool h3{font-weight:600;font-size:clamp(24px,2.8vw,38px);letter-spacing:-.03em;line-height:1.08;margin:0 0 12px;display:flex;align-items:baseline;gap:16px}
+  .tool p{margin:0;font-size:15px;color:var(--tx2);max-width:54ch;text-wrap:pretty}
+  .tool .meta{font-family:var(--mono);font-size:12px;line-height:1.8;color:var(--tx3);padding-top:13px}
   @media(max-width:960px){.tool .meta{grid-column:2;padding-top:2px}}
-  .tag{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--line2);padding:4px 9px;color:var(--tx3);white-space:nowrap;justify-self:end;margin-top:7px}
+  .tag{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--line2);padding:4px 9px;color:var(--tx3);white-space:nowrap;justify-self:end;margin-top:11px}
   .tag.on{border-color:rgba(63,224,160,.4);color:var(--grn)}
   .tag.on::before{content:"";display:inline-block;width:5px;height:5px;background:var(--grn);margin-right:7px;vertical-align:1px}
   @media(max-width:960px){.tag{grid-row:1;grid-column:2;justify-self:end}}
-  .tool .arr{display:inline-block;font-family:var(--mono);font-size:15px;color:var(--tx3);transform:translateX(0)}
+  .tool .arr{display:inline-block;font-family:var(--mono);font-size:17px;color:var(--tx3);transform:translateX(0)}
   a.tool:hover{background:linear-gradient(90deg,transparent,rgba(238,241,243,.025),transparent)}
   a.tool:hover h3{color:var(--grn)}
   a.tool:hover .arr{color:var(--grn)}
   @media (prefers-reduced-motion: no-preference){
     .tool .arr{transition:transform .18s ease,color .18s ease}
-    a.tool:hover .arr{transform:translateX(6px)}
+    a.tool:hover .arr{transform:translateX(8px)}
   }
 
   /* ---------- method: three plain columns ---------- */
@@ -153,6 +181,11 @@
   footer a:hover{color:var(--grn)}
   footer .lbl{margin-bottom:14px}
   footer p{margin:0;max-width:74ch}
+
+  /* scroll reveals: elements are visible by default; a script opts them in,
+     and only when motion is welcome */
+  .rv0{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
+  .rv0.rvIn{opacity:1;transform:none}
 </style>
 </head>
 <body>
@@ -170,29 +203,64 @@
 
 <div class="wrap">
   <div class="hero">
-    <div>
-      <div class="lbl rise">Open tools for infrastructure</div>
-      <h1 class="rise d1">Published specs, corrected for reality.</h1>
+    <div class="lbl rise">Open tools for infrastructure</div>
+    <h1 class="rise d1">Published specs, corrected for reality.</h1>
+    <div class="hero-sub">
       <p class="lede rise d2">A rack is rated for 600&nbsp;kW, a drive for five years, an interconnection queue in gigawatts. None of it survives contact with a real site. These are free tools that do the correction &mdash; on public data, with every constant shown.</p>
       <div class="btns rise d3">
         <a class="btn" href="/rack-budget/">Open Rack Budget</a>
         <a class="btn ghost" href="/crash-cart/">Open Crash Cart</a>
       </div>
     </div>
-    <div class="stage rise d4" aria-hidden="true">
+    <div class="stage rise d4">
       <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
-      <svg id="hall"></svg>
-      <div class="cap lbl"><span>126 racks &middot; 30 MW at PUE 1.2</span><span class="g">Liquid cooled</span></div>
+      <span class="hud tl2" aria-hidden="true">Hall view &mdash; isometric</span>
+      <span class="hud tr2" aria-hidden="true">Liquid cooled</span>
+      <svg id="hall" aria-hidden="true"></svg>
+      <div class="cap">
+        <span class="lbl" aria-hidden="true">30 MW &middot; PUE 1.2 &middot; 177 &times; GB200 NVL72 &middot; 12,744 GPUs</span>
+        <a class="cap-link" href="/rack-budget/#m=A&amp;p=gb200&amp;pue=1.2&amp;mg=15&amp;mw=30">Run this configuration &rarr;</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ticker" aria-hidden="true">
+  <div class="tk">
+    <div class="half">
+      <span>Rack density 2021&rarr;2027<b>6&rarr;600 kW</b></span>
+      <span>GB200 NVL72<b>120 kW</b></span>
+      <span>Rubin Ultra / Kyber<b>600 kW</b></span>
+      <span>Survey median PUE<b>1.56</b></span>
+      <span>New-build PUE<b>1.1&ndash;1.2</b></span>
+      <span>One ton of cooling<b>3.517 kW</b></span>
+      <span>Backblaze fleet<b>~300K drives</b></span>
+      <span>SMART flag likelihood<b>18.3&times;</b></span>
+      <span>Public drive telemetry<b>13 years</b></span>
+      <span>Hidden assumptions<b>0</b></span>
+    </div>
+    <div class="half">
+      <span>Rack density 2021&rarr;2027<b>6&rarr;600 kW</b></span>
+      <span>GB200 NVL72<b>120 kW</b></span>
+      <span>Rubin Ultra / Kyber<b>600 kW</b></span>
+      <span>Survey median PUE<b>1.56</b></span>
+      <span>New-build PUE<b>1.1&ndash;1.2</b></span>
+      <span>One ton of cooling<b>3.517 kW</b></span>
+      <span>Backblaze fleet<b>~300K drives</b></span>
+      <span>SMART flag likelihood<b>18.3&times;</b></span>
+      <span>Public drive telemetry<b>13 years</b></span>
+      <span>Hidden assumptions<b>0</b></span>
     </div>
   </div>
 </div>
 
 <section id="tools">
   <div class="wrap">
-    <div class="sec-hd"><h2>The bench</h2><span class="lbl">02 live &middot; 02 planned</span></div>
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">01</span><span class="sec-rule"></span><span class="lbl">The bench &middot; 02 live &middot; 02 planned</span></div>
+    <h2 class="rv">Four corrections, one method.</h2>
     <div class="tools">
 
-      <a class="tool" href="/rack-budget/">
+      <a class="tool rv" href="/rack-budget/">
         <span class="num">01</span>
         <div>
           <h3>Rack Budget <span class="arr" aria-hidden="true">&rarr;</span></h3>
@@ -202,7 +270,7 @@
         <span class="tag on">Live</span>
       </a>
 
-      <a class="tool" href="/crash-cart/">
+      <a class="tool rv" href="/crash-cart/">
         <span class="num">02</span>
         <div>
           <h3>Crash Cart <span class="arr" aria-hidden="true">&rarr;</span></h3>
@@ -212,7 +280,7 @@
         <span class="tag on">Live</span>
       </a>
 
-      <div class="tool">
+      <div class="tool rv">
         <span class="num">03</span>
         <div>
           <h3>Where the power is</h3>
@@ -222,7 +290,7 @@
         <span class="tag">Planned</span>
       </div>
 
-      <div class="tool">
+      <div class="tool rv">
         <span class="num">04</span>
         <div>
           <h3>Outage replay</h3>
@@ -238,8 +306,9 @@
 
 <section id="method">
   <div class="wrap">
-    <div class="sec-hd"><h2>How these are built</h2></div>
-    <div class="three">
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">02</span><span class="sec-rule"></span><span class="lbl">How these are built</span></div>
+    <h2 class="rv">No secrets, no trust required.</h2>
+    <div class="three rv">
       <div class="c">
         <div class="i">01</div>
         <h3>Public data only</h3>
@@ -261,7 +330,7 @@
 
 <section id="contact">
   <div class="wrap">
-    <div class="plate">
+    <div class="plate rv">
       <div>
         <div class="lbl" style="margin-bottom:14px">Built by</div>
         <div class="p-name">Adrian Mucha</div>
@@ -286,12 +355,13 @@
 </footer>
 
 <script>
-/* The hero draws the thing the tools are about: an isometric AI hall, the same
-   renderer Rack Budget uses, run once with a fixed 126-rack configuration. */
+/* The hero draws the thing the tools are about: the worked example itself — 30 MW at
+   PUE 1.2 with a 15 percent margin is 177 GB200 racks — rendered by the same isometric
+   code Rack Budget uses. The caption's link opens that exact configuration. */
 (function(){
   "use strict";
   var COS = 0.866, SIN = 0.5;
-  var n = 126, liquid = true;
+  var n = 177, liquid = true;
   var RW = 0.6, RD = 1.2, RH = 2.0, AISLE = 1.35;
   var rows = Math.max(1, Math.round(Math.sqrt(n / 2.4)));
   var perRow = Math.ceil(n / rows);
@@ -362,6 +432,27 @@
   var svg = document.getElementById("hall");
   svg.setAttribute("viewBox", (minx-pad)+" "+(miny-pad)+" "+(maxx-minx+2*pad)+" "+(maxy-miny+2*pad));
   svg.innerHTML = out.join("");
+})();
+
+/* Scroll reveals. Content is visible by default; motion is opted into only when
+   the browser is happy to move things. */
+(function(){
+  "use strict";
+  if(!("IntersectionObserver" in window)) return;
+  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var els = document.querySelectorAll(".rv");
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add("rvIn"); io.unobserve(en.target); }
+    });
+  }, { rootMargin: "0px 0px -70px 0px" });
+  els.forEach(function(e){
+    // anything already on screen never blinks out
+    var r = e.getBoundingClientRect();
+    if(r.top < window.innerHeight && r.bottom > 0) return;
+    e.classList.add("rv0");
+    io.observe(e);
+  });
 })();
 </script>
 </body>

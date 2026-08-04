@@ -332,6 +332,17 @@
   ul.plain li:before{content:"\2014";position:absolute;inset-inline-start:0;font-family:var(--mono);color:var(--grn2)}
   ul.plain li b{color:var(--tx);font-weight:500}
 
+  /* ---------- section index: outlined ghost numerals ---------- */
+  .sec-row{display:flex;align-items:center;gap:26px;margin-bottom:38px}
+  .sec-num{font-family:var(--mono);font-weight:600;font-size:clamp(44px,4.8vw,70px);line-height:.9;color:var(--line2);flex:none;font-variant-numeric:tabular-nums}
+  @supports (-webkit-text-stroke:1px black){.sec-num{color:transparent;-webkit-text-stroke:1px var(--line2)}}
+  .sec-rule{flex:1;height:1px;background:var(--line)}
+
+  /* scroll reveals: elements are visible by default; a script opts them in,
+     and only when motion is welcome */
+  .rv0{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
+  .rv0.rvIn{opacity:1;transform:none}
+
   /* ---------- closing plate ---------- */
   .cta .plate{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:28px 40px;
     border:1px solid var(--line);background:var(--bg2);padding:40px 44px}
@@ -414,7 +425,7 @@
 <!-- ================= CONSOLE ================= -->
 <section id="console">
   <div class="wrap">
-    <div class="lbl" style="margin-bottom:34px">01 &mdash; The console</div>
+    <div class="sec-row"><span class="sec-num" aria-hidden="true">01</span><span class="sec-rule"></span><span class="lbl">The console</span></div>
 
     <!-- stable region, populated on every recalculation so the result is announced -->
     <p class="sr" id="srStatus" role="status"></p>
@@ -476,11 +487,11 @@
 <!-- ================= HOW IT WORKS ================= -->
 <section id="how">
   <div class="wrap">
-    <div class="lbl">02 &mdash; How it works</div>
-    <h2>Four steps from a base rate to a work order</h2>
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">02</span><span class="sec-rule"></span><span class="lbl">How it works</span></div>
+    <h2 class="rv">Four steps from a base rate to a work order</h2>
     <p class="lede">Each row of the queue is one drive population carried through the same four multiplications. You can do the arithmetic yourself.</p>
 
-    <div class="steps">
+    <div class="steps rv">
       <div class="step">
         <div class="n">STEP 01 / BASE RATE</div>
         <h3>Start from the published rate</h3>
@@ -539,8 +550,8 @@
 <!-- ================= DRIVE TABLE ================= -->
 <section id="drives">
   <div class="wrap">
-    <div class="lbl">03 &mdash; The drive table</div>
-    <h2>Published lifetime rates</h2>
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">03</span><span class="sec-rule"></span><span class="lbl">The drive table</span></div>
+    <h2 class="rv">Published lifetime rates</h2>
     <p class="lede">Every model the console can queue, with its published failure rate and the drive days behind it.</p>
     <details class="more">
     <summary>The full drive table</summary>
@@ -560,11 +571,11 @@
 <!-- ================= METHOD ================= -->
 <section id="method">
   <div class="wrap">
-    <div class="lbl">04 &mdash; The method</div>
-    <h2>Every constant, in the open</h2>
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">04</span><span class="sec-rule"></span><span class="lbl">The method</span></div>
+    <h2 class="rv">Every constant, in the open</h2>
     <p class="lede">This is the whole model. If you disagree with a constant, you know exactly which one to argue with.</p>
 
-    <div class="method-grid">
+    <div class="method-grid rv">
       <div class="formula">
         <div class="frow"><span class="ft">Annual rate</span><span class="fx">lifetime AFR &times; age multiplier &times; evidence ratio</span></div>
         <div class="frow"><span class="ft">Evidence ratio</span><span class="fx">18.26 if flagged, 0.24 if clean, normalized to the prevalence you set</span></div>
@@ -591,7 +602,7 @@
 <!-- ================= CTA ================= -->
 <section class="cta">
   <div class="wrap">
-    <div class="plate">
+    <div class="plate rv">
       <div>
         <div class="lbl" style="margin-bottom:14px">Built by</div>
         <div class="p-name">Adrian Mucha</div>
@@ -1381,6 +1392,27 @@
       window.scrollTo(0, top);
       setTimeout(function(){ html.style.scrollBehavior = ""; }, 60);
     }
+  });
+})();
+</script>
+<script>
+/* Scroll reveals. Content is visible by default; motion is opted into only when
+   the browser is happy to move things. */
+(function(){
+  "use strict";
+  if(!("IntersectionObserver" in window)) return;
+  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var els = document.querySelectorAll(".rv");
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add("rvIn"); io.unobserve(en.target); }
+    });
+  }, { rootMargin: "0px 0px -70px 0px" });
+  els.forEach(function(e){
+    var r = e.getBoundingClientRect();
+    if(r.top < window.innerHeight && r.bottom > 0) return;
+    e.classList.add("rv0");
+    io.observe(e);
   });
 })();
 </script>

@@ -88,6 +88,11 @@
     .rise{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
     .rise.d1{animation-delay:.06s}.rise.d2{animation-delay:.12s}
     @keyframes rise{from{opacity:0;transform:translateY(14px)}}
+    /* a survey line sweeps the stage; pure decoration, gone under reduced motion */
+    .stage::after{content:"";position:absolute;top:0;bottom:0;left:-160px;width:140px;pointer-events:none;
+      background:linear-gradient(90deg,transparent,rgba(63,224,160,.04) 40%,rgba(63,224,160,.13) 50%,rgba(63,224,160,.04) 60%,transparent);
+      animation:scan 9s linear infinite}
+    @keyframes scan{to{left:calc(100% + 40px)}}
   }
   @keyframes drop{from{opacity:0;transform:translateY(-5px)}}
 
@@ -181,16 +186,16 @@
   .headline-out{margin-bottom:28px}
   .headline-out .lbl{margin-bottom:10px}
   .headline-out .lbl::before{content:"";display:inline-block;width:6px;height:6px;background:var(--grn);margin-right:10px;vertical-align:1px}
-  .big{font-family:var(--mono);font-weight:600;font-size:clamp(52px,6.4vw,88px);line-height:1;letter-spacing:-.04em;color:var(--tx);font-variant-numeric:tabular-nums}
+  .big{font-family:var(--mono);font-weight:600;font-size:clamp(56px,7vw,104px);line-height:1;letter-spacing:-.04em;color:var(--tx);font-variant-numeric:tabular-nums}
   .big em{font-style:normal;font-size:.24em;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-inline-start:14px;font-weight:400}
   .headline-out .note{font-size:14px;color:var(--tx2);margin-top:14px;max-width:56ch}
 
   /* the stage: a framed dark field with registration ticks; the viz owns it */
-  .stage{position:relative;border:1px solid var(--line);background:
+  .stage{position:relative;overflow:hidden;border:1px solid var(--line);background:
     radial-gradient(58% 48% at 50% 56%, rgba(63,224,160,.07), transparent 72%),
     radial-gradient(circle, #161B20 1px, transparent 1.1px);
     background-size:100% 100%, 22px 22px;
-    padding:36px 30px 20px;min-height:340px;margin-bottom:36px;
+    padding:48px 30px 20px;min-height:380px;margin-bottom:36px;
     display:flex;flex-direction:column;justify-content:center}
   @media(max-width:700px){.stage{padding:24px 16px 14px;min-height:240px}}
   .tick{position:absolute;width:9px;height:9px;border:0 solid var(--line2)}
@@ -198,6 +203,11 @@
   .tick.tr{top:-1px;right:-1px;border-top-width:1px;border-right-width:1px}
   .tick.bl{bottom:-1px;left:-1px;border-bottom-width:1px;border-left-width:1px}
   .tick.br{bottom:-1px;right:-1px;border-bottom-width:1px;border-right-width:1px}
+  /* HUD corner readouts */
+  .hud{position:absolute;top:16px;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+  .hud.tl2{left:20px}
+  .hud.tr2{right:20px;color:var(--grn2)}
+  @media(max-width:640px){.hud.tr2{display:none}}
   .hall{width:100%;height:auto;display:block;max-height:520px}
   .fleet{display:flex;flex-wrap:wrap;gap:4px;align-content:center}
   .fleet i{width:8px;height:22px;display:block;background:var(--ramp2);
@@ -298,6 +308,17 @@
   ul.plain li:before{content:"\2014";position:absolute;left:0;font-family:var(--mono);color:var(--grn2)}
   ul.plain li b{color:var(--tx);font-weight:500}
 
+  /* ---------- section index: outlined ghost numerals ---------- */
+  .sec-row{display:flex;align-items:center;gap:26px;margin-bottom:38px}
+  .sec-num{font-family:var(--mono);font-weight:600;font-size:clamp(44px,4.8vw,70px);line-height:.9;color:var(--line2);flex:none;font-variant-numeric:tabular-nums}
+  @supports (-webkit-text-stroke:1px black){.sec-num{color:transparent;-webkit-text-stroke:1px var(--line2)}}
+  .sec-rule{flex:1;height:1px;background:var(--line)}
+
+  /* scroll reveals: elements are visible by default; a script opts them in,
+     and only when motion is welcome */
+  .rv0{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
+  .rv0.rvIn{opacity:1;transform:none}
+
   /* ---------- closing plate ---------- */
   .cta .plate{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:28px 40px;
     border:1px solid var(--line);background:var(--bg2);padding:40px 44px}
@@ -355,7 +376,7 @@
     header nav{display:none}
     section:not(#calc),footer,.toast,.mini{display:none}
     #calc{display:block;padding:12px 0 0;border-top:0}
-    .modes,.actions,.uswitch,input[type="range"],.hint,.skip,.caret,.sel-list{display:none}
+    .modes,.actions,.uswitch,input[type="range"],.hint,.skip,.caret,.sel-list,.hud{display:none}
     .sel-btn{border-color:var(--line2);padding:8px 10px}
     .hero{padding:16px 0 8px}
     .app{gap:28px}
@@ -401,8 +422,8 @@
 <!-- ================= CALCULATOR ================= -->
 <section id="calc">
   <div class="wrap">
+    <div class="sec-row"><span class="sec-num" aria-hidden="true">01</span><span class="sec-rule"></span><span class="lbl">The calculator</span></div>
     <div class="calc-hd">
-      <span class="lbl">01 &mdash; The calculator</span>
       <div class="modes" role="group" aria-label="Calculator direction">
         <button id="mA" aria-pressed="true">Power in &rarr; fleet out</button>
         <button id="mB" aria-pressed="false">Fleet in &rarr; power out</button>
@@ -471,6 +492,8 @@
 
         <div class="stage" aria-hidden="true">
           <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+          <span class="hud tl2" id="stageTL"></span>
+          <span class="hud tr2" id="stageTR"></span>
           <svg id="hall" class="hall"></svg>
           <div class="fleet" id="fleet"></div>
           <div class="fleet-cap" id="fleetCap"></div>
@@ -498,10 +521,10 @@
 <!-- ================= WHY THIS EXISTS ================= -->
 <section>
   <div class="wrap">
-    <div class="lbl">02 &mdash; Why the tool exists</div>
-    <h2>Three things broke at once</h2>
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">02</span><span class="sec-rule"></span><span class="lbl">Why the tool exists</span></div>
+    <h2 class="rv">Three things broke at once</h2>
     <p class="lede">Capacity used to be a floor-area question. It is now power first, heat second, floor last, and most planning conversations still run in the old order.</p>
-    <div class="three">
+    <div class="three rv">
       <div class="c">
         <div class="i">01</div>
         <h3>Density broke the rule of thumb</h3>
@@ -518,7 +541,7 @@
         <p>Below roughly 40 kW per rack, floor area binds and air works. Above it, the liquid loop binds. Which side you are on changes the entire build.</p>
       </div>
     </div>
-    <div class="strip">
+    <div class="strip rv">
       <div><div class="n">6 &rarr; 600 kW</div><div class="l">Per-rack density, 2021 to 2027</div></div>
       <div><div class="n">9</div><div class="l">Rack archetypes, published figures</div></div>
       <div><div class="n">0</div><div class="l">Hidden assumptions</div></div>
@@ -529,11 +552,11 @@
 <!-- ================= HOW IT WORKS ================= -->
 <section id="how">
   <div class="wrap">
-    <div class="lbl">03 &mdash; How it works</div>
-    <h2>Four inputs, in the order they actually get decided</h2>
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">03</span><span class="sec-rule"></span><span class="lbl">How it works</span></div>
+    <h2 class="rv">Four inputs, in the order they actually get decided</h2>
     <p class="lede">Power first, because you cannot conjure it. Density second, because you choose it. Efficiency and margin last, because you argue about them.</p>
 
-    <div class="steps">
+    <div class="steps rv">
       <div class="step">
         <div class="n">Step 00 / Direction</div>
         <h3>Which end do you know?</h3>
@@ -556,7 +579,7 @@
       </div>
     </div>
 
-    <div class="worked">
+    <div class="worked rv">
       <div class="t">Worked example, the default settings</div>
       <div class="chain">
         30 MW at the fence<br>
@@ -575,10 +598,10 @@
 <!-- ================= ARCHETYPES ================= -->
 <section id="archetypes">
   <div class="wrap">
-    <div class="lbl">04 &mdash; Rack archetypes</div>
-    <h2>The density ladder</h2>
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">04</span><span class="sec-rule"></span><span class="lbl">Rack archetypes</span></div>
+    <h2 class="rv">The density ladder</h2>
     <p class="lede">Published figures for the systems halls are being planned around. Air-cooled numbers are practical ceilings, not hard limits. Select any archetype to load it into the calculator.</p>
-    <table>
+    <table class="rv">
       <thead><tr><th>Archetype</th><th>kW / rack</th><th>GPUs</th><th>Cooling</th><th>Notes</th></tr></thead>
       <tbody id="refBody"></tbody>
     </table>
@@ -588,11 +611,11 @@
 <!-- ================= METHOD ================= -->
 <section id="method">
   <div class="wrap">
-    <div class="lbl">05 &mdash; The method</div>
-    <h2>Every constant, in the open</h2>
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">05</span><span class="sec-rule"></span><span class="lbl">The method</span></div>
+    <h2 class="rv">Every constant, in the open</h2>
     <p class="lede">A sizing tool that hides its assumptions is a sales tool. Here is the whole model. If you disagree with a constant, you now know exactly which one to argue with.</p>
 
-    <div class="formula">
+    <div class="formula rv">
       <b>IT capacity</b> = facility MW / PUE<br>
       <b>Usable IT</b> = IT capacity x (1 - margin)<br>
       <b>Racks</b> = floor(usable IT kW / kW per rack)<br>
@@ -604,7 +627,7 @@
       <b>Energy per year</b> = deployed kW x PUE x 8,760 hours
     </div>
 
-    <ul class="plain">
+    <ul class="plain rv">
       <li><b>Heat equals power.</b> Essentially all electricity into a rack leaves as heat.</li>
       <li><b>The ton is 3.517 kW.</b> Liquid archetypes send 90 percent of heat to the loop, 10 percent to room air, roughly what cold plates leave behind.</li>
       <li><b>White space is 30 sq ft per air rack, 40 per liquid,</b> including aisles and CDUs. Shell doubles it for electrical and mechanical.</li>
@@ -618,7 +641,7 @@
 <!-- ================= CTA ================= -->
 <section class="cta">
   <div class="wrap">
-    <div class="plate">
+    <div class="plate rv">
       <div>
         <div class="lbl" style="margin-bottom:14px">Built by</div>
         <div class="p-name">Adrian Mucha</div>
@@ -997,17 +1020,21 @@
 
   function renderFleet(r){
     var hall = $("hall"), marks = $("fleet");
+    $("stageTR").textContent = r.racks === 0 ? "" : (r.liquid ? "Liquid cooled" : "Air cooled");
     if(r.racks === 0){
+      $("stageTL").textContent = "Hall view";
       show(hall,false); show(marks,false);
       $("fleetCap").textContent = "Nothing fits at these settings";
       return;
     }
     if(r.racks <= ISO_MAX){
+      $("stageTL").textContent = "Hall view \u2014 isometric";
       var info = drawHall(r.racks, r.sqft, r.liquid);
       show(hall,true); show(marks,false);
       $("fleetCap").textContent = fmt(r.racks) + " racks · " + info.rows + " rows of " + info.perRow +
         " · floor plate " + (info.capped ? "indicative" : "to scale") + " at " + fmt(area(r.sqft)) + " " + areaUnitLc();
     } else {
+      $("stageTL").textContent = "Fleet view \u2014 schematic";
       var scale = 1, steps = [1,2,5,10,20,50,100];
       for(var si=0; si<steps.length; si++){ if(r.racks/steps[si] <= 420){ scale = steps[si]; break; } scale = steps[steps.length-1]; }
       var units = Math.ceil(r.racks/scale), sq = "";
@@ -1287,6 +1314,27 @@
       window.scrollTo(0, top);
       setTimeout(function(){ html.style.scrollBehavior = ""; }, 60);
     }
+  });
+})();
+</script>
+<script>
+/* Scroll reveals. Content is visible by default; motion is opted into only when
+   the browser is happy to move things. */
+(function(){
+  "use strict";
+  if(!("IntersectionObserver" in window)) return;
+  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var els = document.querySelectorAll(".rv");
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add("rvIn"); io.unobserve(en.target); }
+    });
+  }, { rootMargin: "0px 0px -70px 0px" });
+  els.forEach(function(e){
+    var r = e.getBoundingClientRect();
+    if(r.top < window.innerHeight && r.bottom > 0) return;
+    e.classList.add("rv0");
+    io.observe(e);
   });
 })();
 </script>
