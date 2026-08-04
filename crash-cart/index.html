@@ -154,8 +154,11 @@
   .config-meta{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.08em;color:var(--tx3);margin:10px 0 0;line-height:1.8}
   /* the two expert numbers ride in a second, quieter sentence behind a disclosure;
      at this size the bare input would sit under the 24px target floor, so it gets
-     block padding the sentence's double line-height already has room for */
-  .assump .config{font-size:var(--fs-xl);line-height:2;margin:0}
+     block padding the sentence's double line-height already has room for.
+     The disclosure spans the console below both columns, so its body gets a reading
+     measure rather than the full run of the page. */
+  .assump .config{font-size:var(--fs-xl);line-height:2;margin:0;max-width:74ch}
+  .assump .hint{max-width:88ch}
   .assump .iv-num{padding-block:3px}
   .hint{font-size:var(--fs-base);color:var(--tx2);margin-top:10px;line-height:1.45}
 
@@ -471,14 +474,6 @@
 
         <p class="config-note" id="profNote"></p>
         <p class="config-meta" id="fleetMeta"></p>
-
-        <details class="more assump">
-          <summary>Assumptions</summary>
-          <div class="d-body">
-            <p class="config">Assume <input class="iv-num" type="number" id="smart" value="4.2" min="0" max="40" step="0.1" aria-label="Share of drives with SMART canaries, in percent"> percent of drives carry SMART canaries, and rebuilds run at <input class="iv-num" type="number" id="rebuild" value="150" min="10" max="1000" step="5" aria-label="Rebuild rate in megabytes per second"> MB/s against live traffic.</p>
-            <p class="hint" id="assumpHint"></p>
-          </div>
-        </details>
       </div>
 
       <div class="headline-out">
@@ -488,6 +483,16 @@
         <div class="bar-wrap"><div class="bandbar" id="bandbar" aria-hidden="true"></div><div class="bar-cap" id="barCap"></div></div>
       </div>
     </div>
+
+    <!-- Full width, under both columns: opening it moves the whole section down as one
+         piece instead of growing the question column alone and unbalancing the grid. -->
+    <details class="more assump">
+      <summary>Assumptions</summary>
+      <div class="d-body">
+        <p class="config">Assume <input class="iv-num" type="number" id="smart" value="4.2" min="0" max="40" step="0.1" aria-label="Share of drives with SMART canaries, in percent"> percent of drives carry SMART canaries, and rebuilds run at <input class="iv-num" type="number" id="rebuild" value="150" min="10" max="1000" step="5" aria-label="Rebuild rate in megabytes per second"> MB/s against live traffic.</p>
+        <p class="hint" id="assumpHint"></p>
+      </div>
+    </details>
 
     <div class="q-head">
       <div class="q-t">The work, ranked</div>
