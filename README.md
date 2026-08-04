@@ -83,6 +83,14 @@ adjacent step separation and contrast against the dark surface. An earlier
 three-hue version was rejected for failing colour-blind separation at deltaE 7.3
 under protanopia.
 
+The accent is rationed. Green means one thing — a number that came from data, or a
+thing that is live — and everything else is neutral: hovers, links, section numerals
+and ornament all resolve to white or grey. The isometric hall follows the same rule.
+Racks render in graphite the way real cabinets look, and the only colour in the
+drawing is the row-end CDUs, so the green marks the liquid loop rather than the
+whole room. An accent smeared across every interaction state stops reading as a
+signal, which is the entire job this one has.
+
 ### Running it locally
 
 ```bash

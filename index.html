@@ -26,7 +26,10 @@
     --tx:#EEF1F3;          /* primary text */
     --tx2:#A8B0B8;         /* secondary text */
     --tx3:#7B838D;         /* labels only */
-    --grn:#3FE0A0;         /* signal green: data and live things only */
+    /* Signal green, and nothing else gets it. A number that came from data, or a
+       thing that is live. Not hovers, not links, not ornament — the moment it
+       lands on interaction states it stops reading as a signal. */
+    --grn:#3FE0A0;
     --grn2:#2FBF86;
     --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
     --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
@@ -70,7 +73,7 @@
     display:inline-flex;align-items:center;gap:10px;padding:15px 24px;background:var(--tx);color:var(--bg);border:1px solid var(--tx);cursor:pointer}
   .btn:hover{background:#fff;border-color:#fff}
   .btn.ghost{background:transparent;color:var(--tx);border-color:var(--line2)}
-  .btn.ghost:hover{border-color:var(--grn);color:var(--grn)}
+  .btn.ghost:hover{border-color:var(--tx);color:var(--tx)}
   @media(max-width:640px){.btns{width:100%;flex-direction:column;align-items:stretch}.btns .btn{justify-content:center}}
   @media (prefers-reduced-motion: no-preference){
     html{scroll-behavior:smooth}
@@ -78,9 +81,9 @@
     .rise{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
     .rise.d1{animation-delay:.06s}.rise.d2{animation-delay:.12s}.rise.d3{animation-delay:.18s}.rise.d4{animation-delay:.28s}
     @keyframes rise{from{opacity:0;transform:translateY(14px)}}
-    /* a survey line sweeps the stage; pure decoration, gone under reduced motion */
+    /* a survey line sweeps the stage; pure decoration, so it stays neutral */
     .stage::after{content:"";position:absolute;top:0;bottom:0;left:-160px;width:140px;pointer-events:none;
-      background:linear-gradient(90deg,transparent,rgba(63,224,160,.04) 40%,rgba(63,224,160,.13) 50%,rgba(63,224,160,.04) 60%,transparent);
+      background:linear-gradient(90deg,transparent,rgba(238,241,243,.03) 40%,rgba(238,241,243,.09) 50%,rgba(238,241,243,.03) 60%,transparent);
       animation:scan 9s linear infinite}
     @keyframes scan{to{left:calc(100% + 40px)}}
     .tk{animation:tick 48s linear infinite}
@@ -89,7 +92,7 @@
 
   /* the stage: a framed dark field with registration ticks; the viz owns it */
   .stage{position:relative;overflow:hidden;border:1px solid var(--line);background:
-    radial-gradient(52% 56% at 50% 52%, rgba(63,224,160,.08), transparent 72%),
+    radial-gradient(52% 56% at 50% 52%, rgba(238,241,243,.04), transparent 72%),
     radial-gradient(circle, #161B20 1px, transparent 1.1px);
     background-size:100% 100%, 22px 22px;padding:58px 34px 22px;min-height:440px;
     display:flex;flex-direction:column;justify-content:center}
@@ -106,7 +109,7 @@
   @media(max-width:640px){.hud.tr2{display:none}}
   .stage svg{width:100%;height:auto;display:block;max-height:560px}
   .stage .cap{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px 16px;margin-top:24px}
-  .cap-link{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--grn);white-space:nowrap;position:relative}
+  .cap-link{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx);white-space:nowrap;position:relative}
   .cap-link::after{content:"";position:absolute;inset:-14px -8px}
   .cap-link:hover{text-decoration:underline;text-underline-offset:4px}
 
@@ -143,8 +146,8 @@
   @media(max-width:960px){.tag{grid-row:1;grid-column:2;justify-self:end}}
   .tool .arr{display:inline-block;font-family:var(--mono);font-size:17px;color:var(--tx3);transform:translateX(0)}
   a.tool:hover{background:linear-gradient(90deg,transparent,rgba(238,241,243,.025),transparent)}
-  a.tool:hover h3{color:var(--grn)}
-  a.tool:hover .arr{color:var(--grn)}
+  a.tool:hover h3{color:var(--tx)}
+  a.tool:hover .arr{color:var(--tx)}
   @media (prefers-reduced-motion: no-preference){
     .tool .arr{transition:transform .18s ease,color .18s ease}
     a.tool:hover .arr{transform:translateX(8px)}
@@ -154,7 +157,7 @@
   .three{display:grid;grid-template-columns:repeat(3,1fr);gap:48px}
   @media(max-width:820px){.three{grid-template-columns:1fr;gap:36px}}
   .three .c{border-top:1px solid var(--line2);padding-top:22px}
-  .three .c .i{font-family:var(--mono);font-size:12px;color:var(--grn);margin-bottom:14px}
+  .three .c .i{font-family:var(--mono);font-size:12px;color:var(--tx3);margin-bottom:14px}
   .three .c h3{font-weight:600;font-size:18px;letter-spacing:-.015em;margin:0 0 10px}
   .three .c p{margin:0;font-size:15px;color:var(--tx2);text-wrap:pretty}
 
@@ -174,7 +177,7 @@
   .p-spec dd.on::before{content:"";display:inline-block;width:6px;height:6px;background:var(--grn);margin-right:10px;vertical-align:1px}
   .plate-ft{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;border-top:1px solid var(--line);padding:20px 52px}
   .lnk{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx2);white-space:nowrap;padding:14px 2px}
-  .lnk:hover{color:var(--grn)}
+  .lnk:hover{color:var(--tx)}
   @media(max-width:860px){
     .plate-main{grid-template-columns:1fr;gap:36px;padding:32px 24px 30px}
     .plate-ft{padding:16px 24px;flex-direction:column;align-items:stretch}
@@ -184,7 +187,7 @@
 
   footer{border-top:1px solid var(--line);padding:44px 0 72px;font-size:15px;color:var(--tx3)}
   footer a{color:var(--tx2)}
-  footer a:hover{color:var(--grn)}
+  footer a:hover{color:var(--tx)}
   footer .lbl{margin-bottom:14px}
   footer p{margin:0;max-width:74ch}
 
@@ -412,10 +415,10 @@
   }
 
   out.push('<defs>'+
-    '<linearGradient id="gTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#63EEB4"/><stop offset="1" stop-color="#41D294"/></linearGradient>'+
-    '<linearGradient id="gFront" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1D8E69"/><stop offset="1" stop-color="#0E5B43"/></linearGradient>'+
-    '<linearGradient id="gSide" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#136B51"/><stop offset="1" stop-color="#0A3F2F"/></linearGradient>'+
-    '<linearGradient id="gCdu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0F5040"/><stop offset="1" stop-color="#07281F"/></linearGradient>'+
+    '<linearGradient id="gTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#616467"/><stop offset="1" stop-color="#505356"/></linearGradient>'+
+    '<linearGradient id="gFront" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34373A"/><stop offset="1" stop-color="#242729"/></linearGradient>'+
+    '<linearGradient id="gSide" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#212326"/><stop offset="1" stop-color="#141619"/></linearGradient>'+
+    '<linearGradient id="gCdu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1A7B56"/><stop offset="1" stop-color="#0B4F35"/></linearGradient>'+
     '</defs>');
 
   out.push(poly([iso(0,0,0),iso(hallW,0,0),iso(hallW,hallD,0),iso(0,hallD,0)], "#0F1418", "#1C2126"));
@@ -444,9 +447,9 @@
     out.push(poly([iso(x+RW,y,RH),iso(x+RW,y+RD,RH),iso(x+RW,y+RD,0),iso(x+RW,y,0)], "url(#gSide)", "#0A0C0E"));
     if(liquid && p[3] === rowLen[p[2]] - 1){
       var cx = x + RW + 0.08, CW = 0.7, CH = 1.72;
-      out.push(poly([iso(cx,y,CH),iso(cx+CW,y,CH),iso(cx+CW,y+RD,CH),iso(cx,y+RD,CH)], "#1A6B54", "#0A0C0E"));
+      out.push(poly([iso(cx,y,CH),iso(cx+CW,y,CH),iso(cx+CW,y+RD,CH),iso(cx,y+RD,CH)], "#2FB27E", "#0A0C0E"));
       out.push(poly([iso(cx,y+RD,CH),iso(cx+CW,y+RD,CH),iso(cx+CW,y+RD,0),iso(cx,y+RD,0)], "url(#gCdu)", "#0A0C0E"));
-      out.push(poly([iso(cx+CW,y,CH),iso(cx+CW,y+RD,CH),iso(cx+CW,y+RD,0),iso(cx+CW,y,0)], "#07281F", "#0A0C0E"));
+      out.push(poly([iso(cx+CW,y,CH),iso(cx+CW,y+RD,CH),iso(cx+CW,y+RD,0),iso(cx+CW,y,0)], "#0D553A", "#0A0C0E"));
     }
   });
 
