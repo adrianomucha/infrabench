@@ -1004,9 +1004,15 @@
     $("queue").innerHTML = html;
   }
 
-  /* ---------- the wear curve ---------- */
+  /* ---------- the wear curve ----------
+     Drawn at the panel's real pixel width, one SVG unit per CSS pixel, so the chart's
+     10px labels sit on the same type scale as the rest of the page instead of being
+     stretched up with the viewBox. Re-rendered on resize and when its details opens. */
   function renderCurve(){
-    var p = profile(), W = 720, H = 260, L = 46, R = 14, T = 16, B = 38;
+    var p = profile(), box = $("curve");
+    var W = Math.max(200, box.clientWidth || 720), H = 260, L = 46, R = 14, T = 16, B = 38;
+    var narrow = W < 520;   // on a phone the cohort labels collide, so the legend carries them
+    box.setAttribute("viewBox", "0 0 " + W + " " + H);
     var maxAge = 11, maxMul = 4.4;
     function X(a){ return L + (a/maxAge)*(W-L-R); }
     function Y(m){ return T + (1 - m/maxMul)*(H-T-B); }
@@ -1024,7 +1030,7 @@
 
     // the 1.0x line is where the lifetime average sits, so mark it
     out.push('<line x1="'+L+'" y1="'+Y(1).toFixed(1)+'" x2="'+(W-R)+'" y2="'+Y(1).toFixed(1)+'" stroke="#2E3743" stroke-width="1" stroke-dasharray="3 3"/>');
-    out.push('<text x="'+(W-R-4)+'" y="'+(Y(1)-6).toFixed(1)+'" text-anchor="end" fill="#A8B4C7" font-family="JetBrains Mono, monospace" font-size="10">LIFETIME AVERAGE</text>');
+    out.push('<text x="'+(W-R-4)+'" y="'+(Y(1)-6).toFixed(1)+'" text-anchor="end" fill="#A8B4C7" font-family="JetBrains Mono, monospace" font-size="10">'+(narrow?'AVG':'LIFETIME AVERAGE')+'</text>');
 
     var d = "";
     for(var a=0; a<=maxAge; a+=0.1) d += (d?"L":"M") + X(a).toFixed(1) + " " + Y(ageMul(a)).toFixed(1) + " ";
@@ -1038,7 +1044,7 @@
       var rr = Math.max(4, Math.min(15, Math.sqrt(n)/3.2));
       out.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+rr.toFixed(1)+'" fill="#0E1116" stroke="#3DDC97" stroke-width="1.6" opacity="0.95"/>');
       out.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="2.2" fill="#3DDC97"/>');
-      out.push('<text x="'+x.toFixed(1)+'" y="'+(y-rr-7).toFixed(1)+'" text-anchor="middle" fill="#E6EAF0" font-family="JetBrains Mono, monospace" font-size="10">'+md.tb+' TB</text>');
+      if(!narrow) out.push('<text x="'+x.toFixed(1)+'" y="'+(y-rr-7).toFixed(1)+'" text-anchor="middle" fill="#E6EAF0" font-family="JetBrains Mono, monospace" font-size="10">'+md.tb+' TB</text>');
     });
 
     $("curve").innerHTML = out.join("");
@@ -1383,6 +1389,15 @@
     });
 
     render();
+
+    // the curve sits in a collapsed details, where it has no measurable width;
+    // redraw it when the section opens and when the viewport changes
+    var curveDetails = $("curve").closest("details");
+    if(curveDetails) curveDetails.addEventListener("toggle", renderCurve);
+    var curveResizeT;
+    window.addEventListener("resize", function(){
+      clearTimeout(curveResizeT); curveResizeT = setTimeout(renderCurve, 120);
+    });
 
     // a shared link should land on the numbers, not on the sales pitch
     if(shared){
