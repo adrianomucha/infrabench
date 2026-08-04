@@ -324,8 +324,8 @@
 
   /* the model as a framed ledger: one term, one expression per row, the
      judgement calls alongside instead of an empty right half */
-  .method-grid{display:grid;grid-template-columns:minmax(0,11fr) minmax(0,9fr);gap:24px 88px;align-items:start;margin-top:48px}
-  @media(max-width:980px){.method-grid{grid-template-columns:1fr;gap:8px}}
+  .method-grid{display:grid;grid-template-columns:minmax(0,11fr) minmax(0,9fr);gap:24px 40px;align-items:stretch;margin-top:48px}
+  @media(max-width:980px){.method-grid{grid-template-columns:1fr;gap:24px}}
   .model{position:relative;border:1px solid var(--line);background:var(--bg2);padding:26px 30px 12px}
   @media(max-width:700px){.model{padding:20px 18px 8px}}
   .model-hd{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
@@ -337,7 +337,11 @@
   .frow .ft{color:var(--grn);font-weight:500}
   .frow .fx{color:var(--tx2b);overflow-wrap:break-word}
   ul.plain{padding-inline-start:0;list-style:none;margin:40px 0 0;max-width:78ch}
-  .method-grid ul.plain{margin-top:8px}
+  /* inside a frame the list drops its dash markers and takes the ledger's row rhythm */
+  .model ul.plain{margin:0;max-width:none}
+  .model ul.plain li{padding:13px 0 14px;padding-inline-start:0;margin:0;border-bottom:1px solid var(--line);font-size:15px;line-height:1.7}
+  .model ul.plain li:last-child{border-bottom:0}
+  .model ul.plain li:before{content:none}
   ul.plain li{position:relative;padding-inline-start:28px;margin-bottom:14px;font-size:16px;color:var(--tx2)}
   ul.plain li:before{content:"\2014";position:absolute;left:0;font-family:var(--mono);color:var(--grn2)}
   ul.plain li b{color:var(--tx);font-weight:500}
@@ -687,14 +691,18 @@
         <div class="frow"><span class="ft">Energy per year</span><span class="fx">deployed kW &times; PUE &times; 8,760 hours</span></div>
       </div>
 
-      <ul class="plain">
+      <div class="model">
+        <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+        <div class="model-hd"><span class="lbl">The judgement calls</span><span class="lbl g">6 notes</span></div>
+        <ul class="plain">
       <li><b>Heat equals power.</b> Essentially all electricity into a rack leaves as heat.</li>
       <li><b>The ton is 3.517 kW.</b> Liquid archetypes send 90 percent of heat to the loop, 10 percent to room air, roughly what cold plates leave behind.</li>
       <li><b>White space is 30 sq ft per air rack, 40 per liquid,</b> including aisles and CDUs. Shell doubles it for electrical and mechanical.</li>
       <li><b>Energy is billed on what you run:</b> deployed load x PUE x 8,760 hours. Training clusters run close to continuous.</li>
       <li><b>Homes equivalent is 10,500 kWh per US home per year.</b> Legible, not precise.</li>
       <li><b>A planning heuristic for the first conversation,</b> not an engineering submittal. Nothing here replaces a mechanical engineer.</li>
-      </ul>
+        </ul>
+      </div>
     </div>
   </div>
 </section>

@@ -314,7 +314,7 @@
   /* ---------- method ----------
      The model on the left, the judgement calls on the right, so the section fills its
      width the way the console does instead of hugging the margin. */
-  .method-grid{display:grid;grid-template-columns:minmax(0,11fr) minmax(0,9fr);gap:12px 72px;align-items:start;margin-top:4px}
+  .method-grid{display:grid;grid-template-columns:minmax(0,11fr) minmax(0,9fr);gap:12px 40px;align-items:stretch;margin-top:4px}
   @media(max-width:980px){.method-grid{grid-template-columns:1fr;gap:0}}
   /* the model as a ledger: one term, one expression per row, at reading size */
   .formula{position:relative;margin-top:32px;border:1px solid var(--line);background:var(--bg2);padding:26px 30px 12px}
@@ -330,6 +330,11 @@
   .frow .fx var{font-style:italic;color:var(--tx)}
   .frow .fn{color:var(--tx3);font-style:italic}
   ul.plain{padding-inline-start:0;list-style:none;margin:32px 0 0}
+  /* inside a frame the list drops its dash markers and takes the ledger's row rhythm */
+  .formula ul.plain{margin:0;max-width:none}
+  .formula ul.plain li{padding:14px 0 15px;padding-inline-start:0;margin:0;border-bottom:1px solid var(--line);font-size:15px;line-height:1.7}
+  .formula ul.plain li:last-child{border-bottom:0}
+  .formula ul.plain li:before{content:none}
   ul.plain li{position:relative;padding-inline-start:28px;margin-bottom:16px;font-size:16px;line-height:1.7;color:var(--tx2)}
   ul.plain li:before{content:"\2014";position:absolute;inset-inline-start:0;font-family:var(--mono);color:var(--grn2)}
   ul.plain li b{color:var(--tx);font-weight:500}
@@ -608,13 +613,17 @@
         <div class="frow"><span class="ft">TB actually lost</span><span class="fx">the same, &times; P(group loses data) &nbsp;<span class="fn">the fleet total</span></span></div>
       </div>
 
-      <ul class="plain">
+      <div class="formula">
+        <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+        <div class="model-hd"><span class="lbl">The judgement calls</span><span class="lbl g">5 notes</span></div>
+        <ul class="plain">
         <li><b>The SMART evidence is Bayes, not a threshold.</b> Flagged drives carry an 18x likelihood ratio, clean ones 0.24x, renormalized to the prevalence you set so total expected failures are preserved.</li>
         <li><b>The age multiplier</b> follows the published bathtub shape, normalized so a mixed-age fleet averages 1.0.</li>
         <li><b>Rebuild rate is the effective rate on a live system,</b> not the drive's spec sheet; 150 MB/s is an honest default. Unrecoverable read errors are counted only where no parity is left.</li>
         <li><b>The queue holds drives with a reason.</b> The bands sit at 1.5 percent a year (watch), 5 (schedule) and 15 (pull). A clean drive is usually fine even at six years.</li>
         <li><b>A triage heuristic, not a warranty model.</b> Figures are the published lifetime table, rounded; re-pull the current quarter before you spend money, and nothing here replaces watching your own fleet.</li>
-      </ul>
+        </ul>
+      </div>
     </div>
   </div>
 </section>
