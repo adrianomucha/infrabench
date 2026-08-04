@@ -65,8 +65,8 @@
   a:hover{text-decoration:underline}
 
   /* first focusable element: lets keyboard and screen-reader users bypass the sticky header */
-  .skip{position:absolute;left:-9999px;top:0;z-index:60;font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:.1em;text-transform:uppercase;padding:12px 18px;background:var(--sigd);color:#04120C;font-weight:700}
-  .skip:focus{left:0;text-decoration:none}
+  .skip{position:absolute;inset-inline-start:-9999px;top:0;z-index:60;font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:.1em;text-transform:uppercase;padding:12px 18px;background:var(--sigd);color:#04120C;font-weight:700}
+  .skip:focus{inset-inline-start:0;text-decoration:none}
   main{display:block;scroll-margin-top:70px}
   /* announced to assistive tech only: the result summary and the copy confirmation */
   .sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
@@ -160,13 +160,16 @@
      on the same 7/5 columns and gutter so the seams line up with the grid above.
      The inline start indent seats the sentence under the summary's label, past its
      one-character marker, instead of under the marker itself. */
-  .assump>.d-body{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:12px 72px;
-    align-items:start;padding:12px 18px 26px 37px}
+  /* details.more.assump, not .assump alone: the shared details.more>.d-body rule below
+     carries an element in its selector, so a two-class rule would lose the cascade to it
+     and this padding would silently never apply */
+  details.more.assump>.d-body{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:12px 72px;
+    align-items:start;padding:12px 18px 26px;padding-inline-start:37px}
   .assump .config{font-size:var(--fs-xl);line-height:2;margin:0}
   .assump .hint{font-size:var(--fs-md);line-height:1.7;margin-top:9px}
   /* a value never parts from its unit at a line break */
   .assump .nb{white-space:nowrap}
-  @media(max-width:980px){.assump>.d-body{grid-template-columns:1fr;gap:0;padding:6px 18px 22px}
+  @media(max-width:980px){details.more.assump>.d-body{grid-template-columns:1fr;gap:0;padding:6px 18px 22px}
     .assump .hint{margin-top:12px}}
   .assump .iv-num{padding-block:3px}
   .hint{font-size:var(--fs-base);color:var(--tx2);margin-top:10px;line-height:1.45}
@@ -352,7 +355,7 @@
   .frow .fn{color:var(--tx3);font-style:italic}
   ul.plain{padding-inline-start:0;list-style:none;margin:24px 0 0}
   ul.plain li{position:relative;padding-inline-start:26px;margin-bottom:16px;font-size:var(--fs-lg);line-height:1.65;color:var(--tx2)}
-  ul.plain li:before{content:">";position:absolute;left:0;font-family:var(--mono);color:var(--sig)}
+  ul.plain li:before{content:">";position:absolute;inset-inline-start:0;font-family:var(--mono);color:var(--sig)}
   ul.plain li b{color:var(--tx);font-weight:600}
 
   /* ---------- closing plate ----------
