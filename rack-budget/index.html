@@ -25,6 +25,7 @@
     --line2:#2A3037;       /* stronger rule */
     --tx:#EEF1F3;          /* primary text */
     --tx2:#A8B0B8;         /* secondary text */
+    --tx2b:#C7CDD4;        /* dense mono passages: one step brighter to stay readable */
     --tx3:#7B838D;         /* labels only */
     --grn:#3FE0A0;         /* signal green: data and live things only */
     --grn2:#2FBF86;
@@ -110,6 +111,12 @@
      Nothing floats. */
   .console{border:1px solid var(--line)}
   .console-hd{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;padding:12px 20px;border-bottom:1px solid var(--line)}
+  /* the controls ride along under the site header while the console is in view;
+     on phones the stacked toggles would cost too much screen, so they stay put
+     there and the live-result bar carries the feedback instead */
+  @media(min-width:641px){
+    .console-hd{position:sticky;top:60px;z-index:30;background:rgba(10,12,14,.92);backdrop-filter:blur(10px)}
+  }
   .console-ft{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;border-top:1px solid var(--line);padding:16px 20px}
   .modes{display:flex;flex-wrap:wrap;border:1px solid var(--line2);width:fit-content;max-width:100%}
   .modes button{font-family:var(--mono);font-size:12px;letter-spacing:.13em;text-transform:uppercase;background:transparent;color:var(--tx3);border:0;padding:13px 20px;cursor:pointer}
@@ -130,7 +137,7 @@
     .panel{padding:28px 20px 32px}
     .panel.out{border-inline-start:0;border-top:1px solid var(--line)}
   }
-  @media(min-width:921px){.app .panel:not(.out){position:sticky;top:76px;align-self:start}}
+  @media(min-width:921px){.app .panel:not(.out){position:sticky;top:132px;align-self:start}}
 
   .field{margin-bottom:30px}
   .field label,.field .flabel{display:block;font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px}
@@ -278,10 +285,10 @@
   .worked{border:1px solid var(--line);background:var(--bg2);padding:32px 34px;margin-top:56px;position:relative}
   @media(max-width:700px){.worked{padding:24px 20px}}
   .worked .t{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin-bottom:20px}
-  .chain{font-family:var(--mono);font-size:14px;line-height:2.2;color:var(--tx2);overflow-x:auto}
+  .chain{font-family:var(--mono);font-size:15px;line-height:2.2;color:var(--tx2b);overflow-x:auto}
   .chain .a{color:var(--grn)}
   .chain b{font-weight:600;color:var(--tx)}
-  .worked .out{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);font-size:15px;color:var(--tx2);max-width:72ch}
+  .worked .out{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);font-size:16px;color:var(--tx2);max-width:72ch}
 
   /* ---------- table ---------- */
   table{width:100%;border-collapse:collapse;font-size:15px;margin-top:44px}
@@ -307,10 +314,10 @@
     td.name{white-space:normal}
   }
 
-  .formula{font-family:var(--mono);font-size:14px;line-height:2.15;margin-top:44px;overflow-x:auto;border-inline-start:2px solid var(--grn2);padding-inline-start:22px;color:var(--tx2)}
+  .formula{font-family:var(--mono);font-size:15px;line-height:2.2;margin-top:44px;overflow-x:auto;border-inline-start:2px solid var(--grn2);padding-inline-start:22px;color:var(--tx2b)}
   .formula b{color:var(--tx);font-weight:600}
   ul.plain{padding-inline-start:0;list-style:none;margin:40px 0 0;max-width:78ch}
-  ul.plain li{position:relative;padding-inline-start:28px;margin-bottom:14px;font-size:15px;color:var(--tx2)}
+  ul.plain li{position:relative;padding-inline-start:28px;margin-bottom:14px;font-size:16px;color:var(--tx2)}
   ul.plain li:before{content:"\2014";position:absolute;left:0;font-family:var(--mono);color:var(--grn2)}
   ul.plain li b{color:var(--tx);font-weight:500}
 

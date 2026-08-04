@@ -26,6 +26,7 @@
     --line2:#2A3037;       /* stronger rule */
     --tx:#EEF1F3;          /* primary text */
     --tx2:#A8B0B8;         /* secondary text */
+    --tx2b:#C7CDD4;        /* dense mono passages: one step brighter to stay readable */
     --tx3:#7B838D;         /* labels only */
     --grn:#3FE0A0;         /* signal green: data and live things only */
     --grn2:#2FBF86;
@@ -288,10 +289,10 @@
   .worked{border:1px solid var(--line);background:var(--bg2);padding:32px 34px;margin-top:36px}
   @media(max-width:700px){.worked{padding:24px 20px}}
   .worked .t{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin-bottom:20px}
-  .chain{font-family:var(--mono);font-size:14px;line-height:2.2;color:var(--tx2);overflow-x:auto}
+  .chain{font-family:var(--mono);font-size:15px;line-height:2.2;color:var(--tx2b);overflow-x:auto}
   .chain .a{color:var(--grn)}
   .chain b{font-weight:600;color:var(--tx)}
-  .worked .out{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);font-size:15px;color:var(--tx2);max-width:72ch}
+  .worked .out{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);font-size:16px;color:var(--tx2);max-width:72ch}
 
   /* ---------- table ----------
      Six numeric columns do not fit a phone. Dropping columns would drop the drive days and the
@@ -321,14 +322,14 @@
   /* the model as a ledger: one term, one expression per row, at reading size */
   .formula{margin-top:32px;border-top:1px solid var(--line)}
   .frow{display:grid;grid-template-columns:minmax(150px,200px) 1fr;gap:4px 24px;padding:14px 0 15px;
-    border-bottom:1px solid var(--line);font-family:var(--mono);font-size:14px;line-height:1.8}
+    border-bottom:1px solid var(--line);font-family:var(--mono);font-size:15px;line-height:1.8}
   @media(max-width:640px){.frow{grid-template-columns:1fr}}
   .frow .ft{color:var(--grn);font-weight:500}
-  .frow .fx{color:var(--tx2);overflow-wrap:break-word}
+  .frow .fx{color:var(--tx2b);overflow-wrap:break-word}
   .frow .fx var{font-style:italic;color:var(--tx)}
   .frow .fn{color:var(--tx3);font-style:italic}
   ul.plain{padding-inline-start:0;list-style:none;margin:32px 0 0}
-  ul.plain li{position:relative;padding-inline-start:28px;margin-bottom:16px;font-size:15px;line-height:1.65;color:var(--tx2)}
+  ul.plain li{position:relative;padding-inline-start:28px;margin-bottom:16px;font-size:16px;line-height:1.7;color:var(--tx2)}
   ul.plain li:before{content:"\2014";position:absolute;inset-inline-start:0;font-family:var(--mono);color:var(--grn2)}
   ul.plain li b{color:var(--tx);font-weight:500}
 
