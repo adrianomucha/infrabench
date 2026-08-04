@@ -192,7 +192,7 @@
   .sel-opt.act{background:rgba(63,224,160,.07);box-shadow:inset 2px 0 0 var(--grn2)}
   /* declared after every outline:0 above so the keyboard ring actually wins the cascade */
   input[type=number]:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
-  .pill{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;border:1px solid var(--line2);padding:4px 9px;color:var(--tx3);margin-top:12px}
+  .pill{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line2);padding:5px 10px;color:var(--tx3);margin-top:12px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
   .pill.liquid{border-color:rgba(63,224,160,.4);color:var(--grn)}
 
   /* ---------- output: answer, then the stage ---------- */
@@ -864,7 +864,7 @@
     $("fCustom").hidden = state.preset!=="custom";
 
     $("presetPill").innerHTML = state.preset==="custom" ? "" :
-      '<span class="pill'+(p.liquid?" liquid":"")+'">'+(p.liquid?"Liquid cooled":"Air cooled")+' &nbsp;&middot;&nbsp; '+p.kw+' kW'+(p.gpus?' &nbsp;&middot;&nbsp; '+p.gpus+' GPU':'')+'</span>'+
+      '<span class="pill'+(p.liquid?" liquid":"")+'">'+(p.liquid?"Liquid cooled":"Air cooled")+(p.gpus?' &middot; '+p.gpus+' GPU':'')+'</span>'+
       '<div class="hint">'+p.note+'</div>';
 
     $("pueHint").textContent = state.pue<=1.15 ? "Best-in-class hyperscale, new build, favorable climate."
