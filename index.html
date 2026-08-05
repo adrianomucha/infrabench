@@ -64,10 +64,19 @@
   /* ---------- hero: the statement, then the machine ---------- */
   .hero{padding:88px 0 0}
   @media(max-width:700px){.hero{padding:56px 0 0}}
-  h1{font-weight:500;font-size:clamp(44px,6.4vw,100px);line-height:.99;letter-spacing:-.042em;margin:22px 0 0;max-width:24ch;text-wrap:balance}
-  .hero-sub{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:28px 48px;margin:42px 0 52px}
-  @media(max-width:700px){.hero-sub{margin:32px 0 38px}}
-  .lede{font-size:17px;color:var(--tx2);max-width:52ch;margin:0;text-wrap:pretty}
+  /* ---- shared hero type, identical in index, rack-budget and crash-cart ----
+     One scale across the suite. 84px is the largest that still holds every one of the three
+     headlines to two lines; at 100px the two longer tool headlines ran to three and the home
+     page stopped matching them. h1 .setup carries the two-tone on the headlines built as a
+     setup and a question — the question keeps full brightness, the setup steps back. */
+  h1{font-weight:500;font-size:clamp(40px,5.6vw,84px);line-height:1;letter-spacing:-.04em;margin:24px 0 0;max-width:25ch;text-wrap:balance}
+  h1 .setup{color:var(--tx2)}
+  .lede{font-size:17px;color:var(--tx2);max-width:60ch;margin:0;text-wrap:pretty}
+  .hero-body{margin:38px 0 0}
+  @media(max-width:700px){.hero-body{margin-top:30px}}
+  /* ---- end shared hero type ---- */
+  .hero-sub{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:28px 48px;margin:38px 0 52px}
+  @media(max-width:700px){.hero-sub{margin:30px 0 38px}}
   .btns{display:flex;flex-wrap:wrap;gap:12px}
   .btn{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;
     display:inline-flex;align-items:center;gap:10px;padding:15px 24px;background:var(--tx);color:var(--bg);border:1px solid var(--tx);cursor:pointer}
