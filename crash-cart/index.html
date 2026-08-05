@@ -139,17 +139,36 @@
   .config-note{font-size:15px;color:var(--tx2);margin:26px 0 0;max-width:60ch;text-wrap:pretty}
   /* mono is already wide; .08em on top of that pushed the strip past its own column */
   .config-meta{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--tx3);margin:14px 0 0;line-height:1.6}
-  details.more.assump>.d-body{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:12px 72px;
-    align-items:start;padding:12px 18px 26px;padding-inline-start:37px}
-  /* text size, not display size: no negative tracking and normal body leading */
-  .assump .config{font-size:16px;line-height:1.7;letter-spacing:normal;margin:0}
-  .assump .hint{font-size:15px;line-height:1.7;margin-top:9px}
   /* a value never parts from its unit at a line break */
   .nb{white-space:nowrap}
-  @media(max-width:980px){details.more.assump>.d-body{grid-template-columns:1fr;gap:0;padding:6px 18px 22px}
-    .assump .hint{margin-top:12px}}
-  .assump .iv-num{padding-block:3px}
-  .hint{font-size:14px;color:var(--tx3);margin-top:10px;line-height:1.55}
+
+  /* ---------- assumptions ----------
+     Two constants, each read the way the stat cells below the queue read: the term, the
+     figure, then where the figure came from. Two halves split by a hairline, so the panel
+     fills its width instead of stranding the provenance in a column of its own. Green
+     stays on the editable value, the rule the console sentence already follows. */
+  details.more.assump>.d-body{padding:0}
+  .aledger{display:grid;grid-template-columns:repeat(2,1fr);background:var(--bg2);border-top:1px solid var(--line)}
+  /* 37px is where the summary's own text starts, past the +/- marker and its gap, so the
+     panel keeps one left edge from the disclosure down through the cells */
+  .acell{padding:28px 37px 30px}
+  .acell + .acell{border-inline-start:1px solid var(--line)}
+  /* a real label: the term names the input and is its click target */
+  .aterm{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--tx3);cursor:pointer;margin-bottom:15px}
+  .aterm:hover{color:var(--tx2)}
+  .aval{display:flex;align-items:baseline;gap:9px;white-space:nowrap}
+  /* centred inside its own width, the figure would hang off the term's left edge: in a
+     stacked cell it reads from the start, so term, figure and note share one margin */
+  .aval .iv-num{font-size:26px;text-align:start;padding:0 1px 5px 0}
+  .aval .u{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--tx3)}
+  .anote{margin:18px 0 0;font-size:14px;line-height:1.7;color:var(--tx2);max-width:48ch;text-wrap:pretty}
+  @media(max-width:760px){
+    .aledger{grid-template-columns:1fr}
+    .acell{padding:22px 18px 24px}
+    .acell + .acell{border-inline-start:0;border-top:1px solid var(--line)}
+    .anote{max-width:none}
+  }
 
   /* ---------- profile and scheme pickers ----------
      The ARIA select-only combobox pattern, worn inline as a word in the sentence. */
@@ -499,8 +518,22 @@
     <details class="more assump">
       <summary>Assumptions</summary>
       <div class="d-body">
-        <p class="config">Assume <span class="nb"><input class="iv-num" type="number" id="smart" value="4.2" min="0" max="40" step="0.1" aria-label="Share of drives with SMART canaries, in percent"> percent</span> of drives carry SMART canaries, and rebuilds run at <span class="nb"><input class="iv-num" type="number" id="rebuild" value="150" min="10" max="1000" step="5" aria-label="Rebuild rate in megabytes per second"> MB/s</span> against live traffic.</p>
-        <p class="hint" id="assumpHint"></p>
+        <!-- The term labels the input for real, so clicking it focuses the field; the unit
+             and the provenance line ride along as the input's description. -->
+        <div class="aledger">
+          <div class="acell">
+            <label class="aterm" for="smart">SMART coverage</label>
+            <span class="aval"><input class="iv-num" type="number" id="smart" value="4.2" min="0" max="40" step="0.1"
+              aria-describedby="smartUnit smartNote"><span class="u" id="smartUnit">percent of drives</span></span>
+            <p class="anote" id="smartNote">4.2&nbsp;percent is the published fleet-wide baseline.</p>
+          </div>
+          <div class="acell">
+            <label class="aterm" for="rebuild">Rebuild rate</label>
+            <span class="aval"><input class="iv-num" type="number" id="rebuild" value="150" min="10" max="1000" step="5"
+              aria-describedby="rebuildUnit rebuildNote"><span class="u" id="rebuildUnit">MB/s</span></span>
+            <p class="anote" id="rebuildNote"></p>
+          </div>
+        </div>
       </div>
     </details>
 
@@ -1101,7 +1134,9 @@
     $("profNote").textContent = weld(p.note);
     $("fleetMeta").textContent = fmt(r.totalDrives)+NB+"drives · "+p.mix.length+NB+"cohorts, "+profileSpan(p)+
       ", mean age "+profileAge(p).toFixed(1)+NB+"yr · "+fmt(Math.round(r.totalDrives/r.group))+NB+"groups of "+r.group;
-    $("assumpHint").textContent = weld("4.2 percent is the published fleet-wide baseline. Rebuild rate is the effective rate against production traffic: at "+
+    /* the SMART baseline is a published constant and lives in the markup; only the rebuild
+       line moves, because it restates the rate the reader just set */
+    $("rebuildNote").textContent = weld("The effective rate against production traffic: at "+
       state.rebuild+" MB/s a 16 TB drive rebuilds in "+fmt(16e6/state.rebuild/3600)+" hours.");
 
     setBig(r.thisWeek, 0, r.thisWeek === 1 ? "drive" : "drives");
