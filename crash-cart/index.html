@@ -1150,8 +1150,13 @@
        into a straight line and the whole point of the chart went missing. Height tracks
        width instead, inside bounds that keep it readable on a phone and from sprawling. */
     var H = Math.round(Math.max(250, Math.min(380, W*0.36)));
-    var L = 46, R = 16, T = 20, B = 38;
     var narrow = W < 520;   // on a phone the cohort labels collide, so the legend carries them
+    /* The bottom band holds two rows, the tick numbers and the axis name. At 38 they sat
+       13px apart with the name centred straight under the middle tick, which read as one
+       jumbled line. 48 gives the numbers room under the baseline they label and the name
+       clear air under them. The y-axis gutter only needs to fit "0x", so a phone gets it
+       back as plot width. */
+    var L = narrow ? 32 : 46, R = 16, T = 20, B = 48;
     box.setAttribute("viewBox", "0 0 " + W + " " + H);
     var maxAge = 11, maxMul = 4.4;
     var SURF = "#0E1114", GRN = "#3FE0A0", INK = "#7B838D";
@@ -1174,9 +1179,11 @@
       if(avg) out.push('<text x="'+(W-R-4)+'" y="'+(y-7).toFixed(1)+'" text-anchor="end" fill="'+INK+'" font-family="Geist Mono, monospace" font-size="11" letter-spacing="1">'+(narrow?'AVERAGE':'LIFETIME AVERAGE')+'</text>');
     }
     for(i=0;i<=10;i+=2){
-      out.push('<text x="'+X(i).toFixed(1)+'" y="'+(H-14)+'" text-anchor="middle" fill="'+INK+'" font-family="Geist Mono, monospace" font-size="11">'+i+'</text>');
+      out.push('<text x="'+X(i).toFixed(1)+'" y="'+(Y(0)+19).toFixed(1)+'" text-anchor="middle" fill="'+INK+'" font-family="Geist Mono, monospace" font-size="11">'+i+'</text>');
     }
-    out.push('<text x="'+((L+W-R)/2)+'" y="'+(H-1)+'" text-anchor="middle" fill="'+INK+'" font-family="Geist Mono, monospace" font-size="11" letter-spacing="1.4">DRIVE AGE, YEARS</text>');
+    // same ink as the ticks: at 11px anything dimmer drops under 4.5:1 on this surface,
+    // so the separation above does the work of putting it a step back, not the colour
+    out.push('<text x="'+((L+W-R)/2)+'" y="'+(Y(0)+40).toFixed(1)+'" text-anchor="middle" fill="'+INK+'" font-family="Geist Mono, monospace" font-size="11" letter-spacing="1.4">DRIVE AGE, YEARS</text>');
 
     var d = "", a;
     for(a=0; a<=maxAge; a+=0.1) d += (d?"L":"M") + X(a).toFixed(1) + " " + Y(ageMul(a)).toFixed(1) + " ";
