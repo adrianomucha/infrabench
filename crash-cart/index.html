@@ -123,22 +123,29 @@
      controls; everything around them is plain text. */
   .console-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:12px 72px;align-items:stretch;margin-top:6px}
   @media(max-width:980px){.console-grid{grid-template-columns:1fr;gap:0}}
-  .config{font-size:clamp(20px,6.5vw,26px);line-height:1.9;color:var(--tx2);margin:8px 0 0;text-wrap:pretty;letter-spacing:-.01em}
-  .config + .config{margin-top:4px}
-  .iv-num{font-family:var(--mono);font-size:.92em;font-weight:500;color:var(--grn);background:transparent;
-    border:0;border-bottom:1px solid var(--line2);padding:0 1px 2px;text-align:center;font-variant-numeric:tabular-nums}
+  /* 26px is a display size, so it takes display leading: 1.55 keeps the sentence reading as
+     one sentence while still clearing the control underlines. The gap between the two
+     sentences has to beat that leading, or the four lines read as one undifferentiated block. */
+  .config{font-size:clamp(20px,2.4vw,26px);line-height:1.55;color:var(--tx2);margin:8px 0 0;text-wrap:balance;letter-spacing:-.012em}
+  .config + .config{margin-top:.62em}
+  /* Both controls are the same typeface at the same size, so giving them the same
+     line-height and padding puts their rules at the same depth below the shared baseline. */
+  .iv-num{font-family:var(--mono);font-size:.92em;font-weight:500;color:var(--grn);background:transparent;line-height:1.15;
+    border:0;border-bottom:1px solid var(--line2);padding:0 1px 3px;text-align:center;font-variant-numeric:tabular-nums}
   .iv-num:hover{border-bottom-color:var(--tx3)}
   .iv-num:focus{outline:0;border-bottom-color:var(--grn)}
   input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   .iv-num{-moz-appearance:textfield;appearance:textfield}
-  .config-note{font-size:15px;color:var(--tx2);margin:20px 0 0;max-width:60ch}
-  .config-meta{font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--tx3);margin:12px 0 0;line-height:1.9}
+  .config-note{font-size:15px;color:var(--tx2);margin:26px 0 0;max-width:60ch;text-wrap:pretty}
+  /* mono is already wide; .08em on top of that pushed the strip past its own column */
+  .config-meta{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--tx3);margin:14px 0 0;line-height:1.6}
   details.more.assump>.d-body{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:12px 72px;
     align-items:start;padding:12px 18px 26px;padding-inline-start:37px}
-  .assump .config{font-size:16px;line-height:2;margin:0}
+  /* text size, not display size: no negative tracking and normal body leading */
+  .assump .config{font-size:16px;line-height:1.7;letter-spacing:normal;margin:0}
   .assump .hint{font-size:15px;line-height:1.7;margin-top:9px}
   /* a value never parts from its unit at a line break */
-  .assump .nb{white-space:nowrap}
+  .nb{white-space:nowrap}
   @media(max-width:980px){details.more.assump>.d-body{grid-template-columns:1fr;gap:0;padding:6px 18px 22px}
     .assump .hint{margin-top:12px}}
   .assump .iv-num{padding-block:3px}
@@ -146,9 +153,11 @@
 
   /* ---------- profile and scheme pickers ----------
      The ARIA select-only combobox pattern, worn inline as a word in the sentence. */
-  .sel{position:relative;display:inline-block;max-width:100%;vertical-align:bottom}
-  .sel-btn{display:inline-flex;align-items:baseline;gap:7px;font-family:var(--mono);font-size:.92em;font-weight:500;
-    color:var(--grn);background:transparent;border:0;border-bottom:1px solid var(--line2);padding:0 1px 2px;cursor:pointer;white-space:nowrap;max-width:100%}
+  /* baseline, not bottom: aligning to the bottom of a display-leading line box dropped the
+     picker's rule well below the rule under the neighbouring number on the same line */
+  .sel{position:relative;display:inline-block;max-width:100%;vertical-align:baseline}
+  .sel-btn{display:inline-flex;align-items:baseline;gap:7px;font-family:var(--mono);font-size:.92em;font-weight:500;line-height:1.15;
+    color:var(--grn);background:transparent;border:0;border-bottom:1px solid var(--line2);padding:0 1px 3px;cursor:pointer;white-space:nowrap;max-width:100%}
   .sel-btn:hover{border-bottom-color:var(--tx3)}
   .sel-btn[aria-expanded="true"]{border-bottom-color:var(--grn)}
   .sel-btn:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
@@ -187,8 +196,10 @@
   .headline-out .lbl{margin-bottom:14px}
   .headline-out .lbl::before{content:"";display:inline-block;width:6px;height:6px;background:var(--grn);margin-right:10px;vertical-align:1px}
   .big{font-weight:500;font-size:clamp(24px,2.6vw,34px);line-height:1.25;letter-spacing:-.025em;color:var(--tx);font-variant-numeric:tabular-nums;text-wrap:balance}
-  .big .a{color:var(--grn2);margin-inline-end:4px;font-family:var(--mono);font-weight:400}
-  .big .v{color:var(--grn);font-family:var(--mono)}
+  /* Geist Mono's caps run ~4.5% taller than Archivo's at a shared size, so the mono figure
+     read a size up from the sentence carrying it. .95em lands the two cap heights together. */
+  .big .a{color:var(--grn2);margin-inline-end:4px;font-family:var(--mono);font-weight:400;font-size:.95em}
+  .big .v{color:var(--grn);font-family:var(--mono);font-size:.95em}
   .headline-out .note{font-size:15px;color:var(--tx2);margin:14px 0 20px}
 
   /* ---------- the band bar ----------
@@ -466,9 +477,9 @@
              split the sentence apart at the first picker's listbox if it did -->
         <div class="config">My fleet is a
           <span class="sel"><span class="sel-btn" id="prof" role="combobox" tabindex="0" aria-controls="profList" aria-expanded="false" aria-labelledby="profLabel"><span class="nm" id="profName"></span><svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span><ul class="sel-list" id="profList" role="listbox" aria-labelledby="profLabel" hidden></ul></span> of
-          <input class="iv-num" type="number" id="drives" value="3000" min="20" max="500000" step="10" aria-label="Fleet size in drives"> drives in
+          <span class="nb"><input class="iv-num" type="number" id="drives" value="3000" min="20" max="500000" step="10" aria-label="Fleet size in drives"> drives</span> in
           <span class="sel"><span class="sel-btn" id="scheme" role="combobox" tabindex="0" aria-controls="schemeList" aria-expanded="false" aria-labelledby="schemeLabel"><span class="nm" id="schemeName"></span><svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span><ul class="sel-list" id="schemeList" role="listbox" aria-labelledby="schemeLabel" hidden></ul></span> groups.</div>
-        <div class="config">The crew can pull <input class="iv-num" type="number" id="pulls" value="12" min="0" max="2000" step="1" aria-label="Crew capacity in pulls per week"> drives a week.</div>
+        <div class="config">The crew can pull <span class="nb"><input class="iv-num" type="number" id="pulls" value="12" min="0" max="2000" step="1" aria-label="Crew capacity in pulls per week"> drives</span> a week.</div>
 
         <p class="config-note" id="profNote"></p>
         <p class="config-meta" id="fleetMeta"></p>
@@ -742,6 +753,13 @@
   var $ = function(id){ return document.getElementById(id); };
   var state = { profile:"mixed", drives:3000, scheme:"ec173", smart:4.2, rebuild:150, pulls:12 };
 
+  /* Prose below is authored with ordinary spaces and welded on the way out: a figure and
+     its unit are one word, so a wrap never strands a "22" at the end of a line and its
+     "TB" at the start of the next. */
+  var NB = "\u00A0";
+  var UNITS = /(\d)\u0020(?=TB\b|MB\/s|yr\b|hours?\b|percent\b)/g;
+  function weld(s){ return s.replace(UNITS, "$1"+NB); }
+
   function fmt(n, d){
     if(!isFinite(n)) return "0";
     d = d === undefined ? 0 : d;
@@ -785,7 +803,7 @@
   function profileSpan(p){
     var lo = Infinity, hi = 0;
     p.mix.forEach(function(c){ var t = byId(MODELS, c[0]).tb; lo = Math.min(lo,t); hi = Math.max(hi,t); });
-    return lo + " to " + hi + " TB";
+    return lo + " to " + hi + NB + "TB";
   }
   function scheme(){ return byId(SCHEMES, state.scheme); }
   function model(id){ return byId(MODELS, id); }
@@ -973,7 +991,6 @@
     // queue keep the full name. Counts stay welded to their band names with no-break
     // spaces so that if a longer fleet does force a wrap, it breaks between segments,
     // never inside one.
-    var NB = "\u00A0";
     var lines = order.filter(function(b){ return counts[b] > 0; }).map(function(b){
       var name = b === "pull" ? "pull" : BANDNAME[b].toLowerCase();
       return fmt(counts[b])+NB+name;
@@ -1081,11 +1098,11 @@
   function render(){
     var r = compute(), p = profile(), sc = scheme();
 
-    $("profNote").textContent = p.note;
-    $("fleetMeta").textContent = fmt(r.totalDrives)+" drives · "+p.mix.length+" cohorts, "+profileSpan(p)+
-      ", mean age "+profileAge(p).toFixed(1)+" yr · "+fmt(Math.round(r.totalDrives/r.group))+" groups of "+r.group;
-    $("assumpHint").textContent = "4.2 percent is the published fleet-wide baseline. Rebuild rate is the effective rate against production traffic: at "+
-      state.rebuild+" MB/s a 16 TB drive rebuilds in "+fmt(16e6/state.rebuild/3600)+" hours.";
+    $("profNote").textContent = weld(p.note);
+    $("fleetMeta").textContent = fmt(r.totalDrives)+NB+"drives · "+p.mix.length+NB+"cohorts, "+profileSpan(p)+
+      ", mean age "+profileAge(p).toFixed(1)+NB+"yr · "+fmt(Math.round(r.totalDrives/r.group))+NB+"groups of "+r.group;
+    $("assumpHint").textContent = weld("4.2 percent is the published fleet-wide baseline. Rebuild rate is the effective rate against production traffic: at "+
+      state.rebuild+" MB/s a 16 TB drive rebuilds in "+fmt(16e6/state.rebuild/3600)+" hours.");
 
     setBig(r.thisWeek, 0, r.thisWeek === 1 ? "drive" : "drives");
     var evidence = r.totalFlag === 0
