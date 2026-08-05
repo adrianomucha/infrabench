@@ -83,10 +83,19 @@
   @media(max-width:860px){nav{display:none}}
 
   /* ---------- shared type ---------- */
-  h1{font-weight:500;font-size:clamp(36px,4.4vw,64px);line-height:1.04;letter-spacing:-.035em;margin:22px 0 24px;max-width:22ch;text-wrap:balance;color:var(--tx)}
+  /* ---- shared hero type, identical in index, rack-budget and crash-cart ----
+     One scale across the suite. 84px is the largest that still holds every one of the three
+     headlines to two lines; at 100px the two longer tool headlines ran to three and the home
+     page stopped matching them. h1 .setup carries the two-tone on the headlines built as a
+     setup and a question — the question keeps full brightness, the setup steps back. */
+  h1{font-weight:500;font-size:clamp(40px,5.6vw,84px);line-height:1;letter-spacing:-.04em;margin:24px 0 0;max-width:25ch;text-wrap:balance;color:var(--tx)}
+  h1 .setup{color:var(--tx2)}
+  .lede{font-size:17px;color:var(--tx2);max-width:60ch;margin:0;text-wrap:pretty}
+  .hero-body{margin:38px 0 0}
+  @media(max-width:700px){.hero-body{margin-top:30px}}
+  /* ---- end shared hero type ---- */
   h2{font-weight:500;font-size:clamp(26px,3vw,40px);line-height:1.1;letter-spacing:-.03em;margin:18px 0 18px;max-width:28ch;text-wrap:balance}
   h3{font-weight:600;font-size:17px;letter-spacing:-.015em;margin:0 0 8px}
-  .lede{font-size:17px;color:var(--tx2);max-width:62ch;margin:0;text-wrap:pretty}
   .lede a{color:var(--tx);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:4px}
   .lede a:hover{color:var(--grn);text-decoration-color:var(--grn)}
   @keyframes drop{from{opacity:0;transform:translateY(-5px)}}
@@ -106,16 +115,8 @@
   @media(max-width:700px){section{padding:64px 0}}
 
   /* ---------- hero ---------- */
-  .hero{padding:76px 0 64px}
-  @media(max-width:700px){.hero{padding:52px 0 44px}}
-  /* The headline is the setup and the question; the question is the part the tool answers,
-     so it keeps full brightness and the setup steps back — the same two-tone the answer
-     plate uses on its own figure. */
-  h1 .setup{color:var(--tx2)}
-  /* The hero fills its width with the headline rather than with a second block beside the
-     lede: the tool page's h1 was capped at 64px while the suite's index runs to 100px, so
-     this one sat small in a wide space. It gets the presence instead. */
-  .hero h1{font-size:clamp(38px,5.2vw,78px);max-width:26ch;line-height:1.02;letter-spacing:-.04em;margin:26px 0 30px}
+  .hero{padding:88px 0 64px}
+  @media(max-width:700px){.hero{padding:56px 0 44px}}
   /* provenance as one quiet line, the way the console captions its fleet: it reads as a
      credit under the prose it belongs to, which a free-standing table of three rows did not */
   .hero-meta{font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--tx3);margin:22px 0 0;line-height:1.7}
@@ -544,7 +545,7 @@
   <div class="hero">
     <div class="lbl rise">Tool 02 &mdash; Fleet failure triage</div>
     <h1 class="rise d1"><span class="setup">You cannot pull them all.</span> Which ones this week?</h1>
-    <div class="rise d2">
+    <div class="hero-body rise d2">
       <p class="lede">A failure rate says how many drives will die this year, not which ones. Crash Cart turns thirteen years of public fleet data into a short list: the drives worth a service trip this week, with the evidence behind each one. Every constant is in <a href="#method">the method</a>.</p>
       <!-- counted off the drive table on this page, so it cannot drift from what the tool queues -->
       <p class="hero-meta" id="heroMeta"></p>

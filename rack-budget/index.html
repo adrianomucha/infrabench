@@ -72,10 +72,19 @@
   @media(max-width:860px){nav{display:none}}
 
   /* ---------- shared type ---------- */
-  h1{font-weight:500;font-size:clamp(36px,4.4vw,64px);line-height:1.04;letter-spacing:-.035em;margin:22px 0 24px;max-width:22ch;text-wrap:balance}
+  /* ---- shared hero type, identical in index, rack-budget and crash-cart ----
+     One scale across the suite. 84px is the largest that still holds every one of the three
+     headlines to two lines; at 100px the two longer tool headlines ran to three and the home
+     page stopped matching them. h1 .setup carries the two-tone on the headlines built as a
+     setup and a question — the question keeps full brightness, the setup steps back. */
+  h1{font-weight:500;font-size:clamp(40px,5.6vw,84px);line-height:1;letter-spacing:-.04em;margin:24px 0 0;max-width:25ch;text-wrap:balance}
+  h1 .setup{color:var(--tx2)}
+  .lede{font-size:17px;color:var(--tx2);max-width:60ch;margin:0;text-wrap:pretty}
+  .hero-body{margin:38px 0 0}
+  @media(max-width:700px){.hero-body{margin-top:30px}}
+  /* ---- end shared hero type ---- */
   h2{font-weight:500;font-size:clamp(26px,3vw,40px);line-height:1.1;letter-spacing:-.03em;margin:18px 0 18px;max-width:28ch;text-wrap:balance}
   h3{font-weight:600;font-size:17px;letter-spacing:-.015em;margin:0 0 8px}
-  .lede{font-size:17px;color:var(--tx2);max-width:62ch;margin:0;text-wrap:pretty}
   .lede a{color:var(--tx);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:4px}
   .lede a:hover{color:var(--grn);text-decoration-color:var(--grn)}
   section{padding:96px 0;border-top:1px solid var(--line);scroll-margin-top:64px}
@@ -94,8 +103,10 @@
   @keyframes drop{from{opacity:0;transform:translateY(-5px)}}
 
   /* ---------- hero ---------- */
-  .hero{padding:76px 0 64px}
-  @media(max-width:700px){.hero{padding:52px 0 44px}}
+  .hero{padding:88px 0 64px}
+  @media(max-width:700px){.hero{padding:56px 0 44px}}
+  /* provenance as one quiet line under the lede, the same credit Crash Cart's hero carries */
+  .hero-meta{font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--tx3);margin:22px 0 0;line-height:1.7}
 
   /* ---------- buttons ---------- */
   .btn{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;
@@ -474,8 +485,12 @@
 <div class="wrap">
   <div class="hero">
     <div class="lbl rise">Tool 01 &mdash; AI data center sizing</div>
-    <h1 class="rise d1">You have the megawatts. What actually fits?</h1>
-    <p class="lede rise d2">Rack density went from 6 kW to 600 kW in about four years, so every sizing spreadsheet built before 2024 is now wrong by an order of magnitude. Put in a power budget or a fleet size, get the other side &mdash; plus the heat you have to reject and the floor it lands on. Every constant is in the open, so <a href="#method">read the method</a> if you want to argue with one.</p>
+    <h1 class="rise d1"><span class="setup">You have the megawatts.</span> What actually fits?</h1>
+    <div class="hero-body rise d2">
+      <p class="lede">Rack density went from 6 kW to 600 kW in about four years, so every sizing spreadsheet built before 2024 is now wrong by an order of magnitude. Put in a power budget or a fleet size, get the other side &mdash; plus the heat you have to reject and the floor it lands on. Every constant is in the open, so <a href="#method">read the method</a> if you want to argue with one.</p>
+      <!-- counted off the rack presets on this page, so it cannot drift from what the tool sizes -->
+      <p class="hero-meta" id="heroMeta"></p>
+    </div>
   </div>
 </div>
 
@@ -817,6 +832,18 @@
     d = d === undefined ? 0 : d;
     return n.toLocaleString("en-US",{minimumFractionDigits:d, maximumFractionDigits:d});
   }
+  /* The hero counts the presets rather than quoting them, so the two can never disagree:
+     add a rack profile and the number in the hero moves with it. "Custom" is the reader's
+     own figure, not a published one, so it is not counted or ranged. */
+  var NB = "\u00A0";
+  function buildProv(){
+    var real = PRESETS.filter(function(p){ return p.id !== "custom"; });
+    var lo = Infinity, hi = 0;
+    real.forEach(function(p){ lo = Math.min(lo, p.kw); hi = Math.max(hi, p.kw); });
+    $("heroMeta").textContent = "Public platform disclosures · "+real.length+NB+"rack profiles · "+
+      lo+" to "+hi+NB+"kW · current as of July"+NB+"2026";
+  }
+
   function preset(){
     for(var i=0;i<PRESETS.length;i++){ if(PRESETS[i].id===state.preset) return PRESETS[i]; }
     return PRESETS[4];
@@ -1331,6 +1358,7 @@
 
   document.addEventListener("DOMContentLoaded", function(){
     var shared = readUrl();   // arrived on a shared configuration link
+    buildProv();
     buildRef();
     picker.init(function(id){
       state.preset = id;
