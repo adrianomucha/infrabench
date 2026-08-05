@@ -330,13 +330,28 @@
   .step b{color:var(--tx);font-weight:500}
 
   /* ---------- the wear curve ---------- */
-  .curve{border:1px solid var(--line);background:var(--bg2);padding:30px 30px 24px;margin-top:36px}
+  .curve{position:relative;border:1px solid var(--line);background:var(--bg2);padding:30px 30px 24px;margin-top:36px}
   @media(max-width:700px){.curve{padding:22px 18px 18px}}
   .curve .t{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin-bottom:8px}
   .curve .s{font-size:15px;color:var(--tx2);margin:0 0 22px;max-width:74ch}
-  .curve svg{width:100%;height:auto;display:block}
-  .curve-legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:16px;font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--tx2)}
-  .curve-legend .mk{display:inline-block;width:8px;height:8px;margin-inline-end:7px;vertical-align:-1px}
+  .curve svg{width:100%;height:auto;display:block;overflow:visible}
+  .curve svg .hit{fill:transparent;cursor:pointer}
+  .curve svg .hit:focus-visible{outline:2px solid var(--grn);outline-offset:2px}
+  .curve-legend{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:16px;font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--tx2)}
+  /* the key mirrors the mark: a stroke for the line, a ring for the cohort dots */
+  .curve-legend .lk{display:inline-block;width:16px;height:2px;background:var(--grn);margin-inline-end:8px;vertical-align:4px}
+  .curve-legend .mk{display:inline-block;width:9px;height:9px;border-radius:50%;box-shadow:inset 0 0 0 1.6px var(--grn);margin-inline-end:8px;vertical-align:-1px}
+  .curve-legend .who{margin-inline-start:auto;color:var(--tx3)}
+  @media(max-width:700px){.curve-legend .who{margin-inline-start:0}}
+  /* the readout: the figure leads, what it belongs to follows */
+  .c-tip{position:absolute;z-index:5;pointer-events:none;transform:translate(-50%,-100%);
+    background:var(--bg);border:1px solid var(--line2);padding:9px 13px 10px;
+    font-family:var(--mono);font-size:12px;line-height:1.6;color:var(--tx3);
+    box-shadow:0 14px 30px rgba(0,0,0,.62);white-space:nowrap}
+  .c-tip[hidden]{display:none}
+  .c-tip b{display:block;font-weight:500;font-size:14px;color:var(--grn);letter-spacing:-.01em;margin-bottom:3px}
+  .c-tip span{display:block}
+  .c-tip .m{color:var(--tx2b)}
 
   .worked{border:1px solid var(--line);background:var(--bg2);padding:32px 34px;margin-top:36px}
   @media(max-width:700px){.worked{padding:24px 20px}}
@@ -631,6 +646,10 @@
         <desc id="curveDesc">A shallow bathtub curve. The multiplier starts near 1.45 in the first months, falls to about 0.8 at year two, and climbs steadily past year five to roughly 3.9 by year ten. Your selected fleet cohorts are plotted along it.</desc>
       </svg>
       <div class="curve-legend" id="curveLegend"></div>
+      <!-- Hover and focus readout. It never gates a value: the axes carry the multiplier and
+           the age, the dot labels carry capacity, each dot's own aria-label carries all of
+           it, and the queue rows below repeat the count, the age and the multiplier. -->
+      <div class="c-tip" id="curveTip" hidden aria-hidden="true"><b></b><span class="m"></span><span></span></div>
     </div>
 
     <div class="worked">
@@ -1125,50 +1144,143 @@
      10px labels sit on the same type scale as the rest of the page instead of being
      stretched up with the viewBox. Re-rendered on resize and when its details opens. */
   function renderCurve(){
-    var p = profile(), box = $("curve");
-    var W = Math.max(200, box.clientWidth || 720), H = 260, L = 46, R = 14, T = 16, B = 38;
+    var p = profile(), box = $("curve"), tip = $("curveTip");
+    var W = Math.max(200, box.clientWidth || 720);
+    /* the plot used to be 260 tall at any width, so on a wide screen the bathtub flattened
+       into a straight line and the whole point of the chart went missing. Height tracks
+       width instead, inside bounds that keep it readable on a phone and from sprawling. */
+    var H = Math.round(Math.max(250, Math.min(380, W*0.36)));
+    var L = 46, R = 16, T = 20, B = 38;
     var narrow = W < 520;   // on a phone the cohort labels collide, so the legend carries them
     box.setAttribute("viewBox", "0 0 " + W + " " + H);
     var maxAge = 11, maxMul = 4.4;
+    var SURF = "#0E1114", GRN = "#3FE0A0", INK = "#7B838D";
     function X(a){ return L + (a/maxAge)*(W-L-R); }
     function Y(m){ return T + (1 - m/maxMul)*(H-T-B); }
     var out = [], i;
 
+    out.push('<defs><linearGradient id="cvWash" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="'+GRN+'" stop-opacity=".17"/>' +
+      '<stop offset="1" stop-color="'+GRN+'" stop-opacity="0"/></linearGradient></defs>');
+
+    /* whole-number gridlines: 1.1x, 2.2x, 3.3x were an artefact of dividing the axis by
+       four, and you cannot read a value off ticks like that. The 1x line is the lifetime
+       average by definition, so it carries that label instead of a second dashed line
+       sitting on top of it. */
     for(i=0;i<=4;i++){
-      var mv = i*1.1, y = Y(mv);
-      out.push('<line x1="'+L+'" y1="'+y.toFixed(1)+'" x2="'+(W-R)+'" y2="'+y.toFixed(1)+'" stroke="#1C2126" stroke-width="1"/>');
-      out.push('<text x="'+(L-9)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" fill="#7B838D" font-family="Geist Mono, monospace" font-size="11">'+mv.toFixed(1)+'x</text>');
+      var y = Y(i), avg = i === 1;
+      out.push('<line x1="'+L+'" y1="'+y.toFixed(1)+'" x2="'+(W-R)+'" y2="'+y.toFixed(1)+'" stroke="'+(avg?'#2A3037':'#1C2126')+'" stroke-width="1"/>');
+      out.push('<text x="'+(L-10)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" fill="'+INK+'" font-family="Geist Mono, monospace" font-size="11">'+i+'x</text>');
+      if(avg) out.push('<text x="'+(W-R-4)+'" y="'+(y-7).toFixed(1)+'" text-anchor="end" fill="'+INK+'" font-family="Geist Mono, monospace" font-size="11" letter-spacing="1">'+(narrow?'AVERAGE':'LIFETIME AVERAGE')+'</text>');
     }
     for(i=0;i<=10;i+=2){
-      out.push('<text x="'+X(i).toFixed(1)+'" y="'+(H-14)+'" text-anchor="middle" fill="#7B838D" font-family="Geist Mono, monospace" font-size="11">'+i+'</text>');
+      out.push('<text x="'+X(i).toFixed(1)+'" y="'+(H-14)+'" text-anchor="middle" fill="'+INK+'" font-family="Geist Mono, monospace" font-size="11">'+i+'</text>');
     }
-    out.push('<text x="'+((L+W-R)/2)+'" y="'+(H-1)+'" text-anchor="middle" fill="#7B838D" font-family="Geist Mono, monospace" font-size="11" letter-spacing="1.4">DRIVE AGE, YEARS</text>');
+    out.push('<text x="'+((L+W-R)/2)+'" y="'+(H-1)+'" text-anchor="middle" fill="'+INK+'" font-family="Geist Mono, monospace" font-size="11" letter-spacing="1.4">DRIVE AGE, YEARS</text>');
 
-    // the 1.0x line is where the lifetime average sits, so mark it
-    out.push('<line x1="'+L+'" y1="'+Y(1).toFixed(1)+'" x2="'+(W-R)+'" y2="'+Y(1).toFixed(1)+'" stroke="#2A3037" stroke-width="1" stroke-dasharray="3 3"/>');
-    out.push('<text x="'+(W-R-4)+'" y="'+(Y(1)-6).toFixed(1)+'" text-anchor="end" fill="#7B838D" font-family="Geist Mono, monospace" font-size="11">'+(narrow?'AVG':'LIFETIME AVERAGE')+'</text>');
+    var d = "", a;
+    for(a=0; a<=maxAge; a+=0.1) d += (d?"L":"M") + X(a).toFixed(1) + " " + Y(ageMul(a)).toFixed(1) + " ";
+    // a wash under the line gives the bathtub its shape at a glance, before you read a value
+    out.push('<path d="'+d+'L '+X(maxAge).toFixed(1)+' '+Y(0).toFixed(1)+' L '+X(0).toFixed(1)+' '+Y(0).toFixed(1)+' Z" fill="url(#cvWash)"/>');
+    out.push('<path d="'+d+'" fill="none" stroke="'+GRN+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>');
 
-    var d = "";
-    for(var a=0; a<=maxAge; a+=0.1) d += (d?"L":"M") + X(a).toFixed(1) + " " + Y(ageMul(a)).toFixed(1) + " ";
-    out.push('<path d="'+d+'" fill="none" stroke="#3FE0A0" stroke-width="2"/>');
+    // crosshair, drawn once and moved: the reader aims at an age, not at a 2px line
+    out.push('<g id="cvHover" opacity="0" pointer-events="none">' +
+      '<line y1="'+T+'" y2="'+Y(0).toFixed(1)+'" stroke="#2A3037" stroke-width="1"/>' +
+      '<circle r="4.5" fill="'+SURF+'" stroke="'+GRN+'" stroke-width="2"/></g>');
 
-    var shareSum = 0;
+    var shareSum = 0, marks = [];
     for(i=0;i<p.mix.length;i++) shareSum += p.mix[i][1];
     p.mix.forEach(function(c){
       var md = model(c[0]), n = Math.round(state.drives*(c[1]/shareSum));
-      var x = X(Math.min(c[2], maxAge)), y = Y(ageMul(c[2]));
+      var age = Math.min(c[2], maxAge), mul = ageMul(c[2]);
+      var x = X(age), y = Y(mul);
       var rr = Math.max(4, Math.min(15, Math.sqrt(n)/3.2));
-      out.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+rr.toFixed(1)+'" fill="#0A0C0E" stroke="#3FE0A0" stroke-width="1.6" opacity="0.95"/>');
-      out.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="2.2" fill="#3FE0A0"/>');
-      if(!narrow) out.push('<text x="'+x.toFixed(1)+'" y="'+(y-rr-7).toFixed(1)+'" text-anchor="middle" fill="#EEF1F3" font-family="Geist Mono, monospace" font-size="11">'+md.tb+' TB</text>');
+      marks.push({x:x, y:y, r:rr, md:md, n:n, age:c[2], mul:mul});
+      // surface ring first, so a dot sitting on the line still reads as a dot
+      out.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+rr.toFixed(1)+'" fill="'+SURF+'" stroke="'+SURF+'" stroke-width="3"/>');
+      out.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+rr.toFixed(1)+'" fill="none" stroke="'+GRN+'" stroke-width="1.6"/>');
+      out.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="2.4" fill="'+GRN+'"/>');
+      if(!narrow) out.push('<text x="'+x.toFixed(1)+'" y="'+(y-rr-8).toFixed(1)+'" text-anchor="middle" fill="#A8B0B8" font-family="Geist Mono, monospace" font-size="11">'+md.tb+' TB</text>');
+    });
+    // hit areas last so they sit above the marks, and wide enough to actually hit
+    marks.forEach(function(m, idx){
+      out.push('<circle class="hit" data-i="'+idx+'" cx="'+m.x.toFixed(1)+'" cy="'+m.y.toFixed(1)+'" r="'+Math.max(m.r+9, 14).toFixed(1)+'"' +
+        ' tabindex="0" role="img" aria-label="'+attr(m.md.brand+' '+m.md.model+', '+m.md.tb+' TB, '+m.age.toFixed(1)+' years old, '+fmt(m.n)+' drives, age multiplier '+m.mul.toFixed(2))+'"/>');
     });
 
-    $("curve").innerHTML = out.join("");
+    box.innerHTML = out.join("");
     $("curveLegend").innerHTML =
-      '<span><span class="mk" style="background:#3FE0A0"></span>Age multiplier</span>' +
-      '<span><span class="mk" style="background:#0A0C0E;box-shadow:inset 0 0 0 1.6px #3FE0A0"></span>Your cohorts, sized by drive count</span>' +
-      '<span>' + profile().name + '</span>';
+      '<span><span class="lk"></span>Age multiplier</span>' +
+      '<span><span class="mk"></span>Your cohorts, sized by drive count</span>' +
+      '<span class="who"></span>';
+    $("curveLegend").lastChild.textContent = p.name;
+
+    /* The readout reads its geometry from cv, which every render replaces, so the listeners
+       below are wired to the box once at startup rather than restacked on each resize. */
+    cv = { W:W, L:L, R:R, T:T, Y:Y, maxAge:maxAge, marks:marks,
+           hover:box.querySelector("#cvHover") };
+    cv.hLine = cv.hover.firstChild;
+    cv.hDot  = cv.hover.lastChild;
+    box.querySelectorAll(".hit").forEach(function(el){
+      var idx = +el.getAttribute("data-i");
+      el.addEventListener("pointerenter", function(){ curveShowMark(idx); });
+      el.addEventListener("focus", function(){ curveShowMark(idx); });
+      el.addEventListener("pointerleave", curveHide);
+      el.addEventListener("blur", curveHide);
+    });
   }
+
+  /* ---- the curve's hover and focus readout ---- */
+  var cv = null;
+  /* An <svg> has no offsetLeft, so the readout is placed off bounding rects: the plot
+     point, expressed relative to the panel it is absolutely positioned in. It is then
+     kept inside that panel, and flipped below the point when there is no room above. */
+  function curvePlace(px, py){
+    var box = $("curve"), tip = $("curveTip"), wrap = box.closest(".curve");
+    var r = box.getBoundingClientRect(), wr = wrap.getBoundingClientRect();
+    var s = r.width / cv.W;
+    tip.hidden = false;                                   // measurable before it is placed
+    var x = r.left - wr.left + px*s, y = r.top - wr.top + py*s;
+    var half = tip.offsetWidth/2;
+    tip.style.left = Math.max(half+4, Math.min(wr.width-half-4, x)) + "px";
+    var above = y - 14 - tip.offsetHeight >= 0;
+    tip.style.transform = above ? "translate(-50%,-100%)" : "translate(-50%,0)";
+    tip.style.top = (above ? y - 14 : y + 22) + "px";
+  }
+  function curveSay(val, l1, l2){
+    var tip = $("curveTip");
+    tip.children[0].textContent = val;
+    tip.children[1].textContent = l1;
+    tip.children[2].textContent = l2 || "";
+  }
+  function curveHide(){
+    $("curveTip").hidden = true;
+    if(cv) cv.hover.setAttribute("opacity", "0");
+  }
+  function curveShowMark(idx){
+    var m = cv.marks[idx];
+    cv.hover.setAttribute("opacity", "0");
+    curveSay(m.mul.toFixed(2)+"x at "+m.age.toFixed(1)+" yr",
+             m.md.brand+" "+m.md.model,
+             m.md.tb+" TB · "+fmt(m.n)+" drives");
+    curvePlace(m.x, m.y - m.r);
+  }
+  function curveTrack(e){
+    if(!cv) return;
+    if(e.target.classList && e.target.classList.contains("hit")) return;
+    var box = $("curve"), r = box.getBoundingClientRect(), s = r.width / cv.W;
+    var px = (e.clientX - r.left) / s;
+    if(px < cv.L || px > cv.W - cv.R){ curveHide(); return; }
+    var ag = (px - cv.L) / (cv.W - cv.L - cv.R) * cv.maxAge, mul = ageMul(ag), py = cv.Y(mul);
+    cv.hLine.setAttribute("x1", px.toFixed(1)); cv.hLine.setAttribute("x2", px.toFixed(1));
+    cv.hDot.setAttribute("cx", px.toFixed(1)); cv.hDot.setAttribute("cy", py.toFixed(1));
+    cv.hover.setAttribute("opacity", "1");
+    curveSay(mul.toFixed(2)+"x", "at "+ag.toFixed(1)+" years", "");
+    curvePlace(px, py);
+  }
+  // hardcoded copy, but an attribute is an attribute
+  function attr(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); }
 
   function render(){
     var r = compute(), p = profile(), sc = scheme();
@@ -1520,6 +1632,9 @@
     window.addEventListener("resize", function(){
       clearTimeout(curveResizeT); curveResizeT = setTimeout(renderCurve, 120);
     });
+    // wired to the box, not to its contents, so a redraw never stacks a second copy
+    $("curve").addEventListener("pointermove", curveTrack);
+    $("curve").addEventListener("pointerleave", curveHide);
 
     // a shared link should land on the numbers, not on the sales pitch
     if(shared){
