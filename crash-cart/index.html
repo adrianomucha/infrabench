@@ -341,9 +341,21 @@
   .worked{border:1px solid var(--line);background:var(--bg2);padding:32px 34px;margin-top:36px}
   @media(max-width:700px){.worked{padding:24px 20px}}
   .worked .t{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin-bottom:20px}
-  .chain{font-family:var(--mono);font-size:15px;line-height:2.2;color:var(--tx2b);overflow-x:auto}
+  /* 2.2 leading was carrying the whole structure: it separated the steps, but it separated a
+     wrapped step's own two lines by exactly as much, so on a narrow screen one step read as
+     two. Structure moves to the markup and the leading comes back to a readable 1.7. */
+  .chain{font-family:var(--mono);font-size:15px;line-height:1.6;color:var(--tx2b);overflow-x:auto}
+  .chain .premise{margin:0 0 18px;color:var(--tx)}
+  .chain ol{list-style:none;margin:0;padding:0}
+  /* the arrow hangs in the margin, so a wrapped line sits under its own step's text and the
+     arrows themselves read as the column of steps. That column, not a large gap, is what
+     separates one step from the next, so the steps can sit closer than they did on 2.2. */
+  .chain li{padding-inline-start:2ch;text-indent:-2ch;margin-top:6px}
+  .chain li:first-child{margin-top:0}
   .chain .a{color:var(--grn)}
-  .chain b{font-weight:600;color:var(--tx)}
+  /* 600 against a 400 body punched the figures out of their sentences; the lift to --tx
+     already carries the emphasis, so the weight only needs one step */
+  .chain b{font-weight:500;color:var(--tx)}
   .worked .out{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);font-size:16px;color:var(--tx2)}
 
   /* ---------- table ----------
@@ -623,16 +635,21 @@
 
     <div class="worked">
       <div class="t">Worked example, one row of the default queue</div>
+      <!-- One element per step rather than <br>-separated lines: a step that wraps has to
+           stay one step, which line-height alone cannot express. The arrows are decorative
+           and hidden from assistive tech, which reads the steps as the list they are. -->
       <div class="chain">
-        600 x Toshiba MG07ACA14TA, 14 TB, 5.1 years old, of which 25 are flagged by SMART<br>
-        <span class="a">&rarr;</span> lifetime AFR <b>1.0 percent</b> per year<br>
-        <span class="a">&rarr;</span> times the age multiplier at 5.1 years, 1.50 <span class="a">=</span> 1.51 percent<br>
-        <span class="a">&rarr;</span> times the flagged likelihood ratio, 18.3 <span class="a">=</span> <b>27.5 percent</b> per year<br>
-        <span class="a">&rarr;</span> over 30 days <span class="a">=</span> 2.23 percent per drive, across the 25 that are flagged<br>
-        <span class="a">&rarr;</span> <b>0.56 expected failures</b> in the next 30 days<br>
-        <span class="a">&rarr;</span> each one opens a 25.9 hour rebuild across a 17+3 group holding <b>238 TB</b><br>
-        <span class="a">&rarr;</span> <b>133 TB</b> drops to two parity units in the next 30 days, and that is the sort key<br>
-        <span class="a">&rarr;</span> chance any of it is actually lost, about 1 in 12 billion
+        <p class="premise">600 x Toshiba MG07ACA14TA, 14 TB, 5.1 years old, of which 25 are flagged by SMART</p>
+        <ol>
+          <li><span class="a" aria-hidden="true">&rarr;</span> lifetime AFR <b>1.0 percent</b> per year</li>
+          <li><span class="a" aria-hidden="true">&rarr;</span> times the age multiplier at 5.1 years, 1.50 = 1.51 percent</li>
+          <li><span class="a" aria-hidden="true">&rarr;</span> times the flagged likelihood ratio, 18.3 = <b>27.5 percent</b> per year</li>
+          <li><span class="a" aria-hidden="true">&rarr;</span> over 30 days = 2.23 percent per drive, across the 25 that are flagged</li>
+          <li><span class="a" aria-hidden="true">&rarr;</span> <b>0.56 expected failures</b> in the next 30 days</li>
+          <li><span class="a" aria-hidden="true">&rarr;</span> each one opens a 25.9 hour rebuild across a 17+3 group holding <b>238 TB</b></li>
+          <li><span class="a" aria-hidden="true">&rarr;</span> <b>133 TB</b> drops to two parity units in the next 30 days, and that is the sort key</li>
+          <li><span class="a" aria-hidden="true">&rarr;</span> chance any of it is actually lost, about 1 in 12 billion</li>
+        </ol>
       </div>
       <div class="out">What moved this row up the queue was not the AFR, which is unremarkable. The SMART flag multiplied the risk eighteen-fold, and a 238&nbsp;TB group multiplied the consequence.</div>
     </div>
