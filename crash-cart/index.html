@@ -111,22 +111,13 @@
      so it keeps full brightness and the setup steps back — the same two-tone the answer
      plate uses on its own figure. */
   h1 .setup{color:var(--tx2)}
-  /* The suite's index already pairs the lede with a second block on this line. The tool
-     page stacked instead and left two thirds of the hero empty, so it takes the same row:
-     the lede, and the record the whole thing runs on, counted off the table further down
-     rather than typed in. */
-  .hero-sub{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:30px 56px}
-  .hero-sub .lede{flex:1 1 380px}
-  /* the console's own right column, to the pixel, so the hero's second block and the answer
-     plate under it start on one line down the page */
-  .hero-prov{flex:none;width:calc((100% - 72px) * 5 / 12);min-width:300px;border-top:1px solid var(--line2);padding-top:15px}
-  .hero-prov .k{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--grn);margin-bottom:11px}
-  .hero-prov .r{display:flex;align-items:baseline;justify-content:space-between;gap:24px;
-    font-family:var(--mono);font-size:13px;line-height:1.95;color:var(--tx3)}
-  .hero-prov .r b{font-weight:500;color:var(--tx);font-variant-numeric:tabular-nums}
-  /* 980 is where the console drops to one column, so the hero drops with it and the two
-     never disagree about whether the page has a right-hand column */
-  @media(max-width:980px){.hero-prov{min-width:0;width:100%}}
+  /* The hero fills its width with the headline rather than with a second block beside the
+     lede: the tool page's h1 was capped at 64px while the suite's index runs to 100px, so
+     this one sat small in a wide space. It gets the presence instead. */
+  .hero h1{font-size:clamp(38px,5.2vw,78px);max-width:26ch;line-height:1.02;letter-spacing:-.04em;margin:26px 0 30px}
+  /* provenance as one quiet line, the way the console captions its fleet: it reads as a
+     credit under the prose it belongs to, which a free-standing table of three rows did not */
+  .hero-meta{font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--tx3);margin:22px 0 0;line-height:1.7}
 
   .btn{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;
     display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:15px 24px;
@@ -552,15 +543,10 @@
   <div class="hero">
     <div class="lbl rise">Tool 02 &mdash; Fleet failure triage</div>
     <h1 class="rise d1"><span class="setup">You cannot pull them all.</span> Which ones this week?</h1>
-    <div class="hero-sub rise d2">
+    <div class="rise d2">
       <p class="lede">A failure rate says how many drives will die this year, not which ones. Crash Cart turns thirteen years of public fleet data into a short list: the drives worth a service trip this week, with the evidence behind each one. Every constant is in <a href="#method">the method</a>.</p>
       <!-- counted off the drive table on this page, so it cannot drift from what the tool queues -->
-      <div class="hero-prov">
-        <div class="k">Backblaze Drive Stats</div>
-        <div class="r"><span>Drive models</span><b id="provModels">&mdash;</b></div>
-        <div class="r"><span>Drive days</span><b id="provDays">&mdash;</b></div>
-        <div class="r"><span>Published since</span><b>2013</b></div>
-      </div>
+      <p class="hero-meta" id="heroMeta"></p>
     </div>
   </div>
 </div>
@@ -1429,8 +1415,8 @@
   function buildProv(){
     var days = 0;
     MODELS.forEach(function(m){ days += m.days; });
-    $("provModels").textContent = MODELS.length;
-    $("provDays").textContent = fmt(days) + "M";
+    $("heroMeta").textContent = "Backblaze Drive Stats · "+MODELS.length+NB+"drive models · "+
+      fmt(days)+"M"+NB+"drive days · quarterly since"+NB+"2013";
   }
 
   function buildRef(){
