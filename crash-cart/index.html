@@ -151,7 +151,7 @@
   .aledger{display:grid;grid-template-columns:repeat(2,1fr);background:var(--bg2);border-top:1px solid var(--line)}
   /* 37px is where the summary's own text starts, past the +/- marker and its gap, so the
      panel keeps one left edge from the disclosure down through the cells */
-  .acell{padding:28px 37px 30px}
+  .acell{display:flex;flex-direction:column;padding:28px 37px 30px}
   .acell + .acell{border-inline-start:1px solid var(--line)}
   /* a real label: the term names the input and is its click target */
   .aterm{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
@@ -162,7 +162,9 @@
      stacked cell it reads from the start, so term, figure and note share one margin */
   .aval .iv-num{font-size:26px;text-align:start;padding:0 1px 5px 0}
   .aval .u{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--tx3)}
-  .anote{margin:18px 0 0;font-size:14px;line-height:1.7;color:var(--tx2);max-width:48ch;text-wrap:pretty}
+  /* the note sits on the cell's floor: when one provenance line runs longer than the
+     other, the slack opens above the notes rather than below one of them */
+  .anote{margin:auto 0 0;padding-top:20px;font-size:14px;line-height:1.7;color:var(--tx2);max-width:60ch;text-wrap:pretty}
   @media(max-width:760px){
     .aledger{grid-template-columns:1fr}
     .acell{padding:22px 18px 24px}
@@ -525,7 +527,7 @@
             <label class="aterm" for="smart">SMART coverage</label>
             <span class="aval"><input class="iv-num" type="number" id="smart" value="4.2" min="0" max="40" step="0.1"
               aria-describedby="smartUnit smartNote"><span class="u" id="smartUnit">percent of drives</span></span>
-            <p class="anote" id="smartNote">4.2&nbsp;percent is the published fleet-wide baseline.</p>
+            <p class="anote" id="smartNote"></p>
           </div>
           <div class="acell">
             <label class="aterm" for="rebuild">Rebuild rate</label>
@@ -1134,9 +1136,13 @@
     $("profNote").textContent = weld(p.note);
     $("fleetMeta").textContent = fmt(r.totalDrives)+NB+"drives · "+p.mix.length+NB+"cohorts, "+profileSpan(p)+
       ", mean age "+profileAge(p).toFixed(1)+NB+"yr · "+fmt(Math.round(r.totalDrives/r.group))+NB+"groups of "+r.group;
-    /* the SMART baseline is a published constant and lives in the markup; only the rebuild
-       line moves, because it restates the rate the reader just set */
-    $("rebuildNote").textContent = weld("The effective rate against production traffic: at "+
+    /* Both assumptions read the same way: where the number comes from, then what it does to
+       this fleet. The coverage lands as a count of canaries, the rate as a rebuild window. */
+    var canaries = r.totalFlag === 0 ? "no drives carry a canary"
+      : r.totalFlag === 1 ? "one drive carries a canary"
+      : fmt(r.totalFlag)+" drives carry a canary";
+    $("smartNote").textContent = weld("4.2 percent is the published fleet-wide baseline. In this fleet, "+canaries+".");
+    $("rebuildNote").textContent = weld("The effective rate against production traffic. At "+
       state.rebuild+" MB/s a 16 TB drive rebuilds in "+fmt(16e6/state.rebuild/3600)+" hours.");
 
     setBig(r.thisWeek, 0, r.thisWeek === 1 ? "drive" : "drives");
