@@ -104,11 +104,6 @@
     .rise{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
     .rise.d1{animation-delay:.06s}.rise.d2{animation-delay:.12s}
     @keyframes rise{from{opacity:0;transform:translateY(14px)}}
-    /* the survey line from the home stage sweeps the answer; pure decoration */
-    .headline-out::after{content:"";position:absolute;top:0;bottom:0;left:-160px;width:140px;pointer-events:none;
-      background:linear-gradient(90deg,transparent,rgba(63,224,160,.04) 40%,rgba(63,224,160,.12) 50%,rgba(63,224,160,.04) 60%,transparent);
-      animation:scan 8s linear infinite}
-    @keyframes scan{to{left:calc(100% + 40px)}}
     .big .cursor{animation:blink 1.15s steps(1) infinite}
     @keyframes blink{50%{opacity:0}}
   }
