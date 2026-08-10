@@ -472,8 +472,8 @@
     <div class="console-grid">
       <div>
         <!-- divs, not <p>: the picker's listbox may not sit inside a paragraph -->
-        <div class="config">I need <span class="nb"><input class="iv-num" type="number" id="mw" value="300" min="20" max="2000" step="10" aria-label="Megawatts of new capacity needed"> MW</span> of new grid capacity, energized by
-          <input class="iv-num" type="number" id="yr" value="2030" min="2027" max="2036" step="1" aria-label="Year the power is needed by">.</div>
+        <div class="config">I need <span class="nb"><input class="iv-num" type="number" inputmode="numeric" id="mw" value="300" min="20" max="2000" step="10" aria-label="Megawatts of new capacity needed"> MW</span> of new grid capacity, energized by
+          <input class="iv-num" type="number" inputmode="numeric" id="yr" value="2030" min="2027" max="2036" step="1" aria-label="Year the power is needed by">.</div>
         <div class="config">While the queue moves, I
           <span class="sel"><span class="sel-btn" id="bridge" role="combobox" tabindex="0" aria-controls="bridgeList" aria-expanded="false" aria-labelledby="bridgeLabel"><span class="nm" id="bridgeName"></span><svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span><ul class="sel-list" id="bridgeList" role="listbox" aria-labelledby="bridgeLabel" hidden></ul></span>.</div>
 
@@ -497,13 +497,13 @@
         <div class="aledger">
           <div class="acell">
             <label class="aterm" for="per">Size surcharge</label>
-            <span class="aval"><input class="iv-num" type="number" id="per" value="250" min="100" max="1000" step="50"
+            <span class="aval"><input class="iv-num" type="number" inputmode="numeric" id="per" value="250" min="100" max="1000" step="50"
               aria-describedby="perUnit perNote"><span class="u" id="perUnit">MW per extra study year</span></span>
             <p class="anote" id="perNote">Every megawatt past the first 200 makes the transmission study bigger and the network upgrades longer. One extra year per 250 MW is a planning heuristic read off the gap between published timelines for 100 MW and gigawatt-class requests.</p>
           </div>
           <div class="acell">
             <label class="aterm" for="floor">Bridge floor</label>
-            <span class="aval"><input class="iv-num" type="number" id="floor" value="2" min="0.5" max="5" step="0.5"
+            <span class="aval"><input class="iv-num" type="number" inputmode="decimal" id="floor" value="2" min="0.5" max="5" step="0.5"
               aria-describedby="floorUnit floorNote"><span class="u" id="floorUnit">years minimum, bridged</span></span>
             <p class="anote" id="floorNote">On-site generation is not instant power. An air permit, a substation and the gas turbine order book set the floor: majors are quoting deliveries years out, so two years from decision to first fire is aggressive but done.</p>
           </div>
@@ -511,7 +511,7 @@
       </div>
     </details>
 
-    <div class="stage" aria-hidden="false">
+    <div class="stage">
       <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
       <span class="hud tl2" aria-hidden="true">Energization windows &mdash; by region</span>
       <span class="hud tr2" id="stageTR" aria-hidden="true"></span>
@@ -608,14 +608,14 @@
 
     <div class="worked rv">
       <div class="t">Worked example, the default settings</div>
-      <div class="chain">
+      <div class="chain" tabindex="0" role="region" aria-label="Worked example arithmetic, scrolls horizontally on small screens">
         300 MW, needed by 2030, waiting on the utility, screened against ERCOT<br>
-        <span class="a">&rarr;</span> ERCOT's published large-load band <span class="a">=</span> 2 to 4 years<br>
-        <span class="a">&rarr;</span> size surcharge: (300 &minus; 200) / 250 <span class="a">=</span> +0.4 years of study<br>
-        <span class="a">&rarr;</span> adjusted band <span class="a">=</span> 2.4 to 4.4 years from mid-2026<br>
-        <span class="a">&rarr;</span> window <span class="a">=</span> <b>2028 to 2030</b>, and 2030 &le; the deadline, so ERCOT makes it<br>
-        <span class="a">&rarr;</span> the same arithmetic puts PJM at <b>2030 to 2033</b>: could slip<br>
-        <span class="a">&rarr;</span> and CAISO at <b>2031 to 2034</b>: misses, before politics is even priced in
+        <span class="a" aria-hidden="true">&rarr;</span> ERCOT's published large-load band <span class="a">=</span> 2 to 4 years<br>
+        <span class="a" aria-hidden="true">&rarr;</span> size surcharge: (300 &minus; 200) / 250 <span class="a">=</span> +0.4 years of study<br>
+        <span class="a" aria-hidden="true">&rarr;</span> adjusted band <span class="a">=</span> 2.4 to 4.4 years from mid-2026<br>
+        <span class="a" aria-hidden="true">&rarr;</span> window <span class="a">=</span> <b>2028 to 2030</b>, and 2030 &le; the deadline, so ERCOT makes it<br>
+        <span class="a" aria-hidden="true">&rarr;</span> the same arithmetic puts PJM at <b>2030 to 2033</b>: could slip<br>
+        <span class="a" aria-hidden="true">&rarr;</span> and CAISO at <b>2031 to 2034</b>: misses, before politics is even priced in
       </div>
       <div class="out">The surprise is not that Texas wins. It is the spread: for the same 300 MW, the gap between the fastest region and the slowest is longer than the entire construction schedule of the building.</div>
     </div>
@@ -854,7 +854,8 @@
     var opt = bridgeOpt();
 
     $("bridgeNote").textContent = opt.note;
-    $("askMeta").textContent = fmt(state.mw)+" MW ≈ "+fmt(r.racks)+" GB200 racks at PUE 1.2 · clock starts mid-2026 · 10 regions screened";
+    var NB = " ";
+    $("askMeta").textContent = fmt(state.mw)+NB+"MW ≈ "+fmt(r.racks)+NB+"GB200 racks at PUE"+NB+"1.2 · clock starts mid-2026 · 10 regions screened";
 
     // the answer
     if(r.makes.length > 0){
@@ -906,8 +907,7 @@
     for(var y = x0; y < x1; y++){
       var gx = X(y);
       out.push('<line x1="'+gx.toFixed(1)+'" y1="'+PADT+'" x2="'+gx.toFixed(1)+'" y2="'+(H-PADB+6)+'" stroke="#1C2126" stroke-width="1"/>');
-      if(y < x1 - 1 || true)
-        out.push('<text x="'+gx.toFixed(1)+'" y="'+(H-PADB+22)+'" fill="#7B838D" font-size="11" font-family="Geist Mono,monospace" text-anchor="start" dx="3">'+("’"+String(y).slice(2))+'</text>');
+      out.push('<text x="'+gx.toFixed(1)+'" y="'+(H-PADB+22)+'" fill="#7B838D" font-size="11" font-family="Geist Mono,monospace" text-anchor="start" dx="3">'+("’"+String(y).slice(2))+'</text>');
     }
 
     // the deadline: end of the chosen year
