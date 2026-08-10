@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Desk Budget · What your gear draws, and what AI it can run</title>
+<meta name="description" content="Configure a set of everyday hardware and get the two numbers nobody publishes together: what it draws on your power bill, and which AI models it can actually run, at how many tokens per second. Every constant shown.">
+<meta property="og:title" content="Desk Budget · What your gear draws, and what AI it can run">
+<meta property="og:description" content="Build a set from real published specs. Get watts, annual cost, breaker headroom, and the largest model that fits in your memory, with the generation speed its bandwidth allows.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="/assets/analytics.js"></script>
+<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+<style>
+  :root{
+    color-scheme:dark;
+    --bg:#0A0C0E;          /* page surface */
+    --bg2:#0E1114;         /* raised, one step */
+    --line:#1C2126;        /* hairline */
+    --line2:#2A3037;       /* stronger rule */
+    --tx:#EEF1F3;          /* primary text */
+    --tx2:#A8B0B8;         /* secondary text */
+    --tx2b:#C7CDD4;        /* dense mono passages: one step brighter to stay readable */
+    --tx3:#7B838D;         /* labels only */
+    --grn:#3FE0A0;         /* signal green: data and live things only */
+    --grn2:#2FBF86;
+    --ramp1:#4FE3A5;       /* ordinal step 1: the work */
+    --ramp2:#1E9E73;       /* ordinal step 2: on but idle */
+    --ramp3:#125C46;       /* ordinal step 3: always-on floor */
+    --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:16px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+  .wrap{max-width:1260px;margin:0 auto;padding:0 32px}
+  @media(max-width:640px){.wrap{padding:0 20px}}
+  a{color:var(--tx);text-decoration:none}
+
+  /* micro-label: the only place uppercase mono is allowed */
+  .lbl{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+
+  /* first focusable element: lets keyboard and screen-reader users bypass the sticky header */
+  .skip{position:absolute;left:-9999px;top:0;z-index:60;font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:12px 18px;background:var(--tx);color:var(--bg);font-weight:600}
+  .skip:focus{left:0}
+  main{display:block;scroll-margin-top:64px}
+  :focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  /* announced to assistive tech only: the result summary and the copy confirmation */
+  .sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+
+  /* ---------- header ---------- */
+  header{position:sticky;top:0;z-index:40;background:rgba(10,12,14,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:16px;height:60px}
+  .mark{display:flex;align-items:center;gap:11px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx)}
+  .mark .suite{display:flex;align-items:center;gap:11px;color:var(--tx3);position:relative}
+  .mark .suite::after{content:"";position:absolute;inset:-16px -8px}
+  .mark .suite:hover{color:var(--tx)}
+  .mark .sep{color:var(--line2)}
+  .mark .tool{color:var(--tx)}
+  .sq{width:9px;height:9px;background:var(--grn);flex:none}
+  nav{display:flex;gap:28px}
+  nav a{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);position:relative}
+  nav a::after{content:"";position:absolute;inset:-16px -10px}
+  nav a:hover{color:var(--tx)}
+  @media(max-width:860px){nav{display:none}}
+
+  /* ---------- shared type ---------- */
+  /* ---- shared hero type, identical in index, rack-budget, crash-cart and desk-budget ----
+     One scale across the suite. 84px is the largest that still holds every one of the
+     headlines to two lines. h1 .setup carries the two-tone on the headlines built as a
+     setup and a question: the question keeps full brightness, the setup steps back. */
+  h1{font-weight:500;font-size:clamp(40px,5.6vw,84px);line-height:1;letter-spacing:-.04em;margin:24px 0 0;max-width:25ch;text-wrap:balance}
+  h1 .setup{color:var(--tx2)}
+  .lede{font-size:17px;color:var(--tx2);max-width:60ch;margin:0;text-wrap:pretty}
+  .hero-body{margin:38px 0 0}
+  @media(max-width:700px){.hero-body{margin-top:30px}}
+  /* ---- end shared hero type ---- */
+  h2{font-weight:500;font-size:clamp(26px,3vw,40px);line-height:1.1;letter-spacing:-.03em;margin:18px 0 18px;max-width:28ch;text-wrap:balance}
+  h3{font-weight:600;font-size:17px;letter-spacing:-.015em;margin:0 0 8px}
+  .lede a{color:var(--tx);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:4px}
+  .lede a:hover{color:var(--grn);text-decoration-color:var(--grn)}
+  section{padding:96px 0;border-top:1px solid var(--line);scroll-margin-top:64px}
+  @media(max-width:700px){section{padding:64px 0}}
+
+  @media (prefers-reduced-motion: no-preference){
+    html{scroll-behavior:smooth}
+    .btn{transition:background .15s ease,border-color .15s ease,color .15s ease}
+    .toast{transition:opacity .22s ease, transform .22s ease}
+    .caret{transition:transform .18s ease, color .18s ease}
+    .sel-list{animation:drop .14s ease-out}
+    .rise{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+    .rise.d1{animation-delay:.06s}.rise.d2{animation-delay:.12s}
+    @keyframes rise{from{opacity:0;transform:translateY(14px)}}
+  }
+  @keyframes drop{from{opacity:0;transform:translateY(-5px)}}
+
+  /* ---------- hero ---------- */
+  .hero{padding:88px 0 64px}
+  @media(max-width:700px){.hero{padding:56px 0 44px}}
+  .hero-meta{font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--tx3);margin:22px 0 0;line-height:1.7}
+
+  /* ---------- buttons ---------- */
+  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:15px 24px;
+    background:var(--tx);color:var(--bg);border:1px solid var(--tx);cursor:pointer}
+  .btn:hover{background:#fff;border-color:#fff}
+  .btn.ghost{background:transparent;color:var(--tx);border-color:var(--line2)}
+  .btn.ghost:hover{border-color:var(--grn);color:var(--grn)}
+  .btn:active{transform:translateY(1px)}
+
+  /* ---------- calculator: one framed console ----------
+     The whole instrument is a single bordered panel: controls in a header row,
+     inputs and result split by one internal hairline, actions in a footer row. */
+  .console{border:1px solid var(--line)}
+  .console-hd{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;padding:12px 20px;border-bottom:1px solid var(--line)}
+  @media(min-width:641px){
+    .console-hd{position:sticky;top:60px;z-index:30;background:rgba(10,12,14,.92);backdrop-filter:blur(10px)}
+  }
+  .console-ft{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;border-top:1px solid var(--line);padding:16px 20px}
+  .modes{display:flex;flex-wrap:wrap;border:1px solid var(--line2);width:fit-content;max-width:100%}
+  .modes button{font-family:var(--mono);font-size:12px;letter-spacing:.13em;text-transform:uppercase;background:transparent;color:var(--tx3);border:0;padding:13px 20px;cursor:pointer}
+  .modes button:hover{color:var(--tx)}
+  .modes button + button{border-inline-start:1px solid var(--line2)}
+  .modes button[aria-pressed="true"]{background:var(--tx);color:var(--bg);font-weight:600}
+  @media(max-width:640px){
+    .modes{width:100%;flex-direction:column}
+    .modes button{width:100%;padding:15px 16px;text-align:start}
+    .modes button + button{border-inline-start:0;border-top:1px solid var(--line2)}
+  }
+
+  /* ---------- kit chips: the curated part, each one arriving with its arithmetic ---------- */
+  .kits{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--bg2)}
+  .kits .lbl{margin-inline-end:6px}
+  .kit{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line2);
+    background:transparent;color:var(--tx2);padding:9px 13px;cursor:pointer;white-space:nowrap}
+  .kit:hover{border-color:var(--grn);color:var(--grn)}
+  .kit[aria-pressed="true"]{background:var(--tx);border-color:var(--tx);color:var(--bg);font-weight:600}
+
+  .app{display:grid;grid-template-columns:minmax(320px,390px) minmax(0,1fr);align-items:stretch}
+  .app > .panel{min-width:0}
+  .panel{padding:32px 30px 40px}
+  .panel.out{border-inline-start:1px solid var(--line);padding:32px 36px 40px}
+  @media(max-width:980px){
+    .app{grid-template-columns:1fr}
+    .panel{padding:28px 20px 32px}
+    .panel.out{border-inline-start:0;border-top:1px solid var(--line)}
+  }
+  /* the input column is taller than a viewport once a set has parts in it, so unlike
+     Rack Budget it is not sticky: a stuck panel taller than the screen hides its own
+     bottom fields. The sticky console header carries the orientation instead. */
+
+  .field{margin-bottom:28px}
+  .field:last-child{margin-bottom:0}
+  .field label,.field .flabel{display:block;font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px}
+  .hint{font-size:14px;color:var(--tx3);margin-top:8px;line-height:1.55}
+  .row{display:flex;align-items:baseline;gap:10px}
+  input[type=number]{font-family:var(--mono);font-size:26px;font-weight:500;letter-spacing:-.02em;width:100%;border:0;border-bottom:1px solid var(--line2);background:transparent;color:var(--tx);padding:2px 0 8px;font-variant-numeric:tabular-nums}
+  input[type=number]:focus{outline:0;border-bottom-color:var(--grn)}
+  input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  input[type=number]{-moz-appearance:textfield}
+  .unit{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);white-space:nowrap}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;margin:4px 0 0;cursor:pointer}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line2)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;background:var(--grn);border:0;cursor:pointer;margin-top:-5.5px}
+  input[type=range]::-moz-range-track{height:2px;background:var(--line2)}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;background:var(--grn);border:0;border-radius:0;cursor:pointer}
+  @media(pointer:coarse){
+    input[type=range]{height:44px;margin:0}
+    input[type=range]::-webkit-slider-thumb{width:26px;height:26px;margin-top:-12px}
+    input[type=range]::-moz-range-thumb{width:26px;height:26px}
+  }
+
+  /* ---------- catalogue picker ----------
+     A native select popup is drawn by the OS in the system appearance, so the list can
+     never carry the instrument's palette. This is the ARIA select-only combobox pattern:
+     our chrome, the keyboard contract people already expect from a select. */
+  .sel{position:relative}
+  .sel-btn{display:flex;align-items:center;gap:12px;width:100%;font-family:var(--mono);font-size:15px;
+    text-align:start;padding:13px 14px;border:1px solid var(--line2);background:var(--bg2);color:var(--tx);cursor:pointer}
+  .sel-btn:hover{border-color:var(--tx3)}
+  .sel-btn[aria-expanded="true"]{border-color:var(--grn)}
+  .sel-btn:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  .sel-btn .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sel-btn .kw{color:var(--tx3);font-variant-numeric:tabular-nums;white-space:nowrap;font-size:12px}
+  .caret{flex:none;width:10px;height:10px;color:var(--tx3)}
+  .sel-btn:hover .caret{color:var(--tx)}
+  .sel-btn[aria-expanded="true"] .caret{color:var(--grn);transform:rotate(180deg)}
+  .sel-list{position:absolute;z-index:50;inset-inline:0;top:calc(100% + 5px);margin:0;padding:5px 0;list-style:none;
+    background:var(--bg2);border:1px solid var(--line2);box-shadow:0 22px 48px rgba(0,0,0,.62);
+    max-height:min(54vh,360px);overflow-y:auto;overscroll-behavior:contain}
+  .sel-list[hidden]{display:none}
+  .sel-opt{display:flex;align-items:center;gap:12px;padding:11px 14px;font-family:var(--mono);font-size:14px;color:var(--tx2);cursor:pointer}
+  @media(max-width:640px){.sel-opt{padding:14px;font-size:15px}}
+  .sel-opt .mk{width:6px;height:6px;flex:none}
+  .sel-opt .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sel-opt .kw{font-variant-numeric:tabular-nums;font-size:12px}
+  .sel-opt[aria-selected="true"],.sel-opt.act{color:var(--tx)}
+  .sel-opt[aria-selected="true"] .mk{background:var(--grn)}
+  .sel-opt.act{background:rgba(63,224,160,.07);box-shadow:inset 2px 0 0 var(--grn2)}
+  /* a group heading inside the list: not selectable, just the shelf label */
+  .sel-grp{padding:14px 14px 7px;font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--tx3);border-top:1px solid var(--line);margin-top:5px}
+  .sel-grp:first-child{border-top:0;margin-top:0;padding-top:8px}
+  /* declared after every outline:0 above so the keyboard ring actually wins the cascade */
+  input[type=number]:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+
+  .addrow{display:flex;gap:10px;margin-top:12px}
+  .addrow .btn{flex:1;padding:13px 16px}
+
+  /* ---------- the set: a parts list, not cards ---------- */
+  .set{margin-top:8px;border-top:1px solid var(--line)}
+  .set-empty{font-size:14px;color:var(--tx3);padding:18px 0;line-height:1.6}
+  /* one column legend at the top beats repeating the words on every row */
+  .set-hd{display:flex;justify-content:space-between;gap:12px;padding:9px 0 8px;border-bottom:1px solid var(--line);
+    font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+  .item{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:3px 12px;align-items:center;
+    padding:12px 0;border-bottom:1px solid var(--line)}
+  .item .nm{grid-column:1;grid-row:1;font-size:14px;color:var(--tx);min-width:0;overflow-wrap:break-word}
+  .item .w{grid-column:1;grid-row:2;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);font-variant-numeric:tabular-nums}
+  .item .w .on{color:var(--grn2)}
+  .qty{display:flex;align-items:center;border:1px solid var(--line2);grid-column:2;grid-row:1 / span 2}
+  .qty button{font-family:var(--mono);font-size:14px;line-height:1;background:transparent;border:0;color:var(--tx2);
+    width:30px;height:34px;cursor:pointer}
+  .qty button:hover{color:var(--grn)}
+  .qty .n{font-family:var(--mono);font-size:13px;min-width:20px;text-align:center;color:var(--tx);font-variant-numeric:tabular-nums}
+  .rm{grid-column:3;grid-row:1 / span 2;background:transparent;border:0;color:var(--tx3);font-family:var(--mono);font-size:15px;cursor:pointer;padding:8px 2px 8px 8px;line-height:1}
+  .rm:hover{color:var(--grn)}
+  .set-tot{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:14px 0 0;
+    font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3)}
+  .set-tot b{color:var(--tx);font-weight:500;font-variant-numeric:tabular-nums}
+
+  /* ---------- output: answer, then the stage ---------- */
+  .headline-out{margin-bottom:28px}
+  .headline-out .lbl{margin-bottom:10px}
+  .headline-out .lbl::before{content:"";display:inline-block;width:6px;height:6px;background:var(--grn);margin-right:10px;vertical-align:1px}
+  .big{font-family:var(--mono);font-weight:500;font-size:clamp(44px,4.6vw,76px);line-height:1;letter-spacing:-.035em;color:var(--tx);font-variant-numeric:tabular-nums}
+  /* a model name is words, not a figure, so it takes a step down to stay on two lines */
+  .big.txt{font-size:clamp(28px,3.2vw,50px);line-height:1.05}
+  .big.txt em{font-size:.32em}
+  .big .pre{font-size:.5em;color:var(--tx3);margin-inline-end:2px;vertical-align:.16em}
+  .big em{font-style:normal;font-size:.24em;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-inline-start:14px;font-weight:400}
+  .headline-out .note{font-size:15px;color:var(--tx2);margin-top:14px;max-width:56ch}
+
+  /* the stage: a framed dark field with registration ticks; the viz owns it */
+  .stage{position:relative;overflow:hidden;border:1px solid var(--line);background:
+    radial-gradient(58% 48% at 50% 56%, rgba(63,224,160,.05), transparent 72%),
+    radial-gradient(circle, #161B20 1px, transparent 1.1px);
+    background-size:100% 100%, 22px 22px;
+    padding:44px 26px 20px;min-height:340px;margin-bottom:34px;
+    display:flex;flex-direction:column;justify-content:center}
+  @media(max-width:700px){.stage{padding:38px 14px 14px;min-height:260px}}
+  .tick{position:absolute;width:9px;height:9px;border:0 solid var(--line2)}
+  .tick.tl{top:-1px;left:-1px;border-top-width:1px;border-left-width:1px}
+  .tick.tr{top:-1px;right:-1px;border-top-width:1px;border-right-width:1px}
+  .tick.bl{bottom:-1px;left:-1px;border-bottom-width:1px;border-left-width:1px}
+  .tick.br{bottom:-1px;right:-1px;border-bottom-width:1px;border-right-width:1px}
+  /* HUD corner readouts */
+  .hud{position:absolute;top:16px;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+  .hud.tl2{left:20px}
+  .hud.tr2{right:20px;color:var(--grn2)}
+  @media(max-width:640px){.hud.tr2{display:none}}
+  .plot{width:100%;height:auto;display:block;max-height:420px}
+  .plot text{font-family:var(--mono);fill:var(--tx3)}
+  .stage-cap{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-top:18px;line-height:1.7}
+  .stage-cap b{color:var(--grn);font-weight:500}
+
+  /* where the kilowatt hours go */
+  .pbar-wrap{margin-bottom:36px}
+  .pbar-t{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin-bottom:12px}
+  .pbar{display:flex;height:8px;gap:2px}
+  .pbar span{display:block;min-width:3px}
+  .pbar .s1{background:var(--ramp1)}
+  .pbar .s2{background:var(--ramp2)}
+  .pbar .s3{background:var(--ramp3)}
+  .pbar-legend{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:12px;font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--tx3)}
+  .pbar-legend b{font-weight:500;color:var(--tx)}
+  .pbar-legend .chip{display:inline-block;width:8px;height:8px;margin-inline-end:7px}
+
+  /* stats: hairline typography instead of boxed cells */
+  .uswitch{display:flex;margin:0}
+  .uswitch button{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;background:none;border:1px solid var(--line2);color:var(--tx3);cursor:pointer}
+  .uswitch button+button{border-inline-start:0}
+  .uswitch button[aria-pressed="true"]{color:var(--bg);border-color:var(--tx);background:var(--tx)}
+  @media(max-width:640px){.uswitch button{padding:13px 16px}}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0 40px}
+  @media(max-width:620px){.grid{grid-template-columns:repeat(2,1fr);gap:0 24px}}
+  .cell{border-top:1px solid var(--line);padding:16px 0 22px}
+  .cell .k{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;line-height:1.5;min-height:2.6em}
+  .cell .v{font-family:var(--mono);font-weight:500;font-size:24px;letter-spacing:-.02em;line-height:1.1;color:var(--tx);font-variant-numeric:tabular-nums}
+  .cell .v small{font-size:11px;font-weight:400;letter-spacing:.1em;color:var(--tx3);margin-inline-start:6px}
+  .cell .v.warn{color:var(--grn)}
+
+  .flag{border-inline-start:2px solid var(--grn2);padding:2px 0 2px 20px;margin-top:34px;font-size:15px;line-height:1.75;color:var(--tx2)}
+  .flag .t{font-family:var(--mono);font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--grn);margin-inline-end:16px;white-space:nowrap}
+  .actions{display:flex;flex-wrap:wrap;gap:12px}
+  @media(max-width:640px){.actions{flex-direction:column;align-items:stretch;width:100%}}
+
+  /* ---------- prose sections ---------- */
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:48px;margin-top:52px}
+  @media(max-width:820px){.three{grid-template-columns:1fr;gap:36px}}
+  .three .c{border-top:1px solid var(--line2);padding-top:22px}
+  .three .c .i{font-family:var(--mono);font-size:12px;color:var(--grn);margin-bottom:14px}
+  .three .c p{margin:0;font-size:15px;color:var(--tx2);text-wrap:pretty}
+
+  .strip{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:64px;
+    border:1px solid var(--line);background:var(--bg2)}
+  .strip > div{padding:38px 40px 34px}
+  .strip > div + div{border-inline-start:1px solid var(--line)}
+  @media(max-width:700px){
+    .strip{grid-template-columns:1fr}
+    .strip > div{padding:26px 24px 24px}
+    .strip > div + div{border-inline-start:0;border-top:1px solid var(--line)}
+  }
+  .strip .n{font-family:var(--mono);font-weight:500;font-size:clamp(34px,3.6vw,54px);letter-spacing:-.03em;line-height:1.05;color:var(--tx);font-variant-numeric:tabular-nums}
+  .strip .n .a{color:var(--grn)}
+  .strip .n .u{font-size:.42em;letter-spacing:.08em;color:var(--tx3);margin-inline-start:4px}
+  .strip .n.g{color:var(--grn)}
+  .strip .l{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-top:16px}
+
+  .steps{display:grid;grid-template-columns:repeat(2,1fr);gap:44px 48px;margin-top:52px}
+  @media(max-width:820px){.steps{grid-template-columns:1fr;gap:36px}}
+  .step{border-top:1px solid var(--line2);padding-top:22px}
+  .step .n{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--grn);margin-bottom:14px}
+  .step p{margin:0 0 10px;font-size:15px;color:var(--tx2);text-wrap:pretty}
+  .step p:last-child{margin-bottom:0}
+  .step b{color:var(--tx);font-weight:500}
+
+  .worked{border:1px solid var(--line);background:var(--bg2);padding:32px 34px;margin-top:56px;position:relative}
+  @media(max-width:700px){.worked{padding:24px 20px}}
+  .worked .t{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin-bottom:20px}
+  .chain{font-family:var(--mono);font-size:15px;line-height:2.2;color:var(--tx2b);overflow-x:auto}
+  .chain .a{color:var(--grn)}
+  .chain b{font-weight:600;color:var(--tx)}
+  .worked .out{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);font-size:16px;color:var(--tx2)}
+
+  /* ---------- tables ---------- */
+  /* six columns do not fit a phone even with the notes hidden, so the table scrolls
+     inside its own box rather than dragging the whole page sideways */
+  .tw{overflow-x:auto;overscroll-behavior-x:contain}
+  .tw table{min-width:520px}
+  table{width:100%;border-collapse:collapse;font-size:15px;margin-top:44px}
+  th,td{text-align:start;padding:14px 16px 14px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--tx2)}
+  th{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);font-weight:400}
+  td.m{font-family:var(--mono);font-size:14px;white-space:nowrap;color:var(--tx);font-variant-numeric:tabular-nums}
+  td.name{font-weight:500;color:var(--tx)}
+  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line2);padding:3px 8px;color:var(--tx3);white-space:nowrap}
+  .tag.l{border-color:rgba(63,224,160,.4);color:var(--grn)}
+  tbody.pick tr{cursor:pointer}
+  tbody.pick tr:hover td{background:rgba(63,224,160,.03)}
+  tbody.pick tr:hover td.name{color:var(--grn)}
+  tbody.pick tr.on td{background:rgba(63,224,160,.05)}
+  tbody.pick tr.on td.name{color:var(--grn)}
+  /* the name is the row's real control, so the ladder works by keyboard too */
+  .rowbtn{font:inherit;font-weight:500;color:inherit;background:none;border:0;padding:0;margin:0;text-align:start;cursor:pointer;width:100%;
+    text-decoration:underline dotted var(--line2);text-decoration-thickness:from-font;text-underline-offset:4px}
+  .rowbtn:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  tbody.pick tr:hover .rowbtn,tbody.pick tr.on .rowbtn{color:var(--grn);text-decoration-color:var(--grn2)}
+  .grpr td{background:var(--bg2);font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--tx3);padding:10px 0 10px 0}
+  @media(max-width:760px){
+    /* only the catalogue drops a column: its last one is prose. The ladder's last
+       column is the answer, so that table scrolls instead. */
+    .cat th:last-child, .cat td:last-child{display:none}
+    th,td{padding-inline-end:10px}
+    td.name{white-space:normal}
+  }
+
+  /* the model as a framed ledger, the judgement calls alongside */
+  .method-grid{display:grid;grid-template-columns:minmax(0,11fr) minmax(0,9fr);gap:24px 40px;align-items:stretch;margin-top:48px}
+  @media(max-width:980px){.method-grid{grid-template-columns:1fr;gap:24px}}
+  .model{position:relative;border:1px solid var(--line);background:var(--bg2);padding:26px 30px 12px;display:flex;flex-direction:column}
+  @media(max-width:700px){.model{padding:20px 18px 8px}}
+  .model-hd{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+  .model-hd .g{color:var(--grn2)}
+  .frow{display:grid;grid-template-columns:minmax(130px,175px) 1fr;gap:4px 26px;padding:13px 0 14px;
+    border-bottom:1px solid var(--line);font-family:var(--mono);font-size:14px;line-height:1.75}
+  .frow:last-child{border-bottom:0}
+  @media(max-width:640px){.frow{grid-template-columns:1fr}}
+  .frow .ft{color:var(--grn);font-weight:500}
+  .frow .fx{color:var(--tx2b);overflow-wrap:break-word}
+  ul.plain{padding-inline-start:0;list-style:none;margin:40px 0 0;max-width:78ch}
+  .model ul.plain{margin:0;max-width:none;flex:1;display:flex;flex-direction:column}
+  .model ul.plain li{flex:1;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:12px 0;padding-inline-start:0;margin:0;border-bottom:1px solid var(--line);font-size:15px;line-height:1.7}
+  .model ul.plain li:last-child{border-bottom:0}
+  .model ul.plain li:before{content:none}
+  ul.plain li{position:relative;padding-inline-start:28px;margin-bottom:14px;font-size:16px;color:var(--tx2)}
+  ul.plain li:before{content:"\2014";position:absolute;left:0;font-family:var(--mono);color:var(--grn2)}
+  ul.plain li b{color:var(--tx);font-weight:500}
+
+  /* ---------- section index: outlined ghost numerals ---------- */
+  .sec-row{display:flex;align-items:center;gap:26px;margin-bottom:38px}
+  .sec-num{font-family:var(--mono);font-weight:600;font-size:clamp(44px,4.8vw,70px);line-height:.9;color:var(--line2);flex:none;font-variant-numeric:tabular-nums}
+  @supports (-webkit-text-stroke:1px black){.sec-num{color:transparent;-webkit-text-stroke:1px var(--line2)}}
+  .sec-rule{flex:1;height:1px;background:var(--line)}
+
+  /* scroll reveals: elements are visible by default; a script opts them in,
+     and only when motion is welcome */
+  .rv0{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
+  .rv0.rvIn{opacity:1;transform:none}
+
+  /* ---------- built by: the nameplate ---------- */
+  .plate{position:relative;border:1px solid var(--line);background:var(--bg2)}
+  .plate-main{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:40px 88px;padding:52px 52px 44px}
+  .p-name{font-weight:500;font-size:clamp(34px,3.8vw,58px);letter-spacing:-.035em;line-height:1.05;margin-top:16px;color:var(--tx)}
+  .p-bio{font-size:16px;color:var(--tx2);max-width:44ch;margin:18px 0 0;text-wrap:pretty}
+  .p-spec{margin:0;align-self:center}
+  .p-spec > div{display:grid;grid-template-columns:96px 1fr;gap:24px;padding:15px 0 16px;border-top:1px solid var(--line);align-items:baseline}
+  .p-spec > div:last-child{border-bottom:1px solid var(--line)}
+  .p-spec dt{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+  .p-spec dd{margin:0;font-family:var(--mono);font-size:14px;color:var(--tx)}
+  .p-spec dd a{color:var(--tx);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:4px}
+  .p-spec dd a:hover{color:var(--grn);text-decoration-color:var(--grn)}
+  .p-spec dd.on{color:var(--grn)}
+  .p-spec dd.on::before{content:"";display:inline-block;width:6px;height:6px;background:var(--grn);margin-right:10px;vertical-align:1px}
+  .plate-ft{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;border-top:1px solid var(--line);padding:20px 52px}
+  .lnk{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx2);white-space:nowrap;padding:14px 2px}
+  .lnk:hover{color:var(--grn)}
+  @media(max-width:860px){
+    .plate-main{grid-template-columns:1fr;gap:36px;padding:32px 24px 30px}
+    .plate-ft{padding:16px 24px;flex-direction:column;align-items:stretch}
+    .plate-ft .btn{justify-content:center}
+    .lnk{text-align:center}
+  }
+
+  footer{border-top:1px solid var(--line);padding:44px 0 72px;font-size:15px;color:var(--tx3)}
+  footer a{color:var(--tx2)}
+  footer a:hover{color:var(--grn)}
+  footer .lbl{margin-bottom:14px}
+
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--tx);color:var(--bg);font-family:var(--mono);font-weight:600;font-size:12px;letter-spacing:.13em;text-transform:uppercase;padding:13px 20px;opacity:0;pointer-events:none;z-index:60}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media(max-width:980px){.toast{bottom:92px}}
+
+  /* ---------- live result bar, phones only ----------
+     When the panels stack, the result lives a full screen below the inputs, so
+     adding a part gives no feedback. This bar mirrors the headline at the bottom
+     edge while the inputs are on screen and the real headline is not. */
+  .mini{display:none}
+  @media(max-width:980px){
+    .mini.on{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;
+      align-items:baseline;justify-content:space-between;gap:14px;width:100%;
+      font-family:var(--mono);text-align:start;cursor:pointer;
+      background:rgba(14,17,20,.96);backdrop-filter:blur(8px);
+      border:0;border-top:1px solid var(--line2);color:var(--tx);
+      padding:14px 20px calc(14px + env(safe-area-inset-bottom))}
+  }
+  .mini .lbl{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--tx3)}
+  .mini .val{font-weight:600;font-size:17px;letter-spacing:-.01em;color:var(--grn);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .mini .val svg{width:11px;height:11px;margin-inline-start:8px;color:var(--tx3)}
+
+  .print-url{display:none}
+
+  /* print: a one-page parts list. Only the calculator survives, on white. */
+  @media print{
+    @page{margin:11mm}
+    :root{--bg:#fff;--bg2:#fff;--line:#c7cdd5;--line2:#a8b1bc;--tx:#12161b;--tx2:#39424d;--tx3:#66707c;--grn:#0b7f58;--grn2:#0b7f58;--ramp1:#31b381;--ramp2:#1e8a63;--ramp3:#135c44}
+    body{background:#fff;font-size:14px}
+    header{position:static;background:#fff;backdrop-filter:none;box-shadow:none}
+    header nav{display:none}
+    section:not(#calc),footer,.toast,.mini{display:none}
+    #calc{display:block;padding:12px 0 0;border-top:0}
+    .modes,.actions,.uswitch,.kits,input[type="range"],.hint,.skip,.caret,.sel-list,.hud,.addrow,.qty,.rm{display:none}
+    .sel-btn{border-color:var(--line2);padding:8px 10px}
+    .console,.console-hd,.console-ft{border:0;padding:0}
+    .hero{padding:16px 0 8px}
+    .app{gap:28px}
+    .app .panel:not(.out){position:static;max-height:none;overflow:visible}
+    .field{margin-bottom:12px}
+    .stage{background:none;min-height:0;padding:10px;margin-bottom:16px}
+    .headline-out,.pbar-wrap,.grid,.flag{break-inside:avoid}
+    .print-url{display:block;margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--tx3);word-break:break-all}
+  }
+
+  /* large screens: use them */
+  @media(min-width:1680px){
+    .wrap{max-width:1520px}
+    .plot{max-height:520px}
+    .stage{min-height:420px}
+    .lede{font-size:18px}
+    .three .c p,.step p{font-size:16px}
+  }
+  @media(min-width:2200px){.wrap{max-width:1720px}}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header>
+  <div class="wrap bar">
+    <div class="mark">
+      <a class="suite" href="/"><span class="sq" aria-hidden="true"></span><span class="tool">Desk Budget</span></a>
+    </div>
+    <nav aria-label="Page sections">
+      <a href="#calc">Calculator</a>
+      <a href="#how">How it works</a>
+      <a href="#catalogue">Catalogue</a>
+      <a href="#models">Models</a>
+      <a href="#method">Method</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" tabindex="-1">
+
+<!-- ================= HERO ================= -->
+<div class="wrap">
+  <div class="hero">
+    <div class="lbl rise">Everyday hardware sizing</div>
+    <h1 class="rise d1"><span class="setup">You picked the parts.</span> What can they run?</h1>
+    <div class="hero-body rise d2">
+      <p class="lede">Gear pages publish a price and a hero shot. They do not publish the two numbers you live with: what the set costs to leave switched on, and which AI models actually fit in the memory you bought. Build a set here and get both, from published specs, with <a href="#method">every constant in the open</a>.</p>
+      <!-- counted off the catalogue and model ladder on this page, so it cannot drift -->
+      <p class="hero-meta" id="heroMeta"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CALCULATOR ================= -->
+<section id="calc">
+  <div class="wrap">
+    <div class="sec-row"><span class="sec-num" aria-hidden="true">01</span><span class="sec-rule"></span><span class="lbl">The calculator</span></div>
+
+    <!-- stable region, populated on every recalculation so the result is announced -->
+    <p class="sr" id="srStatus" role="status"></p>
+
+    <div class="console">
+    <div class="console-hd">
+      <div class="modes" role="group" aria-label="Which answer to show">
+        <button id="mA" aria-pressed="true">Power &amp; cost</button>
+        <button id="mB" aria-pressed="false">What AI runs</button>
+      </div>
+      <div class="uswitch" role="group" aria-label="Weight precision">
+        <button id="qQ4" aria-pressed="true">Q4</button><button id="qQ8" aria-pressed="false">Q8</button><button id="qF16" aria-pressed="false">FP16</button>
+      </div>
+    </div>
+
+    <div class="kits" role="group" aria-label="Starter kits">
+      <span class="lbl">Start from</span>
+      <span id="kitRow"></span>
+    </div>
+
+    <div class="app">
+      <div class="panel">
+
+        <div class="field">
+          <span class="flabel" id="pickLabel">Add hardware</span>
+          <div class="sel">
+            <div class="sel-btn" id="pick" role="combobox" tabindex="0" aria-controls="pickList" aria-expanded="false" aria-labelledby="pickLabel">
+              <span class="nm" id="pickName"></span><span class="kw" id="pickW"></span>
+              <svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            </div>
+            <ul class="sel-list" id="pickList" role="listbox" aria-labelledby="pickLabel" hidden></ul>
+          </div>
+          <div class="addrow"><button class="btn" id="addBtn">Add to set</button></div>
+          <div class="hint" id="pickNote"></div>
+        </div>
+
+        <div class="field" id="fCustom" hidden>
+          <label for="cw">Custom device, draw under load</label>
+          <div class="row"><input type="number" inputmode="numeric" id="cw" value="60" min="1" max="3000" step="1"><span class="unit">W</span></div>
+          <input type="range" id="cwR" min="1" max="600" step="1" value="60" aria-label="Custom device load watts slider">
+          <div class="hint">Idle is taken as 30 percent of this and peak as 115 percent, because almost nothing publishes all three.</div>
+        </div>
+
+        <div class="field">
+          <span class="flabel">The set</span>
+          <div class="set" id="setList"></div>
+          <div class="set-tot"><span>At load</span><span><b id="setW">0</b> W</span></div>
+        </div>
+
+        <div class="field">
+          <label for="hl">Hours under load per day</label>
+          <div class="row"><input type="number" inputmode="decimal" id="hl" value="3" min="0" max="24" step="0.5"><span class="unit">h / day</span></div>
+          <input type="range" id="hlR" min="0" max="24" step="0.5" value="3" aria-label="Hours under load per day slider">
+          <div class="hint">Gaming, rendering, or a model generating. The hours that actually push the hardware.</div>
+        </div>
+
+        <div class="field">
+          <label for="hi">Hours on but idle</label>
+          <div class="row"><input type="number" inputmode="decimal" id="hi" value="5" min="0" max="24" step="0.5"><span class="unit">h / day</span></div>
+          <input type="range" id="hiR" min="0" max="24" step="0.5" value="5" aria-label="Hours on but idle per day slider">
+          <div class="hint" id="hiHint">Awake, logged in, doing nothing. Gear marked always on ignores this and idles the rest of the day.</div>
+        </div>
+
+        <div class="field">
+          <label for="rate">Electricity rate</label>
+          <div class="row"><input type="number" inputmode="decimal" id="rate" value="18.44" min="1" max="120" step="0.01"><span class="unit">&cent; / kWh</span></div>
+          <input type="range" id="rateR" min="5" max="60" step="0.5" value="18.44" aria-label="Electricity rate slider">
+          <div class="hint" id="rateHint"></div>
+        </div>
+
+        <div class="field">
+          <span class="flabel" id="circLabel">Wall circuit</span>
+          <div class="sel">
+            <div class="sel-btn" id="circ" role="combobox" tabindex="0" aria-controls="circList" aria-expanded="false" aria-labelledby="circLabel">
+              <span class="nm" id="circName"></span><span class="kw" id="circW"></span>
+              <svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            </div>
+            <ul class="sel-list" id="circList" role="listbox" aria-labelledby="circLabel" hidden></ul>
+          </div>
+          <div class="hint" id="circNote"></div>
+        </div>
+
+        <div class="field">
+          <label for="ctx">Context window</label>
+          <div class="row"><input type="number" inputmode="numeric" id="ctx" value="8" min="1" max="256" step="1"><span class="unit">K tokens</span></div>
+          <input type="range" id="ctxR" min="1" max="128" step="1" value="8" aria-label="Context window slider">
+          <div class="hint">The KV cache is charged against your memory alongside the weights. Long context is not free.</div>
+        </div>
+      </div>
+
+      <div class="panel out">
+        <div class="headline-out">
+          <div class="lbl" id="outLabel">Cost to run, per year</div>
+          <div class="big" id="outBig"><span id="bigPre" class="pre"></span><span id="bigNum">&mdash;</span><em id="bigUnit"></em></div>
+          <div class="note" id="outNote"></div>
+        </div>
+
+        <div class="stage">
+          <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+          <span class="hud tl2" id="stageTL"></span>
+          <span class="hud tr2" id="stageTR"></span>
+          <svg id="plot" class="plot" role="img" aria-labelledby="plotTitle"><title id="plotTitle"></title></svg>
+          <div class="stage-cap" id="stageCap"></div>
+        </div>
+
+        <div class="pbar-wrap" id="pbarWrap">
+          <div class="pbar-t" id="pbarT">Where the kilowatt hours go &middot; over a year</div>
+          <div class="pbar" id="pbar" aria-hidden="true"></div>
+          <div class="pbar-legend" id="pbarLegend"></div>
+        </div>
+
+        <div class="grid" id="cells"></div>
+        <div class="flag"><span class="t">Reality check</span><span id="flagText"></span></div>
+      </div>
+    </div>
+    <div class="console-ft">
+      <div class="actions">
+        <button class="btn" id="copyLink">Copy shareable link</button>
+        <button class="btn ghost" id="copySummary">Copy summary</button>
+      </div>
+      <div class="print-url" id="printUrl"></div>
+    </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= WHY THIS EXISTS ================= -->
+<section>
+  <div class="wrap">
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">02</span><span class="sec-rule"></span><span class="lbl">Why the tool exists</span></div>
+    <h2 class="rv">Three things a spec sheet will not tell you</h2>
+    <p class="lede">Buying guides compare benchmark scores. Nobody runs a benchmark for eight thousand hours a year, and nobody ships a chart of what fits in 16 GB.</p>
+    <div class="three rv">
+      <div class="c">
+        <div class="i">01</div>
+        <h3>Idle writes the bill</h3>
+        <p>A machine used three hours a day spends the other twenty one drawing something. For most home setups the always-on floor, not the peak, is the larger half of the annual kilowatt hours.</p>
+      </div>
+      <div class="c">
+        <div class="i">02</div>
+        <h3>Memory decides, bandwidth paces</h3>
+        <p>Whether a model runs at all is a capacity question. How fast it answers is a bandwidth question. They are different numbers on the box and they fail in different ways.</p>
+      </div>
+      <div class="c">
+        <div class="i">03</div>
+        <h3>The breaker is a real limit</h3>
+        <p>A 575 W card, two monitors and a laser printer share one 15 A circuit rated for 1,440 W continuous. Nothing on the product page mentions the other things already plugged into that wall.</p>
+      </div>
+    </div>
+    <div class="strip rv">
+      <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+      <div><div class="n" id="stripA">&mdash;</div><div class="l">Items in the catalogue, published figures</div></div>
+      <div><div class="n" id="stripB">&mdash;</div><div class="l">Models in the ladder, 3B to 671B</div></div>
+      <div><div class="n g">0</div><div class="l">Hidden assumptions</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section id="how">
+  <div class="wrap">
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">03</span><span class="sec-rule"></span><span class="lbl">How it works</span></div>
+    <h2 class="rv">Four inputs, in the order they actually get decided</h2>
+    <p class="lede">The set first, because it is the only thing you choose. Then the hours, the rate and the wall, because those are the ones people guess at and get wrong by a factor of three.</p>
+
+    <div class="steps rv">
+      <div class="step">
+        <div class="n">Step 00 / The set</div>
+        <h3>Build it the way it will actually sit</h3>
+        <p>Not just the interesting box. The router, the NAS and the second monitor are the ones that never turn off, and they are usually the surprise on the bill. Start from a kit and edit it.</p>
+      </div>
+      <div class="step">
+        <div class="n">Step 01 / The hours</div>
+        <h3>Be honest about the duty cycle</h3>
+        <p><b>Under load</b> is the hours the hardware is working. <b>On but idle</b> is the hours it is awake and doing nothing. Anything marked always on keeps drawing for the rest of the day whatever you set here.</p>
+      </div>
+      <div class="step">
+        <div class="n">Step 02 / The rate</div>
+        <h3>Use your own tariff</h3>
+        <p>18.44 cents is the US residential average. California and much of Europe run more than double that, which moves a 300 W idle floor from an annoyance to a reason to buy different hardware.</p>
+      </div>
+      <div class="step">
+        <div class="n">Step 03 / The wall</div>
+        <h3>Pick the circuit it plugs into</h3>
+        <p>Peak draw is compared against the branch circuit, derated to 80 percent on the North American options because that is what continuous load means in the code. If you are over, you find out here.</p>
+      </div>
+    </div>
+
+    <div class="worked rv">
+      <div class="t">Worked example, the local-AI desktop kit at default hours</div>
+      <div class="chain">
+        Tower with an RTX 5090, one 32 inch display, a router<br>
+        <span class="a">&rarr;</span> at load <span class="a">=</span> 120 + 500 + 45 + 10 <span class="a">=</span> <b>675 W</b><br>
+        <span class="a">&rarr;</span> 3 h at load, 5 h idle at 70.5 W, router always on <span class="a">=</span> <b>2.55 kWh per day</b><br>
+        <span class="a">&rarr;</span> times 365 at 18.44 cents <span class="a">=</span> <b>929 kWh and 171 dollars a year</b>, a fifth of it spent idling<br>
+        <span class="a">&rarr;</span> peak 200 + 575 + 65 + 12 <span class="a">=</span> <b>852 W</b> against a 1,440 W continuous ceiling <span class="a">=</span> <b>59 percent</b> of the circuit<br>
+        <span class="a">&rarr;</span> 32 GB of VRAM, less 1 GB for display and context <span class="a">=</span> <b>31.0 GB usable</b><br>
+        <span class="a">&rarr;</span> Qwen3 32B at Q4 is 18.0 GB of weights, 18.9 with overhead, plus 1.0 GB of cache at 8K <span class="a">=</span> <b>19.9 GB, fits</b><br>
+        <span class="a">&rarr;</span> 1,792 GB/s x 0.75 efficiency / 18.0 GB read per token <span class="a">=</span> <b>about 75 tokens a second</b>
+      </div>
+      <div class="out">The surprise is rarely the GPU. It is that the same set burns about 190 kWh a year while nobody is sitting at it, and that Llama 3.3 70B at Q4 misses the 31.0 GB ceiling by 11.6 GB no matter how fast the card is.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CATALOGUE ================= -->
+<section id="catalogue">
+  <div class="wrap">
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">04</span><span class="sec-rule"></span><span class="lbl">The catalogue</span></div>
+    <h2 class="rv">Gear people actually own</h2>
+    <p class="lede">Load figures are sustained draw under real work, not the nameplate on the power supply. Where a maker publishes a maximum continuous rating, that is the peak column. Select any row to add it to the set.</p>
+    <div class="tw rv">
+      <table class="cat">
+        <thead><tr><th>Item</th><th>Idle</th><th>Load</th><th>Peak</th><th>Memory for AI</th><th>Bandwidth and notes</th></tr></thead>
+        <tbody class="pick" id="catBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MODELS ================= -->
+<section id="models">
+  <div class="wrap">
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">05</span><span class="sec-rule"></span><span class="lbl">The model ladder</span></div>
+    <h2 class="rv">What a gigabyte of memory buys</h2>
+    <p class="lede">Open-weight models, sized at the precision selected in the calculator, with the KV cache for the context you set. The mixture of experts rows store far more than they read, which is why a 120B can outrun a 32B on the same machine.</p>
+    <div class="tw rv">
+      <table>
+        <thead><tr><th>Model</th><th>Params</th><th>Read per token</th><th>Weights</th><th>Cache</th><th>Needs</th></tr></thead>
+        <tbody id="modBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= METHOD ================= -->
+<section id="method">
+  <div class="wrap">
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">06</span><span class="sec-rule"></span><span class="lbl">The method</span></div>
+    <h2 class="rv">Every constant, in the open</h2>
+    <p class="lede">A buying tool that hides its assumptions is a shop. Here is the whole model. If you disagree with a constant, you now know exactly which one to argue with.</p>
+
+    <div class="method-grid rv">
+      <div class="model">
+        <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+        <div class="model-hd"><span class="lbl">The model</span><span class="lbl g">10 equations</span></div>
+        <div class="frow"><span class="ft">Draw at load</span><span class="fx">sum of qty &times; load watts</span></div>
+        <div class="frow"><span class="ft">Daily energy</span><span class="fx">load W &times; load h + idle W &times; idle h, in kWh</span></div>
+        <div class="frow"><span class="ft">Always-on idle</span><span class="fx">idle W &times; (24 &minus; load h) for that gear</span></div>
+        <div class="frow"><span class="ft">Annual cost</span><span class="fx">daily kWh &times; 365 &times; rate</span></div>
+        <div class="frow"><span class="ft">Heat at load</span><span class="fx">load W &times; 3.412 BTU per hour</span></div>
+        <div class="frow"><span class="ft">Circuit load</span><span class="fx">peak W / (volts &times; amps &times; derate)</span></div>
+        <div class="frow"><span class="ft">Usable memory</span><span class="fx">unified &times; platform share, or VRAM &minus; 1 GB</span></div>
+        <div class="frow"><span class="ft">Model footprint</span><span class="fx">params &times; bits / 8, &times;1.05, plus KV cache</span></div>
+        <div class="frow"><span class="ft">Generation speed</span><span class="fx">bandwidth &times; 0.75 / bytes read per token</span></div>
+        <div class="frow"><span class="ft">Energy per token</span><span class="fx">load W / tokens per second, in watt hours</span></div>
+      </div>
+
+      <div class="model">
+        <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+        <div class="model-hd"><span class="lbl">The judgement calls</span><span class="lbl g">7 notes</span></div>
+        <ul class="plain">
+      <li><b>Generation is memory bound, not compute bound.</b> One token at a time reads every active weight once, so bandwidth divided by weight size is the ceiling. The 0.75 covers real-world overhead; measured results land between 0.6 and 0.85.</li>
+      <li><b>That ceiling is for generation only.</b> Reading your prompt is compute bound and much faster, so a slow machine still feels slow in exactly one place: the words appearing.</li>
+      <li><b>Two cards double the memory, not the speed.</b> Split by layer, one card computes while the other waits, so bandwidth stays roughly that of a single card.</li>
+      <li><b>Unified memory is not all yours.</b> macOS hands about 75 percent to the GPU by default, the Ryzen AI Max pool addresses about 96 of its 128 GB, and a discrete card loses about 1 GB to context and display.</li>
+      <li><b>Quantisation is not free.</b> Q4_K_M is charged at 4.5 bits per weight and Q8_0 at 8.5, including the scales. Quality falls with the bits, most visibly below Q4.</li>
+      <li><b>Heat equals power.</b> Essentially all electricity into a device leaves as heat. In summer the air conditioner pays for it twice.</li>
+      <li><b>A planning heuristic, not a benchmark.</b> Silicon lottery, thermals, drivers and firmware move every one of these numbers. Measure your own with a plug meter before spending real money.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CTA ================= -->
+<section class="cta">
+  <div class="wrap">
+    <div class="plate rv">
+      <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+      <div class="plate-main">
+        <div>
+          <div class="lbl">Built by</div>
+          <div class="p-name">Adrian Mucha</div>
+          <p class="p-bio">Product designer for the software most designers avoid: operator consoles where a wrong click costs real money.</p>
+        </div>
+        <dl class="p-spec">
+          <div><dt>Focus</dt><dd>Data centers &middot; AI tooling</dd></div>
+          <div><dt>Also</dt><dd><a href="https://infrabench.io" target="_blank" rel="noopener">Infrabench &rarr;</a></dd></div>
+          <div><dt>Status</dt><dd class="on">Open to new work</dd></div>
+        </dl>
+      </div>
+      <div class="plate-ft">
+        <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Get in touch</a>
+        <a class="lnk" href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">See the work &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="lbl">Sources and fine print</div>
+    Power and memory figures from maker specifications and published reviews:
+    <a href="https://www.apple.com/mac-mini/specs/" target="_blank" rel="noopener">Apple</a> tech specs for maximum continuous power and memory bandwidth,
+    <a href="https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/" target="_blank" rel="noopener">NVIDIA</a> for GeForce board power and bandwidth,
+    <a href="https://www.nvidia.com/en-us/products/workstations/dgx-spark/" target="_blank" rel="noopener">NVIDIA DGX Spark</a> for the GB10 figures,
+    <a href="https://frame.work/desktop" target="_blank" rel="noopener">Framework</a> and
+    <a href="https://www.amd.com/en/developer/resources/technical-articles/2025/amd-ryzen-ai-max-395--a-leap-forward-in-generative-ai-performanc.html" target="_blank" rel="noopener">AMD</a> for Ryzen AI Max.
+    The default electricity rate is the US residential average reported by the
+    <a href="https://www.eia.gov/electricity/monthly/update/end-use.php" target="_blank" rel="noopener">EIA</a>.
+    Continuous-load derating on the North American circuits follows NEC article 210.
+    Figures are public as of August 2026 and change fast. Measure your own gear with a plug meter before spending money.
+    <br><br>
+    Desk Budget runs the same method as <a href="https://infrabench.io" target="_blank" rel="noopener">Infrabench</a>,
+    which asks these questions at data center scale: published figures only, every constant on the page, and the
+    arithmetic shown rather than asserted.
+    Built by <a href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">Adrian Mucha</a> / FruitBat Design, Los Angeles.
+  </div>
+</footer>
+
+<button class="mini" id="mini" type="button">
+  <span class="lbl" id="miniLbl">Cost to run</span>
+  <span class="val"><span id="miniVal">&mdash;</span><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 1v7M1.6 4.8L5 8.2 8.4 4.8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span>
+</button>
+
+<div class="toast" id="toast" role="status">Copied</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- the catalogue ----------
+     idle / load / peak are watts. load is sustained draw under real work; peak is the
+     maker's maximum continuous rating where one is published, otherwise the measured
+     ceiling. mem is memory an inference runtime can address, memF the share of it the
+     platform actually hands over. bw is peak memory bandwidth in GB/s. */
+  var CAT = [
+    {id:"pi5",       g:"Compute",     name:"Raspberry Pi 5, 8 GB",             idle:3,  load:10,  peak:25,  on:true,  mem:8,   memF:0.60, bw:17,
+     note:"A fine always-on home server. Not an AI machine: memory bandwidth is the whole story."},
+    {id:"minipc",    g:"Compute",     name:"Mini PC, N150 class, 16 GB",       idle:6,  load:25,  peak:45,  on:true,  mem:16,  memF:0.50, bw:38,
+     note:"Cheap, silent, always on. Single-channel memory caps it at small models."},
+    {id:"minim4",    g:"Compute",     name:"Mac mini M4, 16 GB",               idle:4,  load:40,  peak:65,  on:true,  mem:16,  memF:0.75, bw:120,
+     note:"The efficiency benchmark for a desk. Four watts idle is hard to argue with."},
+    {id:"minim4p",   g:"Compute",     name:"Mac mini M4 Pro, 24 GB",           idle:7,  load:90,  peak:155, on:true,  mem:24,  memF:0.75, bw:273,
+     note:"155 W is Apple's published maximum continuous power for this machine."},
+    {id:"mbpm4p",    g:"Compute",     name:"MacBook Pro 14, M4 Pro, 24 GB",    idle:5,  load:55,  peak:96,  on:false, mem:24,  memF:0.75, bw:273,
+     note:"Peak is the 96 W adapter, which is the real ceiling while plugged in."},
+    {id:"studiomax", g:"Compute",     name:"Mac Studio M4 Max, 64 GB",         idle:8,  load:170, peak:370, on:true,  mem:64,  memF:0.75, bw:546,
+     note:"Runs a 70B at reading speed for a third of what a gaming tower draws."},
+    {id:"studioult", g:"Compute",     name:"Mac Studio M3 Ultra, 96 GB",       idle:12, load:250, peak:480, on:true,  mem:96,  memF:0.75, bw:819,
+     note:"Configurable to 512 GB. The only desk machine that holds a frontier MoE."},
+    {id:"fwdesk",    g:"Compute",     name:"Framework Desktop, Ryzen AI Max+ 395, 128 GB", idle:12, load:120, peak:230, on:true, mem:128, memF:0.75, bw:256,
+     note:"Capacity is its strength, bandwidth its ceiling. A dense 70B fits and crawls."},
+    {id:"spark",     g:"Compute",     name:"NVIDIA DGX Spark, GB10, 128 GB",   idle:30, load:170, peak:240, on:true,  mem:128, memF:0.86, bw:273,
+     note:"Built for fine-tuning and big models, not for fast single-stream generation."},
+    {id:"tower",     g:"Compute",     name:"Desktop tower, 8-core, no GPU",    idle:45, load:120, peak:200, on:false, mem:32,  memF:0.50, bw:83,
+     note:"The host for a graphics card. Dual-channel DDR5 alone is not an inference platform."},
+
+    {id:"rtx4060ti", g:"Graphics",    name:"GeForce RTX 4060 Ti, 16 GB",       idle:12, load:150, peak:165, on:false, mem:16,  memF:0.94, bw:288,
+     note:"The cheapest honest 16 GB. Bandwidth, not capacity, is what you gave up."},
+    {id:"rtx3090",   g:"Graphics",    name:"GeForce RTX 3090, 24 GB",          idle:20, load:320, peak:350, on:false, mem:24,  memF:0.94, bw:936,
+     note:"Still the used-market answer for 24 GB at speed."},
+    {id:"rtx4090",   g:"Graphics",    name:"GeForce RTX 4090, 24 GB",          idle:20, load:400, peak:450, on:false, mem:24,  memF:0.94, bw:1008,
+     note:"Fast enough that the 24 GB wall arrives first, and it arrives hard."},
+    {id:"rtx5070ti", g:"Graphics",    name:"GeForce RTX 5070 Ti, 16 GB",       idle:15, load:270, peak:300, on:false, mem:16,  memF:0.94, bw:896,
+     note:"All that bandwidth into 16 GB. Everything that fits, runs quickly."},
+    {id:"rtx5090",   g:"Graphics",    name:"GeForce RTX 5090, 32 GB",          idle:25, load:500, peak:575, on:false, mem:32,  memF:0.94, bw:1792,
+     note:"The fastest tokens a second you can buy for a desk, and 575 W to match."},
+
+    {id:"mon27",     g:"Displays",    name:"27 inch 4K monitor",               idle:0.5,load:30,  peak:45,  on:false, mem:0, memF:0, bw:0,
+     note:"Idle here is standby. Brightness moves this more than resolution does."},
+    {id:"mon32",     g:"Displays",    name:"32 inch 4K monitor",               idle:0.5,load:45,  peak:65,  on:false, mem:0, memF:0, bw:0,
+     note:"Two of these draw more all day than a Mac mini does."},
+
+    {id:"nas4",      g:"Storage and network", name:"NAS, 4-bay, 4 spinning disks", idle:30, load:50, peak:70, on:true, mem:0, memF:0, bw:0,
+     note:"Never turns off, so it bills 8,760 hours a year whatever you set above."},
+    {id:"ssd",       g:"Storage and network", name:"External NVMe enclosure",   idle:1,  load:5,   peak:7,   on:true,  mem:0, memF:0, bw:0,
+     note:"Small, but it is on the always-on side of the ledger."},
+    {id:"router",    g:"Storage and network", name:"Wi-Fi router or mesh node", idle:8,  load:10,  peak:12,  on:true,  mem:0, memF:0, bw:0,
+     note:"The most reliably ignored 90 kWh a year in the house."},
+    {id:"switch",    g:"Storage and network", name:"8-port managed switch",     idle:6,  load:9,   peak:12,  on:true,  mem:0, memF:0, bw:0,
+     note:"Power over Ethernet ports add their budget on top of this."},
+
+    {id:"dock",      g:"Peripherals", name:"Thunderbolt dock",                 idle:3,  load:9,   peak:15,  on:false, mem:0, memF:0, bw:0,
+     note:"Excludes whatever it is charging, which is usually the larger number."},
+    {id:"speakers",  g:"Peripherals", name:"Powered desk speakers",            idle:2,  load:15,  peak:30,  on:false, mem:0, memF:0, bw:0,
+     note:"Class D amplifiers idle low and peak on transients."},
+    {id:"printer",   g:"Peripherals", name:"Laser printer, standby and print", idle:2,  load:5,   peak:600, on:true,  mem:0, memF:0, bw:0,
+     note:"Trivial on the bill, dangerous on the breaker. The fuser is a 600 W kettle."},
+    {id:"custom",    g:"Peripherals", name:"Custom device",                    idle:18, load:60,  peak:69,  on:false, mem:0, memF:0, bw:0,
+     note:"Your own figure. Idle is taken as 30 percent of load, peak as 115 percent."}
+  ];
+
+  /* starter kits: the curated part, except each one arrives with its arithmetic */
+  var KITS = [
+    {id:"quiet",  name:"Quiet desk",       set:{minim4:1, mon27:1, router:1, dock:1}},
+    {id:"localai",name:"Local-AI desktop", set:{tower:1, rtx5090:1, mon32:1, router:1}},
+    {id:"unified",name:"Big-memory box",   set:{fwdesk:1, mon27:1, router:1}},
+    {id:"server", name:"Always-on server", set:{pi5:1, nas4:1, router:1, switch:1}},
+    {id:"studio", name:"Creative station", set:{studiomax:1, mon32:2, ssd:2, dock:1, speakers:1}}
+  ];
+
+  /* ---------- the model ladder ----------
+     total and active are billions of parameters; a dense model reads all of them per
+     token, a mixture of experts reads only the active share. kv is gigabytes of KV
+     cache per 1,000 tokens of context, cached at 8 bits. */
+  var MODELS = [
+    {id:"l3b",   name:"Llama 3.2 3B",      total:3,   active:3,    kv:0.03, moe:false, note:"Runs on nearly anything, including a phone."},
+    {id:"l8b",   name:"Llama 3.1 8B",      total:8,   active:8,    kv:0.07, moe:false, note:"The default local assistant. Fits in 8 GB at Q4."},
+    {id:"q14",   name:"Qwen3 14B",         total:14,  active:14,   kv:0.10, moe:false, note:"The sweet spot for a 12 GB card at Q4."},
+    {id:"g27",   name:"Gemma 3 27B",       total:27,  active:27,   kv:0.14, moe:false, note:"Sliding-window attention keeps its cache small."},
+    {id:"q32",   name:"Qwen3 32B",         total:32,  active:32,   kv:0.13, moe:false, note:"The most capable dense model that fits 24 GB at Q4."},
+    {id:"l70",   name:"Llama 3.3 70B",     total:70,  active:70,   kv:0.16, moe:false, note:"The classic 48 GB target. Needs two cards or unified memory."},
+    {id:"oss120",name:"gpt-oss 120B",      total:120, active:5.1,  kv:0.07, moe:true,  note:"Stores 120B, reads 5.1B per token. Capacity buys speed here."},
+    {id:"q235",  name:"Qwen3 235B A22B",   total:235, active:22,   kv:0.19, moe:true,  note:"Frontier-adjacent, if you have 128 GB to give it."},
+    {id:"ds671", name:"DeepSeek R1 671B",  total:671, active:37,   kv:0.07, moe:true,  note:"Latent attention makes the cache tiny. The weights do not care."}
+  ];
+
+  var QUANT = {
+    q4:  {name:"Q4_K_M", bpw:4.5,  note:"Four and a half bits per weight including the scales. The usual local default."},
+    q8:  {name:"Q8_0",   bpw:8.5,  note:"Near lossless, at roughly double the memory and half the speed of Q4."},
+    f16: {name:"FP16",   bpw:16,   note:"The unquantised weights. Rarely worth it on a desk."}
+  };
+
+  var CIRCUITS = {
+    us15: {name:"US 15 A, 120 V",     v:120, a:15, derate:0.80, note:"The standard North American wall outlet. Code allows 80 percent for a continuous load, so 1,440 W."},
+    us20: {name:"US 20 A, 120 V",     v:120, a:20, derate:0.80, note:"A dedicated kitchen or office circuit. 1,920 W continuous."},
+    uk13: {name:"UK 13 A, 230 V",     v:230, a:13, derate:1.00, note:"The plug fuse, not the ring main, is the binding limit at 2,990 W."},
+    eu16: {name:"EU 16 A, 230 V",     v:230, a:16, derate:1.00, note:"A typical European radial circuit. 3,680 W, which is rarely the constraint."}
+  };
+
+  var BTU = 3.412;          /* watts to BTU per hour */
+  var BW_EFF = 0.75;        /* share of peak bandwidth a real runtime achieves */
+  var WEIGHT_OVERHEAD = 1.05; /* runtime, activations and fragmentation on top of the weights */
+  var GPU_RESERVE = 1;      /* GB a discrete card loses to display and context */
+  var DAYS = 365;
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  var state = {
+    mode:"A", set:{tower:1, rtx5090:1, mon32:1, router:1},
+    hl:3, hi:5, rate:18.44, circ:"us15", quant:"q4", ctx:8, cw:60, sel:"minim4"
+  };
+
+  function cat(id){ for(var i=0;i<CAT.length;i++){ if(CAT[i].id===id) return CAT[i]; } return null; }
+  /* the custom device is the one catalogue row whose watts the reader owns */
+  function watts(it){
+    if(it.id!=="custom") return {idle:it.idle, load:it.load, peak:it.peak};
+    return {idle:state.cw*0.3, load:state.cw, peak:state.cw*1.15};
+  }
+
+  function fmt(n, d){
+    if(!isFinite(n)) return "0";
+    d = d === undefined ? 0 : d;
+    return n.toLocaleString("en-US",{minimumFractionDigits:d, maximumFractionDigits:d});
+  }
+  var NB = " ";
+
+  function buildProv(){
+    var items = CAT.filter(function(c){ return c.id!=="custom"; }).length;
+    $("heroMeta").textContent = "Maker specifications and published reviews · "+items+NB+"catalogue items · "+
+      MODELS.length+NB+"open-weight models · current as of August"+NB+"2026";
+    $("stripA").textContent = items;
+    $("stripB").textContent = MODELS.length;
+  }
+
+  /* ---------- the arithmetic ---------- */
+  function compute(){
+    var idleW = 0, loadW = 0, peakW = 0, count = 0;
+    var kwhWork = 0, kwhIdle = 0, kwhFloor = 0;
+    var hl = Math.min(state.hl, 24);
+    var hi = Math.min(state.hi, Math.max(24 - hl, 0));
+
+    var gpuMem = 0, gpuBw = 0, bestUni = 0, bestUniBw = 0, uniName = "", gpuName = "";
+
+    for(var id in state.set){
+      var it = cat(id); if(!it) continue;
+      var q = state.set[id]; if(q<=0) continue;
+      var w = watts(it);
+      count += q;
+      idleW += w.idle*q; loadW += w.load*q; peakW += w.peak*q;
+
+      /* the work hours cost the same for everything; the rest of the day depends on
+         whether the thing is ever actually switched off */
+      kwhWork += w.load*q*hl/1000;
+      if(it.on){ kwhFloor += w.idle*q*(24-hl)/1000; }
+      else     { kwhIdle  += w.idle*q*hi/1000; }
+
+      if(it.mem>0){
+        if(it.g==="Graphics"){
+          /* identical cards in one machine pool their memory; they do not pool bandwidth */
+          gpuMem += it.mem*q;
+          if(it.bw > gpuBw){ gpuBw = it.bw; gpuName = it.name; }
+        } else if(it.mem*it.memF > bestUni){
+          bestUni = it.mem*it.memF; bestUniBw = it.bw; uniName = it.name;
+        }
+      }
+    }
+
+    var gpuUsable = gpuMem>0 ? Math.max(gpuMem - GPU_RESERVE, 0) : 0;
+    var usable, bw, host;
+    if(gpuUsable >= bestUni){ usable = gpuUsable; bw = gpuBw; host = gpuName; }
+    else { usable = bestUni; bw = bestUniBw; host = uniName; }
+
+    var kwhDay = kwhWork + kwhIdle + kwhFloor;
+    var kwhYear = kwhDay*DAYS;
+    var cost = kwhYear*state.rate/100;
+
+    var c = CIRCUITS[state.circ];
+    var ceiling = c.v*c.a*c.derate;
+
+    var bpw = QUANT[state.quant].bpw;
+    var rows = MODELS.map(function(m){
+      var weights = m.total*bpw/8;
+      var kv = m.kv*state.ctx;
+      var need = weights*WEIGHT_OVERHEAD + kv;
+      var perToken = weights*(m.active/m.total);
+      return {
+        m:m, weights:weights, kv:kv, need:need, perToken:perToken,
+        fits: usable>0 && need <= usable,
+        toks: perToken>0 && bw>0 ? BW_EFF*bw/perToken : 0
+      };
+    });
+    var best = null;
+    for(var i=0;i<rows.length;i++){ if(rows[i].fits) best = rows[i]; }
+
+    return {
+      count:count, idleW:idleW, loadW:loadW, peakW:peakW,
+      kwhWork:kwhWork*DAYS, kwhIdle:kwhIdle*DAYS, kwhFloor:kwhFloor*DAYS,
+      kwhYear:kwhYear, cost:cost, btu:loadW*BTU,
+      ceiling:ceiling, circPct: ceiling>0 ? 100*peakW/ceiling : 0,
+      usable:usable, bw:bw, host:host, rows:rows, best:best,
+      hl:hl, hi:hi
+    };
+  }
+
+  /* ---------- stage: a representative day, or the memory ladder ---------- */
+  function drawDay(r){
+    var W = 1000, H = 300, L = 78, R = 16, T = 26, B = 34;
+    var top = Math.max(r.peakW, r.ceiling, r.loadW, 1)*1.08;
+    var x = function(h){ return L + (W-L-R)*h/24; };
+    var y = function(w){ return T + (H-T-B)*(1 - w/top); };
+    var o = [];
+
+    /* the day is laid out work first, then idle, then whatever never turns off */
+    var floorW = 0, switchedIdle = 0;
+    for(var id in state.set){
+      var it = cat(id); if(!it) continue;
+      var q = state.set[id]; if(q<=0) continue;
+      var w = watts(it);
+      if(it.on) floorW += w.idle*q; else switchedIdle += w.idle*q;
+    }
+    var segs = [
+      {from:0, to:r.hl, w:r.loadW, cls:"s1"},
+      {from:r.hl, to:r.hl+r.hi, w:floorW+switchedIdle, cls:"s2"},
+      {from:r.hl+r.hi, to:24, w:floorW, cls:"s3"}
+    ];
+    var FILL = {s1:"#4FE3A5", s2:"#1E9E73", s3:"#125C46"};
+
+    /* grid */
+    for(var g=0; g<=4; g++){
+      var gv = top*g/4;
+      o.push('<line x1="'+L+'" y1="'+y(gv).toFixed(1)+'" x2="'+(W-R)+'" y2="'+y(gv).toFixed(1)+'" stroke="#1C2126" stroke-width="1"/>');
+      o.push('<text x="'+(L-10)+'" y="'+(y(gv)+4).toFixed(1)+'" font-size="11" text-anchor="end">'+fmt(gv)+'</text>');
+    }
+    segs.forEach(function(s){
+      if(s.to<=s.from || s.w<=0) return;
+      o.push('<rect x="'+x(s.from).toFixed(1)+'" y="'+y(s.w).toFixed(1)+'" width="'+(x(s.to)-x(s.from)).toFixed(1)+
+             '" height="'+(y(0)-y(s.w)).toFixed(1)+'" fill="'+FILL[s.cls]+'" opacity="0.9"/>');
+    });
+    /* the wall, and how close the worst case gets to it */
+    o.push('<line x1="'+L+'" y1="'+y(r.ceiling).toFixed(1)+'" x2="'+(W-R)+'" y2="'+y(r.ceiling).toFixed(1)+
+           '" stroke="#E0603F" stroke-width="1.5" stroke-dasharray="7 5"/>');
+    o.push('<text x="'+(W-R)+'" y="'+(y(r.ceiling)-9).toFixed(1)+'" font-size="12" text-anchor="end" fill="#E0603F">'+
+           fmt(r.ceiling)+' W CIRCUIT LIMIT</text>');
+    if(r.peakW>0){
+      o.push('<line x1="'+L+'" y1="'+y(r.peakW).toFixed(1)+'" x2="'+(W-R)+'" y2="'+y(r.peakW).toFixed(1)+
+             '" stroke="#7B838D" stroke-width="1" stroke-dasharray="2 5"/>');
+      o.push('<text x="'+(W-R)+'" y="'+(y(r.peakW)-9).toFixed(1)+'" font-size="12" text-anchor="end">'+
+             fmt(r.peakW)+' W IF EVERYTHING PEAKS AT ONCE</text>');
+    }
+    /* axis */
+    o.push('<line x1="'+L+'" y1="'+y(0)+'" x2="'+(W-R)+'" y2="'+y(0)+'" stroke="#2A3037" stroke-width="1"/>');
+    [0,6,12,18,24].forEach(function(h){
+      o.push('<text x="'+x(h).toFixed(1)+'" y="'+(y(0)+22)+'" font-size="11" text-anchor="middle">'+h+'H</text>');
+    });
+    o.push('<text x="'+L+'" y="14" font-size="11">WATTS</text>');
+    return {svg:o.join(""), vb:"0 0 "+W+" "+H};
+  }
+
+  function drawLadder(r){
+    var rows = r.rows, n = rows.length;
+    var W = 1000, RH = 30, T = 26, B = 16, L = 168, R = 152;
+    var H = T + n*RH + B;
+    /* the ladder is unreadable if the 671B row squashes everything else, so the scale is
+       set by the memory you own, not by the largest model. Rows that overrun run off the
+       end of the plot, which is the correct impression: they are not close. */
+    var maxNeed = r.usable>0 ? r.usable/0.68 : 48;
+    var PW = W-L-R;
+    var x = function(gb){ return L + Math.min(PW*gb/maxNeed, PW+8); };
+    var o = [];
+    var cx = x(r.usable);
+
+    if(r.usable>0){
+      o.push('<rect x="'+L+'" y="'+(T-6)+'" width="'+(cx-L).toFixed(1)+'" height="'+(n*RH)+'" fill="#3FE0A0" opacity="0.04"/>');
+    }
+    rows.forEach(function(row, i){
+      var yy = T + i*RH, bh = 15;
+      var fill = row.fits ? "#3FE0A0" : "#2A3037";
+      var txt  = row.fits ? "#EEF1F3" : "#7B838D";
+      o.push('<text x="'+(L-12)+'" y="'+(yy+12)+'" font-size="13" text-anchor="end" fill="'+txt+'">'+row.m.name+'</text>');
+      o.push('<rect x="'+L+'" y="'+(yy+1)+'" width="'+Math.max(x(row.need)-L,2).toFixed(1)+'" height="'+bh+
+             '" fill="'+fill+'" opacity="'+(row.fits?0.85:0.55)+'"/>');
+      /* the value column is right-aligned at a fixed edge, so an overrunning bar cannot
+         push its own label off the plot */
+      var lbl = row.fits && row.toks>0
+        ? fmt(row.need,1)+" GB, "+fmt(row.toks, row.toks<10?1:0)+" tok/s"
+        : fmt(row.need,1)+" GB";
+      o.push('<text x="'+(W-6)+'" y="'+(yy+12)+'" font-size="12" text-anchor="end" fill="'+
+             (row.fits?"#3FE0A0":"#7B838D")+'">'+lbl+'</text>');
+    });
+    if(r.usable>0){
+      o.push('<line x1="'+cx.toFixed(1)+'" y1="'+(T-10)+'" x2="'+cx.toFixed(1)+'" y2="'+(T+n*RH)+
+             '" stroke="#EEF1F3" stroke-width="1.5"/>');
+      o.push('<text x="'+cx.toFixed(1)+'" y="'+(T-16)+'" font-size="12" text-anchor="middle" fill="#EEF1F3">'+
+             fmt(r.usable,1)+' GB USABLE</text>');
+    }
+    return {svg:o.join(""), vb:"0 0 "+W+" "+H};
+  }
+
+  /* ---------- render ---------- */
+  var bigCur = null, bigRaf = null;
+  var noMotion = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+  function setBig(target, decimals, unit, pre){
+    $("outBig").classList.remove("txt");
+    $("bigUnit").textContent = unit; $("bigPre").textContent = pre||"";
+    if(bigCur === null || !isFinite(bigCur)){ bigCur = target; $("bigNum").textContent = fmt(target, decimals); return; }
+    if(bigRaf) cancelAnimationFrame(bigRaf);
+    if(noMotion && noMotion.matches){ bigCur = target; $("bigNum").textContent = fmt(target, decimals); return; }
+    var from = bigCur, t0 = null, DUR = 220;
+    function step(ts){
+      if(t0===null) t0 = ts;
+      var k = Math.min((ts-t0)/DUR, 1);
+      k = 1 - Math.pow(1-k, 3);
+      $("bigNum").textContent = fmt(from + (target-from)*k, decimals);
+      if(k<1){ bigRaf = requestAnimationFrame(step); } else { bigCur = target; bigRaf = null; }
+    }
+    bigRaf = requestAnimationFrame(step);
+    bigCur = target;
+  }
+  function setBigText(txt, unit){
+    if(bigRaf){ cancelAnimationFrame(bigRaf); bigRaf = null; }
+    bigCur = null;
+    $("outBig").classList.add("txt");
+    $("bigPre").textContent = ""; $("bigNum").textContent = txt; $("bigUnit").textContent = unit||"";
+  }
+
+  function renderSet(){
+    var host = $("setList"), ids = Object.keys(state.set).filter(function(k){ return state.set[k]>0; });
+    if(!ids.length){
+      host.innerHTML = '<div class="set-empty">Nothing in the set yet. Pick a starter kit above, or add an item and the numbers start moving.</div>';
+      return;
+    }
+    host.innerHTML = '<div class="set-hd"><span>Item</span><span>Idle &middot; load &middot; peak</span></div>' +
+      ids.map(function(id){
+      var it = cat(id); if(!it) return "";
+      var w = watts(it);
+      return '<div class="item" data-id="'+id+'">'+
+        '<span class="nm">'+it.name+'</span>'+
+        '<span class="w">'+fmt(w.idle, w.idle<10?1:0)+' &middot; '+fmt(w.load)+' &middot; '+fmt(w.peak)+' W'+(it.on?' &middot; <span class="on">always on</span>':'')+'</span>'+
+        '<span class="qty"><button type="button" data-act="dec" aria-label="One fewer '+it.name+'">&minus;</button>'+
+          '<span class="n">'+state.set[id]+'</span>'+
+          '<button type="button" data-act="inc" aria-label="One more '+it.name+'">+</button></span>'+
+        '<button class="rm" type="button" data-act="rm" aria-label="Remove '+it.name+'">&times;</button>'+
+      '</div>';
+    }).join("");
+  }
+
+  function render(){
+    var r = compute();
+
+    $("mA").setAttribute("aria-pressed", state.mode==="A");
+    $("mB").setAttribute("aria-pressed", state.mode==="B");
+    $("qQ4").setAttribute("aria-pressed", state.quant==="q4");
+    $("qQ8").setAttribute("aria-pressed", state.quant==="q8");
+    $("qF16").setAttribute("aria-pressed", state.quant==="f16");
+    $("fCustom").hidden = !(state.set.custom > 0 || state.sel==="custom");
+    $("setW").textContent = fmt(r.loadW);
+
+    var kitOn = r.count===0 ? "__empty" : (KITS.filter(function(k){ return sameSet(k.set, state.set); })[0]||{}).id;
+    Array.prototype.forEach.call($("kitRow").children, function(b){
+      b.setAttribute("aria-pressed", b.getAttribute("data-k")===kitOn);
+    });
+
+    var c = CIRCUITS[state.circ];
+    $("circNote").textContent = c.note;
+    $("rateHint").textContent = state.rate<12 ? "Cheaper than almost anywhere in the US. Hydro, or a very good fixed deal."
+      : state.rate<20 ? "Around the US residential average of 18.44 cents."
+      : state.rate<32 ? "California, New England, or a typical European tariff."
+      : "Hawaii, or a peak-rate band. At this price the idle floor is worth engineering away.";
+    $("hiHint").textContent = r.hi < state.hi
+      ? "Trimmed to "+fmt(r.hi,1)+" hours, because the day is 24 hours long."
+      : "Awake, logged in, doing nothing. Gear marked always on ignores this and idles the rest of the day.";
+
+    /* the two answers */
+    if(state.mode==="A"){
+      $("outLabel").textContent = "Cost to run, per year";
+      setBig(r.cost, 0, "per year", "$");
+      $("miniLbl").textContent = "Cost to run";
+      $("miniVal").textContent = "$"+fmt(r.cost,0)+" / yr";
+      $("outNote").textContent = r.count
+        ? fmt(r.kwhYear)+" kWh a year from "+r.count+" item"+(r.count===1?"":"s")+", drawing "+fmt(r.loadW)+" W at load and "+fmt(r.idleW, r.idleW<10?1:0)+" W with everything idle."
+        : "Add something to the set and this fills in.";
+    } else {
+      $("outLabel").textContent = "Largest model that fits";
+      if(r.best){
+        setBigText(r.best.m.name, fmt(r.best.toks, r.best.toks<10?1:0)+" tok/s");
+        $("miniVal").textContent = r.best.m.name;
+        $("outNote").textContent = r.best.m.name+" at "+QUANT[state.quant].name+" needs "+fmt(r.best.need,1)+
+          " GB of the "+fmt(r.usable,1)+" GB you have usable, and generates about "+
+          fmt(r.best.toks, r.best.toks<10?1:0)+" tokens a second at "+fmt(r.bw)+" GB/s. "+r.best.m.note;
+      } else {
+        setBigText(r.usable>0 ? "Nothing" : "No compute", r.usable>0 ? "at "+QUANT[state.quant].name : "");
+        $("miniVal").textContent = r.usable>0 ? "Nothing fits" : "No compute";
+        $("outNote").textContent = r.usable>0
+          ? fmt(r.usable,1)+" GB of usable memory does not hold the smallest model on the ladder at "+QUANT[state.quant].name+". Drop to Q4, or shorten the context."
+          : "Nothing in this set can run a model. Add a machine or a graphics card.";
+      }
+      $("miniLbl").textContent = "Largest that fits";
+    }
+
+    /* stage */
+    var d = state.mode==="A" ? drawDay(r) : drawLadder(r);
+    var svg = $("plot");
+    svg.setAttribute("viewBox", d.vb);
+    svg.innerHTML = '<title id="plotTitle">'+(state.mode==="A"
+      ? "A representative day of power draw against the circuit limit"
+      : "Memory footprint of each model against your usable memory")+'</title>' + d.svg;
+    $("stageTL").textContent = state.mode==="A" ? "A representative day" : "Memory ladder";
+    $("stageTR").textContent = state.mode==="A"
+      ? fmt(r.circPct)+"% of circuit"
+      : (r.host ? fmt(r.bw)+" GB/s" : "");
+    $("stageCap").innerHTML = state.mode==="A"
+      ? "Work <b>"+fmt(r.hl,1)+" h</b> &middot; idle <b>"+fmt(r.hi,1)+" h</b> &middot; always-on floor <b>"+fmt(24-r.hl-r.hi,1)+" h</b>"
+      : "Weights at <b>"+QUANT[state.quant].name+"</b> &middot; cache for <b>"+state.ctx+"K</b> tokens &middot; green rows fit";
+
+    /* the same bar carries a different split in each mode: the year's kilowatt hours
+       on the power side, the memory the winning model actually occupies on the AI side */
+    var segs, tot, unit;
+    if(state.mode==="A"){
+      $("pbarT").innerHTML = "Where the kilowatt hours go &middot; over a year";
+      segs = [
+        ["s1","Doing the work", r.kwhWork],
+        ["s2","On but idle", r.kwhIdle],
+        ["s3","Always-on floor", r.kwhFloor]
+      ];
+      tot = Math.max(r.kwhYear, 0.001); unit = "kWh";
+      $("pbarWrap").hidden = false;
+    } else if(r.best){
+      $("pbarT").innerHTML = "Where the memory goes &middot; " + r.best.m.name + " at " + QUANT[state.quant].name;
+      segs = [
+        ["s1","Weights", r.best.weights*WEIGHT_OVERHEAD],
+        ["s2","KV cache at "+state.ctx+"K", r.best.kv],
+        ["s3","Headroom", Math.max(r.usable - r.best.need, 0)]
+      ];
+      tot = Math.max(r.usable, 0.001); unit = "GB";
+      $("pbarWrap").hidden = false;
+    } else {
+      $("pbarWrap").hidden = true;
+    }
+    if(!$("pbarWrap").hidden){
+      var dp = unit==="GB" ? 1 : 0;
+      $("pbar").innerHTML = segs.map(function(g){
+        return '<span class="'+g[0]+'" style="width:'+(100*g[2]/tot)+'%" title="'+g[1]+': '+fmt(g[2],dp)+' '+unit+'"></span>';
+      }).join("");
+      $("pbarLegend").innerHTML = segs.map(function(g){
+        return '<span><span class="chip '+g[0]+'"></span>'+g[1]+' <b>'+fmt(g[2],dp)+'</b> '+unit+'</span>';
+      }).join("");
+    }
+
+    /* cells */
+    var cells;
+    if(state.mode==="A"){
+      cells = [
+        ["Draw at load", fmt(r.loadW), "W", false],
+        ["Idle floor", fmt(r.idleW, r.idleW<10?1:0), "W", false],
+        ["Energy per year", fmt(r.kwhYear), "KWH", false],
+        ["Heat at load", fmt(r.btu), "BTU / H", false],
+        ["Peak vs circuit", fmt(r.circPct), "%", r.circPct>80],
+        ["Cost per month", "$"+fmt(r.cost/12), "", false]
+      ];
+    } else {
+      var whPerK = r.best && r.best.toks>0 ? r.loadW*1000/r.best.toks/3600 : 0;
+      cells = [
+        ["Usable memory", fmt(r.usable,1), "GB", false],
+        ["Memory bandwidth", fmt(r.bw), "GB / S", false],
+        ["Models that fit", r.rows.filter(function(x){return x.fits;}).length+" of "+r.rows.length, "", false],
+        ["Cache at "+state.ctx+"K", r.best ? fmt(r.best.kv,1) : "0", "GB", false],
+        ["Energy per 1M tokens", whPerK ? fmt(whPerK, whPerK<10?2:1) : "0", "KWH", false],
+        ["Cost per 1M tokens", whPerK ? "$"+fmt(whPerK*state.rate/100, 2) : "$0.00", "", false]
+      ];
+    }
+    var st = document.getElementById("chipCss");
+    if(!st){ st = document.createElement("style"); st.id = "chipCss";
+      st.textContent = ".chip.s1{background:#4FE3A5}.chip.s2{background:#1E9E73}.chip.s3{background:#125C46;outline:1px solid #1E9E73}";
+      document.head.appendChild(st); }
+    $("cells").innerHTML = cells.map(function(x){
+      return '<div class="cell"><div class="k">'+x[0]+'</div><div class="v'+(x[3]?" warn":"")+'">'+x[1]+
+             (x[2]?'<small>'+x[2]+'</small>':'')+'</div></div>';
+    }).join("");
+
+    $("flagText").textContent = flag(r);
+
+    renderModelTable(r);
+    var catRows = $("catBody").children;
+    for(var i=0;i<catRows.length;i++){
+      var rid = catRows[i].getAttribute("data-c");
+      if(rid) catRows[i].classList.toggle("on", state.set[rid]>0);
+    }
+
+    announce();
+    writeUrl();
+  }
+
+  /* the one decision out: name the thing that will actually stop you */
+  function flag(r){
+    if(!r.count) return "An empty set costs nothing and runs nothing. Load a kit to see the shape of the answer.";
+    if(state.mode==="A"){
+      if(r.circPct>100) return "Everything at peak draws "+fmt(r.peakW)+" W against a "+fmt(r.ceiling)+
+        " W circuit. That is not a warning, it is a tripped breaker. Split the set across two circuits before you buy anything else.";
+      if(r.circPct>80) return "Peak draw is "+fmt(r.circPct)+" percent of what this circuit carries continuously. A space heater or a kettle on the same breaker takes you over, and the printer alone is a 600 W transient.";
+      var floorShare = r.kwhYear>0 ? 100*(r.kwhFloor+r.kwhIdle)/r.kwhYear : 0;
+      if(floorShare>55) return fmt(floorShare)+" percent of the year's kilowatt hours are spent doing nothing. The gear that never turns off, not the "+
+        fmt(r.loadW)+" W peak, is writing this bill. Idle draw is the number to shop on.";
+      return "The work itself is "+fmt(100-floorShare)+" percent of the annual energy, so this set is genuinely used rather than merely on. At "+
+        fmt(state.rate,2)+" cents it costs $"+fmt(r.cost/12)+" a month, and the circuit has "+fmt(100-r.circPct)+" percent headroom left.";
+    }
+    if(!r.usable) return "There is no accelerator in this set, so the model ladder is empty. A machine with unified memory or a graphics card is the entry ticket.";
+    if(!r.best) return "Nothing on the ladder fits in "+fmt(r.usable,1)+" GB at "+QUANT[state.quant].name+
+      ". Capacity is the wall, and no amount of bandwidth moves it. Q4 and a shorter context are the cheap fixes.";
+    var nextUp = null;
+    for(var i=0;i<r.rows.length;i++){ if(!r.rows[i].fits){ nextUp = r.rows[i]; break; } }
+    if(r.best.toks < 10) return r.best.m.name+" fits, but at "+fmt(r.best.toks,1)+
+      " tokens a second it generates slower than you read. Capacity got you in the door; "+fmt(r.bw)+
+      " GB/s is what you are actually living with. Bandwidth, not memory, is the constraint here.";
+    if(nextUp) return "The wall is capacity, not speed. "+nextUp.m.name+" needs "+fmt(nextUp.need,1)+" GB and you have "+
+      fmt(r.usable,1)+", so it misses by "+fmt(nextUp.need-r.usable,1)+" GB. Another "+fmt(Math.ceil((nextUp.need-r.usable)/8)*8)+
+      " GB of memory changes what you can run; a faster card does not.";
+    return "Everything on the ladder fits, which means bandwidth is now the only thing you are buying. At "+fmt(r.bw)+
+      " GB/s the largest model still generates "+fmt(r.best.toks,0)+" tokens a second.";
+  }
+
+  function renderModelTable(r){
+    $("modBody").innerHTML = r.rows.map(function(row){
+      var m = row.m;
+      return '<tr>'+
+        '<td class="name">'+m.name+(m.moe?' <span class="tag l">MoE</span>':'')+'</td>'+
+        '<td class="m">'+m.total+'B</td>'+
+        '<td class="m">'+(m.moe? m.active+'B' : m.total+'B')+'</td>'+
+        '<td class="m">'+fmt(row.weights,1)+' GB</td>'+
+        '<td class="m">'+fmt(row.kv,1)+' GB</td>'+
+        '<td class="m">'+fmt(row.need,1)+' GB</td>'+
+        '</tr>';
+    }).join("");
+  }
+
+  function buildCat(){
+    var out = [], grp = "";
+    CAT.forEach(function(it){
+      if(it.g!==grp){ grp = it.g; out.push('<tr class="grpr"><td colspan="6">'+grp+'</td></tr>'); }
+      if(it.id==="custom") return;
+      out.push('<tr data-c="'+it.id+'">'+
+        '<td class="name"><button class="rowbtn" type="button">'+it.name+'</button></td>'+
+        '<td class="m">'+fmt(it.idle, it.idle<10?1:0)+' W</td>'+
+        '<td class="m">'+fmt(it.load)+' W</td>'+
+        '<td class="m">'+fmt(it.peak)+' W</td>'+
+        '<td class="m">'+(it.mem? fmt(it.mem*it.memF,1)+' of '+it.mem+' GB' : '&mdash;')+'</td>'+
+        '<td>'+(it.bw? '<span class="m">'+fmt(it.bw)+' GB/s</span> &middot; ' : '')+it.note+'</td>'+
+        '</tr>');
+    });
+    $("catBody").innerHTML = out.join("");
+  }
+
+  function buildKits(){
+    $("kitRow").innerHTML = KITS.map(function(k){
+      return '<button class="kit" type="button" data-k="'+k.id+'" aria-pressed="false">'+k.name+'</button>';
+    }).join("") + '<button class="kit" type="button" data-k="__empty" aria-pressed="false">Empty</button>';
+  }
+  function sameSet(a, b){
+    var ka = Object.keys(a).filter(function(k){return a[k]>0;});
+    var kb = Object.keys(b).filter(function(k){return b[k]>0;});
+    if(ka.length!==kb.length) return false;
+    return ka.every(function(k){ return a[k]===b[k]; });
+  }
+
+  /* ---------- select-only combobox, shared by the picker and the circuit ---------- */
+  function makeSelect(btnId, listId, nameId, metaId, options, onPick){
+    var btn = $(btnId), list = $(listId), open = false, act = -1;
+    var flat = options.filter(function(o){ return !o.group; });
+
+    function paint(){
+      var i = -1;
+      list.innerHTML = options.map(function(o){
+        if(o.group) return '<li class="sel-grp" role="presentation">'+o.group+'</li>';
+        i++;
+        return '<li class="sel-opt" id="'+listId+'Opt'+i+'" role="option" aria-selected="false" data-v="'+o.id+'">'+
+          '<span class="mk"></span><span class="nm">'+o.name+'</span><span class="kw">'+(o.meta||"")+'</span></li>';
+      }).join("");
+    }
+    function opts(){ return list.querySelectorAll(".sel-opt"); }
+    function setActive(i){
+      var os = opts(); if(!os.length) return;
+      act = Math.max(0, Math.min(i, os.length-1));
+      for(var k=0;k<os.length;k++) os[k].classList.toggle("act", k===act);
+      btn.setAttribute("aria-activedescendant", os[act].id);
+      os[act].scrollIntoView({block:"nearest"});
+    }
+    function show(){
+      open = true; list.hidden = false; btn.setAttribute("aria-expanded","true");
+      var cur = current(); var os = opts();
+      for(var k=0;k<os.length;k++){ if(os[k].getAttribute("data-v")===cur){ setActive(k); return; } }
+      setActive(0);
+    }
+    function hide(){ open = false; list.hidden = true; btn.setAttribute("aria-expanded","false"); btn.removeAttribute("aria-activedescendant"); }
+    var curId = flat[0].id;
+    function current(){ return curId; }
+    function set(id){
+      var o = flat.filter(function(x){ return x.id===id; })[0] || flat[0];
+      curId = o.id;
+      $(nameId).textContent = o.name;
+      if(metaId) $(metaId).textContent = o.meta || "";
+      var os = opts();
+      for(var k=0;k<os.length;k++) os[k].setAttribute("aria-selected", os[k].getAttribute("data-v")===curId);
+    }
+    function choose(id){ set(id); hide(); btn.focus(); onPick(id); }
+
+    paint();
+    btn.addEventListener("click", function(){ open ? hide() : show(); });
+    btn.addEventListener("keydown", function(e){
+      var k = e.key;
+      if(k==="ArrowDown"||k==="ArrowUp"){
+        e.preventDefault();
+        if(!open){ show(); return; }
+        setActive(act + (k==="ArrowDown"?1:-1));
+      } else if(k==="Home"||k==="End"){
+        if(open){ e.preventDefault(); setActive(k==="Home"?0:opts().length-1); }
+      } else if(k==="Enter"||k===" "){
+        e.preventDefault();
+        if(!open){ show(); return; }
+        var os = opts(); if(os[act]) choose(os[act].getAttribute("data-v"));
+      } else if(k==="Escape"){ if(open){ e.preventDefault(); hide(); } }
+      else if(k==="Tab"){ if(open) hide(); }
+    });
+    list.addEventListener("mousemove", function(e){
+      var li = e.target.closest ? e.target.closest(".sel-opt") : null;
+      if(!li) return;
+      var os = opts();
+      for(var k=0;k<os.length;k++) if(os[k]===li) setActive(k);
+    });
+    list.addEventListener("click", function(e){
+      var li = e.target.closest ? e.target.closest(".sel-opt") : null;
+      if(li) choose(li.getAttribute("data-v"));
+    });
+    document.addEventListener("click", function(e){
+      if(open && !btn.contains(e.target) && !list.contains(e.target)) hide();
+    });
+    return {set:set, get:current};
+  }
+
+  /* ---------- url state ---------- */
+  function writeUrl(){
+    var q = [];
+    q.push("m="+state.mode);
+    var s = Object.keys(state.set).filter(function(k){return state.set[k]>0;})
+      .map(function(k){ return k+"~"+state.set[k]; }).join("!");
+    if(s) q.push("s="+s);
+    q.push("hl="+state.hl); q.push("hi="+state.hi);
+    q.push("r="+state.rate); q.push("c="+state.circ);
+    q.push("q="+state.quant); q.push("x="+state.ctx);
+    if(state.set.custom) q.push("cw="+state.cw);
+    history.replaceState(null, "", "#"+q.join("&"));
+  }
+  function readUrl(){
+    var h = location.hash.slice(1);
+    if(h.indexOf("=")===-1) return false;
+    var q = new URLSearchParams(h);
+    if(q.get("m")==="B") state.mode = "B";
+    if(q.get("s")){
+      var set = {};
+      q.get("s").split("!").forEach(function(p){
+        var kv = p.split("~");
+        if(cat(kv[0])) set[kv[0]] = Math.max(1, Math.min(parseInt(kv[1],10)||1, 99));
+      });
+      state.set = set;
+    }
+    if(q.get("hl")!==null) state.hl = clamp(parseFloat(q.get("hl")), 0, 24, 3);
+    if(q.get("hi")!==null) state.hi = clamp(parseFloat(q.get("hi")), 0, 24, 5);
+    if(q.get("r")) state.rate = clamp(parseFloat(q.get("r")), 1, 120, 18.44);
+    if(q.get("c") && CIRCUITS[q.get("c")]) state.circ = q.get("c");
+    if(q.get("q") && QUANT[q.get("q")]) state.quant = q.get("q");
+    if(q.get("x")) state.ctx = clamp(parseInt(q.get("x"),10), 1, 256, 8);
+    if(q.get("cw")) state.cw = clamp(parseFloat(q.get("cw")), 1, 3000, 60);
+    return true;
+  }
+  function clamp(v, lo, hi, dflt){
+    if(isNaN(v)) return dflt;
+    return Math.max(lo, Math.min(hi, v));
+  }
+
+  function syncInputs(){
+    $("hl").value = state.hl;     $("hlR").value = state.hl;
+    $("hi").value = state.hi;     $("hiR").value = state.hi;
+    $("rate").value = state.rate; $("rateR").value = Math.min(Math.max(state.rate,5),60);
+    $("ctx").value = state.ctx;   $("ctxR").value = Math.min(state.ctx,128);
+    $("cw").value = state.cw;     $("cwR").value = Math.min(state.cw,600);
+  }
+
+  function pair(numId, rangeId, key, min, max, isInt){
+    var n = $(numId), rg = $(rangeId);
+    function set(v){
+      v = parseFloat(v); if(isNaN(v)) return;
+      v = Math.max(min, Math.min(max, v));
+      if(isInt) v = Math.round(v);
+      state[key] = v;
+      n.value = v; rg.value = Math.min(v, parseFloat(rg.max));
+      if(key==="cw") renderSet();
+      render();
+    }
+    n.addEventListener("input", function(){ set(n.value); });
+    rg.addEventListener("input", function(){ set(rg.value); });
+  }
+
+  function toast(msg){
+    var t = $("toast"); t.textContent = msg; t.classList.add("on");
+    setTimeout(function(){ t.classList.remove("on"); }, 1600);
+  }
+  function copy(text, msg){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, function(){ fallback(text,msg); });
+    } else { fallback(text,msg); }
+  }
+  function fallback(text,msg){
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); toast(msg); }catch(e){ toast("Copy failed"); }
+    document.body.removeChild(ta);
+  }
+  function summary(){
+    var r = compute(), L = [];
+    L.push("Desk Budget: "+r.count+" item"+(r.count===1?"":"s")+", "+fmt(r.loadW)+" W at load");
+    L.push("");
+    Object.keys(state.set).filter(function(k){return state.set[k]>0;}).forEach(function(k){
+      var it = cat(k), w = watts(it);
+      L.push("  "+state.set[k]+" x "+it.name+"   "+fmt(w.load)+" W load, "+fmt(w.idle, w.idle<10?1:0)+" W idle");
+    });
+    L.push("");
+    L.push("Energy: "+fmt(r.kwhYear)+" kWh/yr at "+fmt(state.rate,2)+" c/kWh = $"+fmt(r.cost)+" a year");
+    L.push("  work "+fmt(r.kwhWork)+" kWh, idle "+fmt(r.kwhIdle)+" kWh, always-on floor "+fmt(r.kwhFloor)+" kWh");
+    L.push("Peak: "+fmt(r.peakW)+" W, "+fmt(r.circPct)+"% of a "+CIRCUITS[state.circ].name+" circuit ("+fmt(r.ceiling)+" W continuous)");
+    L.push("Heat at load: "+fmt(r.btu)+" BTU/hr");
+    L.push("");
+    L.push("Usable memory: "+fmt(r.usable,1)+" GB at "+fmt(r.bw)+" GB/s"+(r.host?" ("+r.host+")":""));
+    L.push("Largest model at "+QUANT[state.quant].name+", "+state.ctx+"K context: "+
+      (r.best ? r.best.m.name+", "+fmt(r.best.need,1)+" GB, about "+fmt(r.best.toks, r.best.toks<10?1:0)+" tok/s" : "none fits"));
+    L.push("");
+    L.push("Run your own: "+location.href);
+    return L.join("\n");
+  }
+
+  var picker, circPicker;
+
+  document.addEventListener("DOMContentLoaded", function(){
+    var shared = readUrl();
+    buildProv();
+    buildCat();
+    buildKits();
+
+    var pickOpts = [];
+    var g = "";
+    CAT.forEach(function(it){
+      if(it.g!==g){ g = it.g; pickOpts.push({group:g}); }
+      pickOpts.push({id:it.id, name:it.name, meta: it.mem? it.mem+" GB" : fmt(it.load)+" W"});
+    });
+    picker = makeSelect("pick","pickList","pickName","pickW", pickOpts, function(id){
+      state.sel = id;
+      $("pickNote").textContent = cat(id).note;
+      $("fCustom").hidden = !(state.set.custom > 0 || id==="custom");
+    });
+    picker.set(state.sel);
+    $("pickNote").textContent = cat(state.sel).note;
+
+    var circOpts = Object.keys(CIRCUITS).map(function(k){
+      return {id:k, name:CIRCUITS[k].name, meta: fmt(CIRCUITS[k].v*CIRCUITS[k].a*CIRCUITS[k].derate)+" W"};
+    });
+    circPicker = makeSelect("circ","circList","circName","circW", circOpts, function(id){
+      state.circ = id; render();
+    });
+    circPicker.set(state.circ);
+
+    function add(id, n){
+      state.set[id] = Math.max(0, Math.min((state.set[id]||0) + (n===undefined?1:n), 99));
+      if(state.set[id]===0) delete state.set[id];
+      renderSet(); render();
+    }
+    $("addBtn").addEventListener("click", function(){ add(picker.get()); });
+    $("setList").addEventListener("click", function(e){
+      var b = e.target.closest ? e.target.closest("[data-act]") : null;
+      if(!b) return;
+      var id = b.closest(".item").getAttribute("data-id");
+      var a = b.getAttribute("data-act");
+      if(a==="inc") add(id, 1);
+      else if(a==="dec") add(id, -1);
+      else { delete state.set[id]; renderSet(); render(); }
+    });
+
+    $("kitRow").addEventListener("click", function(e){
+      var b = e.target.closest ? e.target.closest("[data-k]") : null;
+      if(!b) return;
+      var k = b.getAttribute("data-k");
+      if(k==="__empty"){ state.set = {}; }
+      else {
+        var kit = KITS.filter(function(x){ return x.id===k; })[0];
+        if(!kit) return;
+        state.set = {};
+        for(var id in kit.set) state.set[id] = kit.set[id];
+      }
+      renderSet(); render();
+    });
+
+    $("catBody").addEventListener("click", function(e){
+      var tr = e.target.closest ? e.target.closest("tr[data-c]") : null;
+      if(!tr) return;
+      var id = tr.getAttribute("data-c");
+      add(id);
+      picker.set(id); state.sel = id;
+      $("pickNote").textContent = cat(id).note;
+      // send focus with the scroll, so a keyboard user is not left behind in the table
+      $("pick").focus({ preventScroll: true });
+      window.scrollTo(0, $("calc").getBoundingClientRect().top + window.pageYOffset - 60);
+      toast("Added");
+    });
+
+    $("mA").addEventListener("click", function(){ state.mode="A"; bigCur=null; render(); });
+    $("mB").addEventListener("click", function(){ state.mode="B"; bigCur=null; render(); });
+    $("qQ4").addEventListener("click", function(){ state.quant="q4"; render(); });
+    $("qQ8").addEventListener("click", function(){ state.quant="q8"; render(); });
+    $("qF16").addEventListener("click", function(){ state.quant="f16"; render(); });
+
+    syncInputs();
+    pair("hl","hlR","hl",0,24,false);
+    pair("hi","hiR","hi",0,24,false);
+    pair("rate","rateR","rate",1,120,false);
+    pair("ctx","ctxR","ctx",1,256,true);
+    pair("cw","cwR","cw",1,3000,false);
+
+    $("copyLink").addEventListener("click", function(){ copy(location.href, "Link copied"); });
+    $("copySummary").addEventListener("click", function(){ copy(summary(), "Summary copied"); });
+
+    /* the bar appears while the inputs are on screen and the real headline is not,
+       which only ever happens once the panels have stacked (the CSS gates the rest) */
+    if("IntersectionObserver" in window){
+      var seen = { inputs:false, head:false };
+      function miniShow(){ $("mini").classList.toggle("on", seen.inputs && !seen.head); }
+      new IntersectionObserver(function(es){ seen.inputs = es[es.length-1].isIntersecting; miniShow(); })
+        .observe(document.querySelector(".app .panel:not(.out)"));
+      new IntersectionObserver(function(es){ seen.head = es[es.length-1].isIntersecting; miniShow(); },
+        { rootMargin: "0px 0px -140px 0px" })
+        .observe(document.querySelector(".headline-out"));
+      $("mini").addEventListener("click", function(){
+        window.scrollTo(0, document.querySelector(".panel.out").getBoundingClientRect().top + window.pageYOffset - 58);
+      });
+    }
+    window.addEventListener("beforeprint", function(){
+      $("printUrl").textContent = "Reproduce this set: " + location.href;
+    });
+
+    renderSet();
+    render();
+
+    /* a shared link should land on the numbers, not on the sales pitch */
+    if(shared){
+      var html = document.documentElement;
+      html.style.scrollBehavior = "auto";
+      window.scrollTo(0, $("calc").getBoundingClientRect().top + window.pageYOffset - 60);
+      setTimeout(function(){ html.style.scrollBehavior = ""; }, 60);
+    }
+  });
+
+  /* The whole result panel is rewritten on every keystroke and slider tick, which a screen
+     reader cannot see. Mirror the headline into a polite status region, debounced so dragging
+     a slider announces where it landed rather than every frame along the way. */
+  var srTimer;
+  function announce(){
+    clearTimeout(srTimer);
+    srTimer = setTimeout(function(){
+      $("srStatus").textContent = $("outLabel").textContent + ": " + $("bigNum").textContent + " " +
+        $("bigUnit").textContent.trim() + ". " + $("outNote").textContent;
+    }, 500);
+  }
+})();
+</script>
+<script>
+/* Scroll reveals. Content is visible by default; motion is opted into only when
+   the browser is happy to move things. */
+(function(){
+  "use strict";
+  if(!("IntersectionObserver" in window)) return;
+  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var els = document.querySelectorAll(".rv");
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add("rvIn"); io.unobserve(en.target); }
+    });
+  }, { rootMargin: "0px 0px -70px 0px" });
+  els.forEach(function(e){
+    var r = e.getBoundingClientRect();
+    if(r.top < window.innerHeight && r.bottom > 0) return;
+    e.classList.add("rv0");
+    io.observe(e);
+  });
+})();
+</script>
+</body>
+</html>
