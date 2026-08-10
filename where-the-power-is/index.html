@@ -135,8 +135,8 @@
   .iv-num:focus{outline:0;border-bottom-color:var(--grn)}
   input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   .iv-num{-moz-appearance:textfield;appearance:textfield}
-  .config-note{font-size:15px;color:var(--tx2);margin:26px 0 0;max-width:60ch;text-wrap:pretty}
-  .config-meta{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--tx3);margin:14px 0 0;line-height:1.6}
+  .config-note{font-size:16px;color:var(--tx2);margin:26px 0 0;max-width:64ch;text-wrap:pretty}
+  .config-meta{font-family:var(--mono);font-size:12.5px;letter-spacing:.03em;color:var(--tx3);margin:14px 0 0;line-height:1.7}
   .nb{white-space:nowrap}
 
   /* ---------- assumptions: the two dials of the model ---------- */
@@ -789,9 +789,9 @@
 
   var BRIDGEOPTS = [
     {id:"no",  name:"will wait for the utility",
-     note:"Grid power only. The window is the utility's window, and the queue is the queue."},
+     note:"Grid power only: the utility's window is your window."},
     {id:"yes", name:"would bridge with on-site generation",
-     note:"On-site gas carries the load while the interconnection completes, where regulation allows it. The credit applies in the regions marked bridgeable; elsewhere the utility window stands."}
+     note:"On-site gas carries you while the interconnection completes. The credit applies in the regions marked bridgeable."}
   ];
 
   var BANDCLASS = {make:"b-make", slip:"b-slip", miss:"b-miss"};
