@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where the power is · Infrabench</title>
+<meta name="description" content="A siting screener for power-constrained data centers. Put in the megawatts you need and the year you need them, get the US grid regions that can actually deliver, ranked by earliest realistic energization window. Every constant shown.">
+<meta property="og:title" content="Where the power is · Siting under a power constraint">
+<meta property="og:description" content="The interconnection queue holds terawatts and delivers a fraction. Put in your megawatts and your deadline, get the regions that can actually energize you, ranked. Every constant shown.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/where-the-power-is/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="/assets/analytics.js"></script>
+<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+<style>
+  :root{
+    color-scheme:dark;
+    /* --- suite chrome, shared with the rest of Infrabench --- */
+    --bg:#0A0C0E;          /* page surface */
+    --bg2:#0E1114;         /* raised, one step */
+    --line:#1C2126;        /* hairline */
+    --line2:#2A3037;       /* stronger rule */
+    --tx:#EEF1F3;          /* primary text */
+    --tx2:#A8B0B8;         /* secondary text */
+    --tx2b:#C7CDD4;        /* dense mono passages: one step brighter to stay readable */
+    --tx3:#7B838D;         /* labels only */
+    --grn:#3FE0A0;         /* signal green: data and live things only */
+    --grn2:#2FBF86;
+    /* --- verdict ramp, same three steps Crash Cart validated ---
+       Green, amber, red never carry text alone: every verdict is also spelled out
+       in words on the row it colours. */
+    --r-make:#3FE0A0;      /* makes the deadline */
+    --r-slip:#FFEA6B;      /* the window straddles it */
+    --r-miss:#FF5B5B;      /* misses it */
+    --w-make:#0E1F1B;      /* row washes: the verdict at 10 percent over the surface */
+    --w-slip:#1F2015;
+    --w-miss:#201113;
+    --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:16px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+  .wrap{max-width:1260px;margin:0 auto;padding:0 32px}
+  @media(max-width:640px){.wrap{padding:0 20px}}
+  a{color:var(--tx);text-decoration:none}
+
+  /* micro-label: the only place uppercase mono is allowed */
+  .lbl{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+
+  /* first focusable element: lets keyboard and screen-reader users bypass the sticky header */
+  .skip{position:absolute;inset-inline-start:-9999px;top:0;z-index:60;font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:12px 18px;background:var(--tx);color:var(--bg);font-weight:600}
+  .skip:focus{inset-inline-start:0}
+  main{display:block;scroll-margin-top:64px}
+  :focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  /* announced to assistive tech only: the result summary and the copy confirmation */
+  .sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+
+  /* ---------- header ---------- */
+  header{position:sticky;top:0;z-index:40;background:rgba(10,12,14,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:16px;height:60px}
+  .mark{display:flex;align-items:center;gap:11px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx)}
+  .mark .suite{display:flex;align-items:center;gap:11px;color:var(--tx3);position:relative}
+  .mark .suite::after{content:"";position:absolute;inset:-16px -8px}
+  .mark .suite:hover{color:var(--tx)}
+  .mark .sep{color:var(--line2)}
+  .mark .tool{color:var(--tx)}
+  .sq{width:9px;height:9px;background:var(--grn);flex:none}
+  nav{display:flex;gap:28px}
+  nav a{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);position:relative;display:inline-block}
+  nav a::after{content:"";position:absolute;inset:-16px -10px}
+  nav a:hover{color:var(--tx)}
+  @media(max-width:860px){nav{display:none}}
+
+  /* ---------- shared type ---------- */
+  /* ---- shared hero type, identical across the suite ----
+     One scale across the suite. 84px is the largest that still holds every one of the
+     headlines to two lines. h1 .setup carries the two-tone on the headlines built as a
+     setup and a question — the question keeps full brightness, the setup steps back. */
+  h1{font-weight:500;font-size:clamp(40px,5.6vw,84px);line-height:1;letter-spacing:-.04em;margin:24px 0 0;max-width:25ch;text-wrap:balance;color:var(--tx)}
+  h1 .setup{color:var(--tx2)}
+  .lede{font-size:17px;color:var(--tx2);max-width:60ch;margin:0;text-wrap:pretty}
+  .hero-body{margin:38px 0 0}
+  @media(max-width:700px){.hero-body{margin-top:30px}}
+  /* ---- end shared hero type ---- */
+  h2{font-weight:500;font-size:clamp(26px,3vw,40px);line-height:1.1;letter-spacing:-.03em;margin:18px 0 18px;max-width:28ch;text-wrap:balance}
+  h3{font-weight:600;font-size:17px;letter-spacing:-.015em;margin:0 0 8px}
+  .lede a{color:var(--tx);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:4px}
+  .lede a:hover{color:var(--grn);text-decoration-color:var(--grn)}
+  @keyframes drop{from{opacity:0;transform:translateY(-5px)}}
+  @media (prefers-reduced-motion: no-preference){
+    html{scroll-behavior:smooth}
+    .toast{transition:opacity .22s ease, transform .22s ease}
+    .caret{transition:transform .18s ease, color .18s ease}
+    .sel-list{animation:drop .14s ease-out}
+    .btn{transition:background .15s ease,border-color .15s ease,color .15s ease}
+    .rise{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+    .rise.d1{animation-delay:.06s}.rise.d2{animation-delay:.12s}
+    @keyframes rise{from{opacity:0;transform:translateY(14px)}}
+    .big .cursor{animation:blink 1.15s steps(1) infinite}
+    @keyframes blink{50%{opacity:0}}
+  }
+  section{padding:96px 0;border-top:1px solid var(--line);scroll-margin-top:64px}
+  @media(max-width:700px){section{padding:64px 0}}
+
+  /* ---------- hero ---------- */
+  .hero{padding:88px 0 64px}
+  @media(max-width:700px){.hero{padding:56px 0 44px}}
+  .hero-meta{font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--tx3);margin:22px 0 0;line-height:1.7}
+
+  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:15px 24px;
+    background:var(--tx);color:var(--bg);border:1px solid var(--tx);cursor:pointer}
+  .btn:hover{background:#fff;border-color:#fff}
+  .btn.ghost{background:transparent;color:var(--tx);border-color:var(--line2)}
+  .btn.ghost:hover{border-color:var(--grn);color:var(--grn)}
+  .btn:active{transform:translateY(1px)}
+
+  /* ---------- console: the ask ----------
+     Not a form. You state the ask in one editable sentence, the way you would say it to
+     a utility, and the tool answers in a sentence of its own, followed by the map of
+     windows and the ranked list. The editable values are the only green in the prose. */
+  .console-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:12px 72px;align-items:stretch;margin-top:6px}
+  @media(max-width:980px){.console-grid{grid-template-columns:1fr;gap:0}}
+  .config{font-size:clamp(20px,2.4vw,26px);line-height:1.55;color:var(--tx2);margin:8px 0 0;text-wrap:balance;letter-spacing:-.012em}
+  .config + .config{margin-top:.62em}
+  .iv-num{font-family:var(--mono);font-size:.92em;font-weight:500;color:var(--grn);background:transparent;line-height:1.15;
+    border:0;border-bottom:1px solid var(--line2);padding:0 1px 3px;text-align:center;font-variant-numeric:tabular-nums}
+  .iv-num:hover{border-bottom-color:var(--tx3)}
+  .iv-num:focus{outline:0;border-bottom-color:var(--grn)}
+  input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .iv-num{-moz-appearance:textfield;appearance:textfield}
+  .config-note{font-size:16px;color:var(--tx2);margin:26px 0 0;max-width:64ch;text-wrap:pretty}
+  .config-meta{font-family:var(--mono);font-size:12.5px;letter-spacing:.03em;color:var(--tx3);margin:14px 0 0;line-height:1.7}
+  .nb{white-space:nowrap}
+
+  /* ---------- assumptions: the two dials of the model ---------- */
+  details.more.assump>.d-body{padding:0}
+  .aledger{display:grid;grid-template-columns:repeat(2,1fr);background:var(--bg2);border-top:1px solid var(--line)}
+  .acell{display:flex;flex-direction:column;padding:28px 37px 30px}
+  .acell + .acell{border-inline-start:1px solid var(--line)}
+  .aterm{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--tx3);cursor:pointer;margin-bottom:15px}
+  .aterm:hover{color:var(--tx2)}
+  .aval{display:flex;align-items:baseline;gap:9px;white-space:nowrap}
+  .aval .iv-num{font-size:26px;text-align:start;padding:0 1px 5px 0}
+  .aval .u{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--tx3)}
+  .anote{margin:auto 0 0;padding-top:20px;font-size:14px;line-height:1.7;color:var(--tx2);max-width:60ch;text-wrap:pretty}
+  @media(max-width:760px){
+    .aledger{grid-template-columns:1fr}
+    .acell{padding:22px 18px 24px}
+    .acell + .acell{border-inline-start:0;border-top:1px solid var(--line)}
+    .anote{max-width:none}
+  }
+
+  /* ---------- the bridge picker: the ARIA combobox worn inline as a word ---------- */
+  .sel{position:relative;display:inline-block;max-width:100%;vertical-align:baseline}
+  .sel-btn{display:inline-flex;align-items:baseline;gap:7px;font-family:var(--mono);font-size:.92em;font-weight:500;line-height:1.15;
+    color:var(--grn);background:transparent;border:0;border-bottom:1px solid var(--line2);padding:0 1px 3px;cursor:pointer;white-space:nowrap;max-width:100%}
+  .sel-btn:hover{border-bottom-color:var(--tx3)}
+  .sel-btn[aria-expanded="true"]{border-bottom-color:var(--grn)}
+  .sel-btn:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  .sel-btn .nm{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .caret{flex:none;width:.4em;height:.4em;color:var(--tx3);align-self:center}
+  .sel-btn:hover .caret{color:var(--grn)}
+  .sel-btn[aria-expanded="true"] .caret{color:var(--grn);transform:rotate(180deg)}
+  .sel-list{position:absolute;z-index:50;inset-inline-start:0;top:calc(100% + 7px);margin:0;padding:5px 0;list-style:none;
+    min-width:min(340px,86vw);background:var(--bg2);border:1px solid var(--line2);box-shadow:0 22px 48px rgba(0,0,0,.62);
+    max-height:min(54vh,340px);overflow-y:auto;overscroll-behavior:contain;font-size:14px;font-weight:400}
+  .sel-list[hidden]{display:none}
+  .sel-opt{display:flex;align-items:center;gap:12px;padding:11px 14px;font-family:var(--mono);font-size:14px;color:var(--tx2);cursor:pointer;white-space:nowrap}
+  @media(max-width:640px){.sel-opt{padding:14px;font-size:15px}}
+  .sel-opt .mk{width:6px;height:6px;flex:none}
+  .sel-opt .nm{flex:1}
+  .sel-opt[aria-selected="true"],.sel-opt.act{color:var(--tx)}
+  .sel-opt[aria-selected="true"] .mk{background:var(--grn)}
+  .sel-opt.act{background:rgba(63,224,160,.07);box-shadow:inset 2px 0 0 var(--grn2)}
+  .iv-num:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+
+  /* ---------- the answer ----------
+     The plate reads as an instrument: the stage's dot grid and glow behind it,
+     the suite's survey sweep across it, and the brand's block cursor after the
+     verdict, blinking the way the social cards freeze it. */
+  .headline-out{position:relative;overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--line);
+    background-color:var(--bg2);background-image:
+    radial-gradient(90% 110% at 18% 0%, rgba(63,224,160,.07), transparent 70%),
+    radial-gradient(circle, #161B20 1px, transparent 1.1px);
+    background-size:100% 100%, 22px 22px;
+    padding:28px 30px 26px;margin:10px 0 0}
+  @media(max-width:980px){.headline-out{margin-top:36px}}
+  .tick{position:absolute;width:9px;height:9px;border:0 solid var(--line2)}
+  .tick.tl{top:-1px;left:-1px;border-top-width:1px;border-left-width:1px}
+  .tick.tr{top:-1px;right:-1px;border-top-width:1px;border-right-width:1px}
+  .tick.bl{bottom:-1px;left:-1px;border-bottom-width:1px;border-left-width:1px}
+  .tick.br{bottom:-1px;right:-1px;border-bottom-width:1px;border-right-width:1px}
+  .headline-out .lbl{margin-bottom:14px}
+  .headline-out .lbl::before{content:"";display:inline-block;width:6px;height:6px;background:var(--grn);margin-right:10px;vertical-align:1px}
+  .big{font-weight:500;font-size:clamp(24px,2.6vw,34px);line-height:1.25;letter-spacing:-.025em;color:var(--tx);font-variant-numeric:tabular-nums;text-wrap:balance}
+  .big .a{color:var(--grn2);margin-inline-end:4px;font-family:var(--mono);font-weight:400;font-size:.95em}
+  .big .v{color:var(--grn);font-family:var(--mono);font-size:.95em}
+  /* the block cursor from the suite's social cards, live on the page */
+  .big .cursor{display:inline-block;width:.44em;height:.86em;background:var(--grn);margin-inline-start:9px;vertical-align:-.06em}
+  .headline-out .note{font-size:15px;color:var(--tx2);margin:14px 0 20px}
+  .headline-out .note b{font-family:var(--mono);font-size:.92em;font-weight:600;color:var(--tx);white-space:nowrap}
+  /* the counts carry their band's colour; the words carry the meaning */
+  .bar-cap b{font-weight:500}
+  .bar-cap .cm{color:var(--r-make)}
+  .bar-cap .cs{color:var(--r-slip)}
+  .bar-cap .cx{color:var(--r-miss)}
+
+  /* the verdict bar: ten regions as one stacked strip, best first. Decorative; the
+     caption below carries the counts as text. */
+  .bar-wrap{margin-top:auto;padding-top:18px;border-top:1px solid var(--line)}
+  .bandbar{display:flex;height:8px;background:var(--line);gap:2px}
+  .bandbar span{display:block;height:100%;min-width:2px}
+  .bandbar .b-make{background:var(--r-make)}
+  .bandbar .b-slip{background:var(--r-slip)}
+  .bandbar .b-miss{background:var(--r-miss)}
+  .bar-cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-top:12px;line-height:1.7}
+
+  /* ---------- progressive disclosure ---------- */
+  details.more{border:1px solid var(--line);margin-top:26px}
+  details.more>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px;padding:15px 18px;
+    font-family:var(--mono);font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--tx2)}
+  details.more>summary::-webkit-details-marker{display:none}
+  details.more>summary::before{content:"+";font-family:var(--mono);font-weight:600;color:var(--grn);width:1ch}
+  details.more[open]>summary::before{content:"\2212"}
+  details.more>summary:hover{color:var(--tx)}
+  details.more>summary:focus-visible{outline:2px solid var(--grn);outline-offset:-2px}
+  details.more>.d-body{padding:4px 18px 20px}
+
+  /* ---------- the stage: energization windows as a timeline ---------- */
+  .stage{position:relative;overflow:hidden;border:1px solid var(--line);background:
+    radial-gradient(58% 48% at 50% 56%, rgba(63,224,160,.05), transparent 72%),
+    radial-gradient(circle, #161B20 1px, transparent 1.1px);
+    background-size:100% 100%, 22px 22px;
+    padding:52px 26px 20px;margin-top:52px}
+  @media(max-width:700px){.stage{padding:46px 12px 14px}}
+  .hud{position:absolute;top:16px;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+  .hud.tl2{left:20px}
+  .hud.tr2{right:20px;color:var(--grn2)}
+  @media(max-width:640px){.hud.tr2{display:none}}
+  .stage svg{width:100%;height:auto;display:block}
+  /* on a phone the chart keeps a readable width and pans instead of shrinking */
+  .tlwrap{overflow-x:auto;overscroll-behavior-x:contain}
+  .tlwrap:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  @media(max-width:700px){.tlwrap svg{min-width:680px}}
+  .stage .cap{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-top:18px}
+
+  /* ---------- the ranked list ---------- */
+  .q-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:52px 0 12px}
+  .q-t{font-family:var(--mono);font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--tx3)}
+  .uswitch{display:flex;margin:0}
+  .uswitch button{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;background:none;border:1px solid var(--line2);color:var(--tx3);cursor:pointer}
+  .uswitch button+button{border-inline-start:0}
+  .uswitch button[aria-pressed="true"]{color:var(--bg);border-color:var(--tx);background:var(--tx)}
+  @media(max-width:640px){.uswitch button{padding:12px 16px}}
+  .queue{border-top:1px solid var(--line);margin-bottom:34px}
+  .qrow{display:grid;grid-template-columns:26px 1fr auto;gap:14px;align-items:baseline;padding:18px 18px 19px;border-bottom:1px solid var(--line);border-inline-start:2px solid var(--line2)}
+  .qrow.b-make{border-inline-start-color:var(--r-make);background:var(--w-make)}
+  .qrow.b-slip{border-inline-start-color:var(--r-slip);background:var(--w-slip)}
+  .qrow.b-miss{border-inline-start-color:var(--r-miss);background:var(--w-miss)}
+  .qrow .rk{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--tx3);font-variant-numeric:tabular-nums}
+  .qrow .nm{font-weight:600;font-size:16px;color:var(--tx);letter-spacing:-.015em}
+  .qrow .nm small{font-family:var(--mono);font-weight:400;font-size:12px;letter-spacing:.04em;color:var(--tx3);margin-inline-start:10px}
+  .qrow .sub{font-size:14px;color:var(--tx2);margin-top:5px;line-height:1.5;max-width:72ch;text-wrap:pretty}
+  .qrow .ev{font-family:var(--mono);font-size:12px;letter-spacing:.01em;color:var(--tx2);margin-top:9px;line-height:1.8}
+  .qrow .ev b{color:var(--tx);font-weight:600}
+  .qrow .amt{font-family:var(--mono);font-size:17px;font-weight:600;color:var(--tx);text-align:end;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .qrow .amt small{display:block;font-size:11px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-top:7px}
+  .band{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--tx2);margin-top:12px}
+  .band .mk{width:8px;height:8px;flex:none;background:var(--line2)}
+  .band.b-make .mk{background:var(--r-make)}
+  .band.b-slip .mk{background:var(--r-slip)}
+  .band.b-miss .mk{background:var(--r-miss)}
+  @media(max-width:700px){
+    .qrow{grid-template-columns:22px 1fr;padding-inline:12px}
+    .qrow .amt{grid-column:2;text-align:start;margin-top:10px}
+    .qrow .amt small{display:inline;margin-inline-start:6px}
+  }
+
+  /* stats: hairline typography instead of boxed cells */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0 40px}
+  @media(max-width:620px){.grid{grid-template-columns:repeat(2,1fr);gap:0 24px}}
+  .cell{border-top:1px solid var(--line);padding:16px 0 22px}
+  .cell .k{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;line-height:1.5;min-height:2.6em}
+  .cell .v{font-family:var(--mono);font-weight:500;font-size:24px;letter-spacing:-.02em;line-height:1.1;color:var(--tx);font-variant-numeric:tabular-nums}
+  .cell .v small{font-size:11px;font-weight:400;letter-spacing:.1em;color:var(--tx3);margin-inline-start:6px}
+
+  .flag{border-inline-start:2px solid var(--grn2);padding:2px 0 2px 20px;margin-top:34px;font-size:15px;line-height:1.75;color:var(--tx2)}
+  .flag .t{font-family:var(--mono);font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--grn);margin-inline-end:16px;white-space:nowrap}
+  .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
+  @media(max-width:640px){.actions{flex-direction:column;align-items:stretch;width:100%}}
+
+  /* ---------- prose sections ---------- */
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:48px;margin-top:52px}
+  @media(max-width:820px){.three{grid-template-columns:1fr;gap:36px}}
+  .three .c{border-top:1px solid var(--line2);padding-top:22px}
+  .three .c .i{font-family:var(--mono);font-size:12px;color:var(--grn);margin-bottom:14px}
+  .three .c p{margin:0;font-size:15px;color:var(--tx2);text-wrap:pretty}
+
+  /* the numbers that make the argument, on an instrument readout of their own */
+  .strip{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:64px;
+    border:1px solid var(--line);background:var(--bg2)}
+  .strip > div{padding:38px 40px 34px}
+  .strip > div + div{border-inline-start:1px solid var(--line)}
+  @media(max-width:700px){
+    .strip{grid-template-columns:1fr}
+    .strip > div{padding:26px 24px 24px}
+    .strip > div + div{border-inline-start:0;border-top:1px solid var(--line)}
+  }
+  .strip .n{font-family:var(--mono);font-weight:500;font-size:clamp(34px,3.6vw,54px);letter-spacing:-.03em;line-height:1.05;color:var(--tx);font-variant-numeric:tabular-nums}
+  .strip .n .a{color:var(--grn)}
+  .strip .n .u{font-size:.42em;letter-spacing:.08em;color:var(--tx3);margin-inline-start:4px}
+  .strip .n.g{color:var(--grn)}
+  .strip .l{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-top:16px}
+
+  .steps{display:grid;grid-template-columns:repeat(2,1fr);gap:44px 48px;margin-top:52px}
+  @media(max-width:820px){.steps{grid-template-columns:1fr;gap:36px}}
+  .step{border-top:1px solid var(--line2);padding-top:22px}
+  .step .n{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--grn);margin-bottom:14px}
+  .step p{margin:0 0 10px;font-size:15px;color:var(--tx2);text-wrap:pretty}
+  .step p:last-child{margin-bottom:0}
+  .step b{color:var(--tx);font-weight:500}
+
+  .worked{border:1px solid var(--line);background:var(--bg2);padding:32px 34px;margin-top:56px;position:relative}
+  @media(max-width:700px){.worked{padding:24px 20px}}
+  .worked .t{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin-bottom:20px}
+  .chain{font-family:var(--mono);font-size:15px;line-height:2.2;color:var(--tx2b);overflow-x:auto}
+  .chain .a{color:var(--grn)}
+  .chain b{font-weight:600;color:var(--tx)}
+  .worked .out{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);font-size:16px;color:var(--tx2)}
+
+  /* ---------- table ---------- */
+  .tscroll{overflow-x:auto}
+  .tscroll:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  table{width:100%;border-collapse:collapse;font-size:15px;margin-top:44px}
+  th,td{text-align:start;padding:14px 16px 14px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--tx2)}
+  th{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);font-weight:400}
+  td.m{font-family:var(--mono);font-size:14px;white-space:nowrap;color:var(--tx);font-variant-numeric:tabular-nums}
+  td.name{font-weight:500;color:var(--tx);white-space:nowrap}
+  td.note{min-width:26ch}
+  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line2);padding:3px 8px;color:var(--tx3);white-space:nowrap}
+  .tag.l{border-color:rgba(63,224,160,.4);color:var(--grn)}
+
+  /* the model as a framed ledger */
+  .method-grid{display:grid;grid-template-columns:minmax(0,11fr) minmax(0,9fr);gap:24px 40px;align-items:stretch;margin-top:48px}
+  @media(max-width:980px){.method-grid{grid-template-columns:1fr;gap:24px}}
+  .model{position:relative;border:1px solid var(--line);background:var(--bg2);padding:26px 30px 12px;display:flex;flex-direction:column}
+  @media(max-width:700px){.model{padding:20px 18px 8px}}
+  .model-hd{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+  .model-hd .g{color:var(--grn2)}
+  .frow{display:grid;grid-template-columns:minmax(130px,170px) 1fr;gap:4px 26px;padding:13px 0 14px;
+    border-bottom:1px solid var(--line);font-family:var(--mono);font-size:14px;line-height:1.75}
+  .frow:last-child{border-bottom:0}
+  @media(max-width:640px){.frow{grid-template-columns:1fr}}
+  .frow .ft{color:var(--grn);font-weight:500}
+  .frow .fx{color:var(--tx2b);overflow-wrap:break-word}
+  ul.plain{padding-inline-start:0;list-style:none;margin:40px 0 0;max-width:78ch}
+  .model ul.plain{margin:0;max-width:none;flex:1;display:flex;flex-direction:column}
+  .model ul.plain li{flex:1;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:12px 0;padding-inline-start:0;margin:0;border-bottom:1px solid var(--line);font-size:15px;line-height:1.7}
+  .model ul.plain li:last-child{border-bottom:0}
+  .model ul.plain li:before{content:none}
+  ul.plain li{position:relative;padding-inline-start:28px;margin-bottom:14px;font-size:16px;color:var(--tx2)}
+  ul.plain li:before{content:"\2014";position:absolute;left:0;font-family:var(--mono);color:var(--grn2)}
+  ul.plain li b{color:var(--tx);font-weight:500}
+
+  /* ---------- section index: outlined ghost numerals ---------- */
+  .sec-row{display:flex;align-items:center;gap:26px;margin-bottom:38px}
+  .sec-num{font-family:var(--mono);font-weight:600;font-size:clamp(44px,4.8vw,70px);line-height:.9;color:var(--line2);flex:none;font-variant-numeric:tabular-nums}
+  @supports (-webkit-text-stroke:1px black){.sec-num{color:transparent;-webkit-text-stroke:1px var(--line2)}}
+  .sec-rule{flex:1;height:1px;background:var(--line)}
+
+  /* scroll reveals: elements are visible by default; a script opts them in,
+     and only when motion is welcome */
+  .rv0{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
+  .rv0.rvIn{opacity:1;transform:none}
+
+  /* ---------- built by: the nameplate ---------- */
+  .plate{position:relative;border:1px solid var(--line);background:var(--bg2)}
+  .plate-main{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:40px 88px;padding:52px 52px 44px}
+  .p-name{font-weight:500;font-size:clamp(34px,3.8vw,58px);letter-spacing:-.035em;line-height:1.05;margin-top:16px;color:var(--tx)}
+  .p-bio{font-size:16px;color:var(--tx2);max-width:44ch;margin:18px 0 0;text-wrap:pretty}
+  .p-spec{margin:0;align-self:center}
+  .p-spec > div{display:grid;grid-template-columns:96px 1fr;gap:24px;padding:15px 0 16px;border-top:1px solid var(--line);align-items:baseline}
+  .p-spec > div:last-child{border-bottom:1px solid var(--line)}
+  .p-spec dt{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+  .p-spec dd{margin:0;font-family:var(--mono);font-size:14px;color:var(--tx)}
+  .p-spec dd.on{color:var(--grn)}
+  .p-spec dd.on::before{content:"";display:inline-block;width:6px;height:6px;background:var(--grn);margin-right:10px;vertical-align:1px}
+  .plate-ft{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;border-top:1px solid var(--line);padding:20px 52px}
+  .lnk{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx2);white-space:nowrap;padding:14px 2px}
+  .lnk:hover{color:var(--grn)}
+  @media(max-width:860px){
+    .plate-main{grid-template-columns:1fr;gap:36px;padding:32px 24px 30px}
+    .plate-ft{padding:16px 24px;flex-direction:column;align-items:stretch}
+    .plate-ft .btn{justify-content:center}
+    .lnk{text-align:center}
+  }
+
+  footer{border-top:1px solid var(--line);padding:44px 0 72px;font-size:15px;color:var(--tx3)}
+  footer a{color:var(--tx2)}
+  footer a:hover{color:var(--grn)}
+  footer .lbl{margin-bottom:14px}
+
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--tx);color:var(--bg);font-family:var(--mono);font-weight:600;font-size:12px;letter-spacing:.13em;text-transform:uppercase;padding:13px 20px;opacity:0;pointer-events:none;z-index:60}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .print-url{display:none}
+
+  /* print: a one-page siting brief. Only the screener survives, on white. */
+  @media print{
+    @page{margin:11mm}
+    :root{--bg:#fff;--bg2:#fff;--line:#c7cdd5;--line2:#a8b1bc;--tx:#12161b;--tx2:#39424d;--tx3:#66707c;--grn:#0b7f58;--grn2:#0b7f58;
+      --r-make:#0b7f58;--r-slip:#8a6d00;--r-miss:#a83232;--w-make:#fff;--w-slip:#fff;--w-miss:#fff}
+    body{background:#fff;font-size:14px}
+    header{position:static;background:#fff;backdrop-filter:none;box-shadow:none}
+    header nav{display:none}
+    section:not(#screener),footer,.toast{display:none}
+    #screener{display:block;padding:12px 0 0;border-top:0}
+    .actions,.skip,.caret,.sel-list,details.more,.config-note,.uswitch,.hud{display:none}
+    .config{font-size:15px;line-height:1.7;margin-top:4px}
+    .stage{background:none;padding:10px;margin-top:20px}
+    .headline-out,.grid,.flag,.qrow{break-inside:avoid}
+    .print-url{display:block;margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--tx3);word-break:break-all}
+  }
+
+  /* large screens: use them */
+  @media(min-width:1680px){
+    .wrap{max-width:1520px}
+    .lede{font-size:18px}
+    .three .c p,.step p{font-size:16px}
+    .config{font-size:28px}
+  }
+  @media(min-width:2200px){.wrap{max-width:1720px}}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header>
+  <div class="wrap bar">
+    <div class="mark">
+      <a class="suite" href="/"><span class="sq" aria-hidden="true"></span>Infrabench</a>
+      <span class="sep">/</span>
+      <span class="tool">Where the power is</span>
+    </div>
+    <nav aria-label="Page sections">
+      <a href="#screener">Screener</a>
+      <a href="#how">How it works</a>
+      <a href="#regions">Regions</a>
+      <a href="#method">Method</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" tabindex="-1">
+
+<!-- ================= HERO ================= -->
+<div class="wrap">
+  <div class="hero">
+    <div class="lbl rise">Tool 03 &mdash; Power-constrained siting</div>
+    <h1 class="rise d1"><span class="setup">The chips are the easy part.</span> Where is the power?</h1>
+    <div class="hero-body rise d2">
+      <p class="lede">The US interconnection queue holds more capacity than the entire installed grid, and most of it will never be built. Meanwhile a new hall lives or dies on one date: the day the utility energizes it. Put in the megawatts you need and the year you need them, get the regions that can actually deliver, ranked by the earliest realistic window. Every constant is in <a href="#method">the method</a>.</p>
+      <!-- counted off the region table on this page, so it cannot drift from what the tool ranks -->
+      <p class="hero-meta" id="heroMeta"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SCREENER ================= -->
+<section id="screener">
+  <div class="wrap">
+    <div class="sec-row"><span class="sec-num" aria-hidden="true">01</span><span class="sec-rule"></span><span class="lbl">The screener</span></div>
+
+    <!-- stable region, populated on every recalculation so the result is announced -->
+    <p class="sr" id="srStatus" role="status"></p>
+    <span class="sr" id="bridgeLabel">While you wait</span>
+
+    <div class="console-grid">
+      <div>
+        <!-- divs, not <p>: the picker's listbox may not sit inside a paragraph -->
+        <div class="config">I need <span class="nb"><input class="iv-num" type="number" inputmode="numeric" id="mw" value="300" min="20" max="2000" step="10" aria-label="Megawatts of new capacity needed"> MW</span> of new grid capacity, energized by
+          <input class="iv-num" type="number" inputmode="numeric" id="yr" value="2030" min="2027" max="2036" step="1" aria-label="Year the power is needed by">.</div>
+        <div class="config">While the queue moves, I
+          <span class="sel"><span class="sel-btn" id="bridge" role="combobox" tabindex="0" aria-controls="bridgeList" aria-expanded="false" aria-labelledby="bridgeLabel"><span class="nm" id="bridgeName"></span><svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span><ul class="sel-list" id="bridgeList" role="listbox" aria-labelledby="bridgeLabel" hidden></ul></span>.</div>
+
+        <p class="config-note" id="bridgeNote"></p>
+        <p class="config-meta" id="askMeta"></p>
+      </div>
+
+      <div class="headline-out">
+        <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+        <div class="lbl">The answer</div>
+        <div class="big" id="bigLine"><span class="a" aria-hidden="true">&rarr;</span> <span id="bigText">&mdash;</span><span class="cursor" aria-hidden="true"></span></div>
+        <div class="note" id="outNote"></div>
+        <div class="bar-wrap"><div class="bandbar" id="bandbar" aria-hidden="true"></div><div class="bar-cap" id="barCap"></div></div>
+      </div>
+    </div>
+
+    <!-- Full width, under both columns: opening it moves the whole section down as one piece. -->
+    <details class="more assump">
+      <summary>Assumptions</summary>
+      <div class="d-body">
+        <div class="aledger">
+          <div class="acell">
+            <label class="aterm" for="per">Size surcharge</label>
+            <span class="aval"><input class="iv-num" type="number" inputmode="numeric" id="per" value="250" min="100" max="1000" step="50"
+              aria-describedby="perUnit perNote"><span class="u" id="perUnit">MW per extra study year</span></span>
+            <p class="anote" id="perNote">Every megawatt past the first 200 makes the transmission study bigger and the network upgrades longer. One extra year per 250 MW is a planning heuristic read off the gap between published timelines for 100 MW and gigawatt-class requests.</p>
+          </div>
+          <div class="acell">
+            <label class="aterm" for="floor">Bridge floor</label>
+            <span class="aval"><input class="iv-num" type="number" inputmode="decimal" id="floor" value="2" min="0.5" max="5" step="0.5"
+              aria-describedby="floorUnit floorNote"><span class="u" id="floorUnit">years minimum, bridged</span></span>
+            <p class="anote" id="floorNote">On-site generation is not instant power. An air permit, a substation and the gas turbine order book set the floor: majors are quoting deliveries years out, so two years from decision to first fire is aggressive but done.</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <div class="stage">
+      <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+      <span class="hud tl2" aria-hidden="true">Energization windows &mdash; by region</span>
+      <span class="hud tr2" id="stageTR" aria-hidden="true"></span>
+      <div class="tlwrap" tabindex="0" role="region" aria-label="Energization timeline, scrolls horizontally on small screens">
+        <svg id="tl" role="img" aria-labelledby="tlTitle tlDesc">
+          <title id="tlTitle">Earliest realistic energization window for each region</title>
+          <desc id="tlDesc"></desc>
+        </svg>
+      </div>
+      <div class="cap" id="tlCap"></div>
+    </div>
+
+    <div class="q-head">
+      <div class="q-t">The regions, ranked</div>
+      <div class="uswitch" role="group" aria-label="Ranking order">
+        <button id="sTime" aria-pressed="true">By time</button>
+        <button id="sCarbon" aria-pressed="false">By carbon</button>
+        <button id="sPrice" aria-pressed="false">By price</button>
+      </div>
+    </div>
+    <div class="queue" id="queue"></div>
+
+    <div class="grid" id="cells"></div>
+    <div class="flag"><span class="t">Reality check</span><span id="flagText"></span></div>
+    <div class="actions">
+      <button class="btn" id="copyLink">Copy shareable link</button>
+      <button class="btn ghost" id="copySummary">Copy siting brief</button>
+    </div>
+    <div class="print-url" id="printUrl"></div>
+  </div>
+</section>
+
+<!-- ================= WHY THIS EXISTS ================= -->
+<section>
+  <div class="wrap">
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">02</span><span class="sec-rule"></span><span class="lbl">Why the tool exists</span></div>
+    <h2 class="rv">The site selection question inverted</h2>
+    <p class="lede">Ten years ago you picked land and ordered power. Now you pick power and the land follows, because the grid, not the building, is the long pole on every schedule.</p>
+    <div class="three rv">
+      <div class="c">
+        <div class="i">01</div>
+        <h3>The queue is not a pipeline</h3>
+        <p>Over 2,000 gigawatts sit in US interconnection queues, more than the entire installed grid, and historically only about one queued megawatt in eight reaches commercial operation. A queue position is a lottery ticket, not a delivery date.</p>
+      </div>
+      <div class="c">
+        <div class="i">02</div>
+        <h3>Time-to-power beat price-per-kilowatt</h3>
+        <p>PJM's capacity price rose ninefold in one auction and hit the regulatory price cap in the next, with data center load named as the reason. Expensive power hurts; power that arrives three years late kills the project. The date is the number to shop.</p>
+      </div>
+      <div class="c">
+        <div class="i">03</div>
+        <h3>Loads queue like generators now</h3>
+        <p>A few hundred megawatts of demand gets studied the way a power plant does. ERCOT's large-load queue hit 239 gigawatts of requests, three quarters of it data centers, of which about 7.5 have actually connected. You are in a queue whether you like it or not. The question is which one.</p>
+      </div>
+    </div>
+    <div class="strip rv" id="whyStrip">
+      <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+      <div><div class="n" id="stripQueue">&mdash;<span class="u">GW</span></div><div class="l">Active in US interconnection queues</div></div>
+      <div><div class="n" id="stripBuilt">&mdash;</div><div class="l">Of queued capacity ever gets built</div></div>
+      <div><div class="n" id="stripWait">&mdash;<span class="u">YRS</span></div><div class="l">Median wait, request to operation</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section id="how">
+  <div class="wrap">
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">03</span><span class="sec-rule"></span><span class="lbl">How it works</span></div>
+    <h2 class="rv">Four steps from an ask to a shortlist</h2>
+    <p class="lede">Each region is carried through the same four steps. You can do the arithmetic yourself, and the two constants it leans on are editable in the assumptions panel.</p>
+
+    <div class="steps rv">
+      <div class="step">
+        <div class="n">Step 01 / The published band</div>
+        <h3>Start from what each region admits to</h3>
+        <p>Every region has a band of years between a large-load request and energization, assembled from utility filings, regulator dockets and trade press. ERCOT connects loads in <b>2 to 4 years</b>; a constrained coastal market can take <b>6 to 8</b>. The band is the tool's starting point and its biggest judgement call, so it is printed in full in the table below.</p>
+      </div>
+      <div class="step">
+        <div class="n">Step 02 / Size</div>
+        <h3>Scale for the ask</h3>
+        <p>A 100 MW request rides existing headroom. A 700 MW request triggers network upgrades that get studied, procured and built. The tool adds <b>one year per 250 MW beyond the first 200</b>, applied to both ends of the band.</p>
+      </div>
+      <div class="step">
+        <div class="n">Step 03 / The bridge</div>
+        <h3>Credit on-site generation where it is legal and practical</h3>
+        <p>In regions that allow large behind-the-meter builds, on-site gas turbines can carry the load while the grid catches up. Bridging takes <b>1.5 years off the wait</b> in those regions, floored at two years, because turbines have their own queue: the order book.</p>
+      </div>
+      <div class="step">
+        <div class="n">Step 04 / The verdict</div>
+        <h3>Check the window against your deadline</h3>
+        <p>The clock starts mid-2026. Each region gets a window, earliest to latest realistic energization. If the whole window lands before your year, the region <b>makes it</b>. If your year falls inside the window, it <b>could slip</b>. If even the optimistic end is late, it <b>misses</b>, and no amount of negotiation fixes that.</p>
+      </div>
+    </div>
+
+    <div class="worked rv">
+      <div class="t">Worked example, the default settings</div>
+      <div class="chain" tabindex="0" role="region" aria-label="Worked example arithmetic, scrolls horizontally on small screens">
+        300 MW, needed by 2030, waiting on the utility, screened against ERCOT<br>
+        <span class="a" aria-hidden="true">&rarr;</span> ERCOT's published large-load band <span class="a">=</span> 2 to 4 years<br>
+        <span class="a" aria-hidden="true">&rarr;</span> size surcharge: (300 &minus; 200) / 250 <span class="a">=</span> +0.4 years of study<br>
+        <span class="a" aria-hidden="true">&rarr;</span> adjusted band <span class="a">=</span> 2.4 to 4.4 years from mid-2026<br>
+        <span class="a" aria-hidden="true">&rarr;</span> window <span class="a">=</span> <b>2028 to 2030</b>, and 2030 &le; the deadline, so ERCOT makes it<br>
+        <span class="a" aria-hidden="true">&rarr;</span> the same arithmetic puts PJM at <b>2030 to 2033</b>: could slip<br>
+        <span class="a" aria-hidden="true">&rarr;</span> and CAISO at <b>2031 to 2034</b>: misses, before politics is even priced in
+      </div>
+      <div class="out">The surprise is not that Texas wins. It is the spread: for the same 300 MW, the gap between the fastest region and the slowest is longer than the entire construction schedule of the building.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= REGIONS ================= -->
+<section id="regions">
+  <div class="wrap">
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">04</span><span class="sec-rule"></span><span class="lbl">The regions</span></div>
+    <h2 class="rv">Ten grids, ten different decades</h2>
+    <p class="lede">The lead-time bands the screener starts from, with the queue depth, grid carbon and industrial power price behind each one. The bands are the model's biggest judgement call, so they are printed here in full.</p>
+    <div class="tscroll" tabindex="0" role="region" aria-label="Region table, scrolls horizontally">
+      <table class="rv">
+        <caption class="sr">The ten regions the screener ranks, with large-load lead-time bands, active interconnection queue capacity, average grid carbon intensity, industrial electricity price, and whether on-site bridging is practical</caption>
+        <thead><tr><th scope="col">Region</th><th scope="col">Lead time</th><th scope="col">Queue</th><th scope="col">Grid CO2</th><th scope="col">Power price</th><th scope="col">Bridge</th><th scope="col">Notes</th></tr></thead>
+        <tbody id="refBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= METHOD ================= -->
+<section id="method">
+  <div class="wrap">
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">05</span><span class="sec-rule"></span><span class="lbl">The method</span></div>
+    <h2 class="rv">Every constant, in the open</h2>
+    <p class="lede">This is the whole model. If you disagree with a constant, you know exactly which one to argue with, and the two that matter most are editable on the page.</p>
+
+    <div class="method-grid rv">
+      <div class="model">
+        <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+        <div class="model-hd"><span class="lbl">The model</span><span class="lbl g">6 equations</span></div>
+        <div class="frow"><span class="ft">Lead band</span><span class="fx">per region, published years from large-load request to energization</span></div>
+        <div class="frow"><span class="ft">Size surcharge</span><span class="fx">max(0, MW &minus; 200) / 250, in years, added to both ends</span></div>
+        <div class="frow"><span class="ft">Bridge credit</span><span class="fx">&minus;1.5 years in bridge-friendly regions, never below the 2-year floor</span></div>
+        <div class="frow"><span class="ft">Window</span><span class="fx">mid-2026 + adjusted band, floored to calendar years</span></div>
+        <div class="frow"><span class="ft">Verdict</span><span class="fx">makes it if the window closes by the deadline; could slip if it straddles; misses if it opens after</span></div>
+        <div class="frow"><span class="ft">Rank</span><span class="fx">midpoint of the window, then carbon or price if you re-sort</span></div>
+      </div>
+
+      <div class="model">
+        <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+        <div class="model-hd"><span class="lbl">The judgement calls</span><span class="lbl g">6 notes</span></div>
+        <ul class="plain">
+        <li><b>The lead bands are the model.</b> They are assembled from utility integrated resource plans, regulator dockets and trade press, not from a single published dataset, because no such dataset exists. That is why they are printed in full.</li>
+        <li><b>The clock starts mid-2026.</b> Windows are floored to the calendar year they land in: a mid-2028 energization prints as 2028.</li>
+        <li><b>Queue depth is a congestion proxy.</b> The gigawatts are generator requests, not loads, but they occupy the same study engineers and the same transmission headroom you need. The two Western regions share LBNL's single 567 GW non-ISO pool, and figures marked ~ are read off public trackers rather than the report.</li>
+        <li><b>Carbon and price are anchors, not accounting.</b> Carbon is the eGRID 2023 annual average for the subregion where you would actually site, not the marginal unit your load turns on, which is almost always gas. Price is the EIA 2023 industrial average for the region's anchor state.</li>
+        <li><b>Bridging means gas.</b> The bridge credit assumes reciprocating engines or turbines you own, permitted on site. Solar and batteries shave peaks; they do not carry a 24/7 hall through a winter.</li>
+        <li><b>A screening heuristic, not a siting study.</b> The output is which three conversations to start, not which contract to sign. Nothing here replaces a utility letter with a date on it.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CTA ================= -->
+<section class="cta">
+  <div class="wrap">
+    <div class="plate rv">
+      <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+      <div class="plate-main">
+        <div>
+          <div class="lbl">Built by</div>
+          <div class="p-name">Adrian Mucha</div>
+          <p class="p-bio">Product designer for the software most designers avoid: operator consoles where a wrong click costs real money.</p>
+        </div>
+        <dl class="p-spec">
+          <div><dt>Focus</dt><dd>Data centers &middot; AI tooling</dd></div>
+          <div><dt>Base</dt><dd>Los Angeles, CA</dd></div>
+          <div><dt>Status</dt><dd class="on">Open to new work</dd></div>
+        </dl>
+      </div>
+      <div class="plate-ft">
+        <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Get in touch</a>
+        <a class="lnk" href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">See the work &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="lbl">Sources and fine print</div>
+    Queue totals, completion rates and wait times from Lawrence Berkeley National Laboratory's
+    <a href="https://emp.lbl.gov/queues" target="_blank" rel="noopener">Queued Up</a> series, browsable at
+    <a href="https://www.interconnection.fyi" target="_blank" rel="noopener">interconnection.fyi</a>.
+    Grid carbon intensities are annual averages from
+    <a href="https://app.electricitymaps.com" target="_blank" rel="noopener">Electricity Maps</a> and EPA
+    <a href="https://www.epa.gov/egrid" target="_blank" rel="noopener">eGRID</a>.
+    Industrial power prices from <a href="https://www.eia.gov/electricity/data.php" target="_blank" rel="noopener">EIA</a> state averages.
+    Capacity auction figures from <a href="https://www.pjm.com" target="_blank" rel="noopener">PJM</a> published results, and large-load queue figures from
+    <a href="https://www.ercot.com" target="_blank" rel="noopener">ERCOT</a> public updates.
+    The lead-time bands are planning heuristics assembled from utility filings and trade press, current as of August 2026, and they change fast.
+    Verify against your own utility conversation before spending money.
+    <br><br>
+    Where the power is is part of <a href="/">Infrabench</a>, a set of open tools for the people who build data centers.
+    Built by <a href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">Adrian Mucha</a> / FruitBat Design, Los Angeles.
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status">Copied</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================================
+     THE DATA. Ten regions, each with the band of years a large new load waits
+     between request and energization, plus the context that ranks them. The
+     bands are planning heuristics assembled from utility filings, regulator
+     dockets and trade press as of August 2026; everything else on the page is
+     derived from this block, so correcting it is a single edit here.
+       lo/hi   years, request to energization, for a ~200 MW grid-served load
+       q       GW of active generator requests in the region's queue, LBNL Queued
+               Up 2026 edition where stated exactly, ~ where read off trackers.
+               The two Western regions share one 567 GW non-ISO pool (qn flag).
+       co2     annual average grid carbon intensity, gCO2eq/kWh, EPA eGRID 2023
+               subregion nearest where you would actually site
+       price   industrial retail electricity, cents/kWh, EIA 2023 state average
+               for the region's anchor state
+       bridge  whether a large behind-the-meter build is legal and practical
+     ========================================================================= */
+  var REGIONS = [
+    {id:"ercot", name:"ERCOT", area:"Texas", lo:2, hi:4, q:"408", co2:335, price:6.6, bridge:true,
+     note:"Connect-and-manage interconnection and a private-use-network path make it the fastest grid in the country, priced in volatility.",
+     con:"Speed is real but so is exposure: an energy-only market with scarcity pricing, a large-load queue that hit 239 GW, and a statewide pause on new approvals while the state audits it."},
+    {id:"se", name:"Southeast", area:"Georgia / Carolinas / TVA", lo:3, hi:5, q:"~45", co2:385, price:6.9, bridge:true,
+     note:"Vertically integrated utilities that actively recruit large loads and build gas to serve them. Georgia just approved a 9,900 MW expansion for exactly this.",
+     con:"You get exactly one counterparty per state. If the utility's build slips, or the commission balks at the rate case, there is no market to route around them."},
+    {id:"spp", name:"SPP", area:"Oklahoma / Kansas / Plains", lo:3, hi:5, q:"~120", co2:395, price:6.3, bridge:true,
+     note:"Cheap land, cheap wind-heavy power, shallower queues. The sleeper pick for latency-tolerant training loads.",
+     con:"The transmission between the wind and anywhere you would put a campus is thin, and the fiber routes are thinner."},
+    {id:"dsw", name:"Desert Southwest", area:"Arizona / Nevada", lo:3, hi:6, q:"567", qn:"West pool", co2:335, price:8.1, bridge:false,
+     note:"The Phoenix metro is the second-largest data center market in the country and the utilities are building for it.",
+     con:"APS alone holds some 10 GW of data center requests and has committed to a fraction of it, with the supporting gas pipeline due in 2029. And every project answers the water question in public."},
+    {id:"miso", name:"MISO", area:"Upper Midwest", lo:4, hi:6, q:"382", co2:565, price:7.5, bridge:false,
+     note:"Real capacity for sale and states that want the load, behind one of the deepest queues in the country.",
+     con:"The queue is the constraint: hundreds of gigawatts deep, and the dirtiest average grid on this list until it clears."},
+    {id:"pjm", name:"PJM", area:"Mid-Atlantic / Virginia", lo:4, hi:7, q:"~76", co2:270, price:8.9, bridge:false,
+     note:"The biggest data center market on earth, and the most congested. Fiber, workforce and ecosystem nothing else matches.",
+     con:"Capacity prices rose ninefold in one auction and hit the price cap in the next, and Dominion quotes up to seven years for a new 100 MW connection. You pay for the congestion twice, in dollars and in years."},
+    {id:"ny", name:"Upstate NY", area:"NYISO zones A to F", lo:5, hi:7, q:"~25", co2:110, price:6.9, bridge:false,
+     note:"Hydro and nuclear make one of the cleanest grids anywhere, with real industrial sites on it.",
+     con:"The clean power is spoken for on paper: state climate targets claim every clean megawatt-hour, so new load triggers a compliance conversation, not just a study."},
+    {id:"nw", name:"Pacific Northwest", area:"Washington / Oregon", lo:5, hi:8, q:"567", qn:"West pool", co2:290, price:6.4, bridge:false,
+     note:"The original data center region: cheap hydro, cool air, deep fiber.",
+     con:"The hydro surplus that built the region is gone. BPA's transmission queue runs long enough that projects are installing batteries just to jump it, and new load competes with electrification for every drop."},
+    {id:"ne", name:"New England", area:"ISO-NE", lo:6, hi:8, q:"~40", co2:245, price:17.9, bridge:false,
+     note:"Strong fiber and finance adjacency, straining against a gas-constrained winter grid.",
+     con:"Winter gas constraints cap everything. The region struggles to serve the load it already has in a cold snap, and it knows it."},
+    {id:"caiso", name:"CAISO", area:"California", lo:5, hi:8, q:"191", co2:200, price:18.6, bridge:false,
+     note:"The talent and the customers are here. The megawatts are not.",
+     con:"Five to six years to connect a large load, at nearly triple the power price of the fastest region on this list. The honest use of California is offices, not halls."}
+  ];
+
+  /* National context, from LBNL Queued Up 2026 (data through end of 2025).
+     Quoted in the strip and the cells. */
+  var NAT_QUEUE_GW = 2061;   // active capacity in US queues, GW
+  var NAT_BUILT = 13;        // percent of queued capacity that ever reaches operation
+  var NAT_WAIT = 5;          // median years, request to operation, is above this
+
+  var START = 2026.5;        // the clock: mid-2026
+  var FREE_MW = 200;         // the ask that rides existing headroom
+  var BRIDGE_CREDIT = 1.5;   // years taken off the band by on-site generation
+  /* GB200 equivalence for the ask, same constants Rack Budget uses */
+  var RB_PUE = 1.2, RB_MARGIN = 0.85, RB_KW = 120;
+
+  var BRIDGEOPTS = [
+    {id:"no",  name:"will wait for the utility",
+     note:"Grid power only: the utility's window is your window."},
+    {id:"yes", name:"would bridge with on-site generation",
+     note:"On-site gas carries you while the interconnection completes. The credit applies in the regions marked bridgeable."}
+  ];
+
+  var BANDCLASS = {make:"b-make", slip:"b-slip", miss:"b-miss"};
+  var BANDNAME  = {make:"Makes", slip:"Could slip past", miss:"Misses"};
+
+  var $ = function(id){ return document.getElementById(id); };
+  var state = { mw:300, yr:2030, bridge:"no", srt:"time", per:250, floor:2 };
+
+  function fmt(n, d){
+    if(!isFinite(n)) return "0";
+    d = d === undefined ? 0 : d;
+    return n.toLocaleString("en-US",{minimumFractionDigits:d, maximumFractionDigits:d});
+  }
+  function bridgeOpt(){
+    for(var i=0;i<BRIDGEOPTS.length;i++){ if(BRIDGEOPTS[i].id===state.bridge) return BRIDGEOPTS[i]; }
+    return BRIDGEOPTS[0];
+  }
+
+  /* ---------- the model ---------- */
+  function compute(){
+    var surcharge = Math.max(0, state.mw - FREE_MW) / state.per;
+    var bridging = state.bridge === "yes";
+
+    var rows = REGIONS.map(function(g){
+      var lo = g.lo + surcharge, hi = g.hi + surcharge, bridged = false;
+      if(bridging && g.bridge){
+        lo = Math.max(lo - BRIDGE_CREDIT, state.floor);
+        hi = Math.max(hi - BRIDGE_CREDIT, state.floor);
+        bridged = true;
+      }
+      var yLo = Math.floor(START + lo), yHi = Math.floor(START + hi);
+      var band = yHi <= state.yr ? "make" : (yLo <= state.yr ? "slip" : "miss");
+      return { g:g, lo:lo, hi:hi, yLo:yLo, yHi:yHi, mid:(yLo+yHi)/2, band:band, bridged:bridged };
+    });
+
+    var byTime = rows.slice().sort(function(a,b){
+      return (a.mid - b.mid) || (a.yLo - b.yLo) || (a.g.co2 - b.g.co2);
+    });
+    var order = byTime;
+    if(state.srt === "carbon") order = rows.slice().sort(function(a,b){ return (a.g.co2 - b.g.co2) || (a.mid - b.mid); });
+    if(state.srt === "price")  order = rows.slice().sort(function(a,b){ return (a.g.price - b.g.price) || (a.mid - b.mid); });
+
+    var counts = {make:0, slip:0, miss:0};
+    rows.forEach(function(r){ counts[r.band]++; });
+
+    var makes = byTime.filter(function(r){ return r.band === "make"; });
+    var racks = Math.floor(state.mw*1000/RB_PUE*RB_MARGIN/RB_KW);
+
+    return { rows:rows, byTime:byTime, order:order, counts:counts, makes:makes,
+             top:byTime[0], surcharge:surcharge, racks:racks, bridging:bridging };
+  }
+
+  function windowText(r){
+    return r.yLo === r.yHi ? String(r.yLo) : r.yLo + "–" + r.yHi;
+  }
+
+  /* ---------- render ---------- */
+  function render(){
+    var r = compute();
+    var opt = bridgeOpt();
+
+    $("bridgeNote").textContent = opt.note;
+    var NB = " ";
+    $("askMeta").textContent = fmt(state.mw)+NB+"MW ≈ "+fmt(r.racks)+NB+"GB200 racks at PUE"+NB+"1.2 · clock starts mid-2026 · 10 regions screened";
+
+    // the answer
+    if(r.makes.length > 0){
+      $("bigText").innerHTML = 'Start the conversation in <span class="v">'+r.makes[0].g.name+'</span>.';
+      var alt = r.makes.slice(1,3).map(function(x){ return x.g.name; });
+      $("outNote").innerHTML = "Earliest realistic window <b>"+windowText(r.makes[0])+"</b>"+
+        (r.makes[0].bridged ? ", bridged with on-site generation." : ".")+
+        (alt.length ? " Also holding a "+state.yr+" date: "+alt.join(" and ")+"." : " Nothing else holds a "+state.yr+" date at this size.");
+    } else {
+      var best = r.top;
+      $("bigText").innerHTML = 'Nowhere makes <span class="v">'+state.yr+'</span> at this size.';
+      $("outNote").innerHTML = "The closest is "+best.g.name+" at <b>"+windowText(best)+"</b>."+
+        " Shrink the first phase, split the campus, or buy a project already holding a signed interconnection agreement.";
+    }
+
+    // verdict bar: ten regions, best first
+    $("bandbar").innerHTML = r.byTime.map(function(x){
+      return '<span class="'+BANDCLASS[x.band]+'" style="flex:1" title="'+x.g.name+': '+windowText(x)+'"></span>';
+    }).join("");
+    $("barCap").innerHTML = '<b class="cm">'+r.counts.make+' make '+state.yr+'</b> · <b class="cs">'+r.counts.slip+' could slip</b> · <b class="cx">'+r.counts.miss+' miss</b>';
+
+    drawTimeline(r);
+    renderQueue(r);
+    renderCells(r);
+    renderFlag(r);
+
+    $("sTime").setAttribute("aria-pressed", state.srt==="time");
+    $("sCarbon").setAttribute("aria-pressed", state.srt==="carbon");
+    $("sPrice").setAttribute("aria-pressed", state.srt==="price");
+
+    announce(r);
+    writeUrl();
+  }
+
+  /* ---------- the timeline ----------
+     One row per region: a bar spanning the energization window, coloured by
+     verdict, with the deadline as a vertical rule. The ranked list below
+     repeats every value as text, so the chart is annotation, not gatekeeper. */
+  function drawTimeline(r){
+    var rows = r.byTime;
+    // drawn at the container's real pixel width, so the chart's type and bars
+    // render 1:1 with the rest of the page instead of scaling up with the stage
+    var W = Math.max(680, Math.round($("tl").parentNode.clientWidth) || 860);
+    var ROW = 46, PADT = 34, PADB = 42, LAB = 172, PADR = 24;
+    var H = PADT + rows.length*ROW + PADB;
+    var x0 = 2026, x1 = Math.max(2037, state.yr + 2) + 1;
+    function X(yr){ return LAB + (yr - x0) / (x1 - x0) * (W - LAB - PADR); }
+    var COL = {make:"#3FE0A0", slip:"#FFEA6B", miss:"#FF5B5B"};
+    var out = [];
+
+    // year grid
+    for(var y = x0; y < x1; y++){
+      var gx = X(y);
+      out.push('<line x1="'+gx.toFixed(1)+'" y1="'+PADT+'" x2="'+gx.toFixed(1)+'" y2="'+(H-PADB+6)+'" stroke="#1C2126" stroke-width="1"/>');
+      out.push('<text x="'+gx.toFixed(1)+'" y="'+(H-PADB+26)+'" fill="#7B838D" font-size="13" font-family="Geist Mono,monospace" text-anchor="start" dx="4">'+("’"+String(y).slice(2))+'</text>');
+    }
+
+    // the deadline: end of the chosen year
+    var dx = X(state.yr + 1);
+    out.push('<line x1="'+dx.toFixed(1)+'" y1="'+(PADT-12)+'" x2="'+dx.toFixed(1)+'" y2="'+(H-PADB+6)+'" stroke="#EEF1F3" stroke-width="1.2" stroke-dasharray="3 4"/>');
+    out.push('<text x="'+dx.toFixed(1)+'" y="'+(PADT-18)+'" fill="#EEF1F3" font-size="13" font-family="Geist Mono,monospace" text-anchor="middle" letter-spacing="1.2">NEED IT BY '+state.yr+'</text>');
+
+    rows.forEach(function(x, i){
+      var cy = PADT + i*ROW + ROW/2;
+      var c = COL[x.band];
+      var bx0 = X(x.yLo), bx1 = X(x.yHi + 1);   // a window covering whole calendar years
+      out.push('<text x="'+(LAB-16)+'" y="'+(cy+5)+'" fill="'+(x.band==="miss"?"#7B838D":"#C7CDD4")+'" font-size="14.5" font-family="Geist Mono,monospace" text-anchor="end">'+x.g.name+'</text>');
+      // faint lead-in from the clock start to the window
+      out.push('<line x1="'+X(x0).toFixed(1)+'" y1="'+cy+'" x2="'+bx0.toFixed(1)+'" y2="'+cy+'" stroke="#2A3037" stroke-width="1"/>');
+      out.push('<rect x="'+bx0.toFixed(1)+'" y="'+(cy-7)+'" width="'+Math.max(bx1-bx0,3).toFixed(1)+'" height="14" fill="'+c+'" fill-opacity="0.32" stroke="'+c+'" stroke-width="1.2"/>');
+      out.push('<line x1="'+bx0.toFixed(1)+'" y1="'+(cy-7)+'" x2="'+bx0.toFixed(1)+'" y2="'+(cy+7)+'" stroke="'+c+'" stroke-width="2.6"/>');
+      if(x.bridged)
+        out.push('<text x="'+(bx1+9).toFixed(1)+'" y="'+(cy+4)+'" fill="#7B838D" font-size="11.5" font-family="Geist Mono,monospace">BRIDGED</text>');
+    });
+
+    var svg = $("tl");
+    svg.setAttribute("viewBox", "0 0 "+W+" "+H);
+    // keep the title/desc, replace the drawing
+    var kids = svg.querySelectorAll("g.draw");
+    for(var k=0;k<kids.length;k++) svg.removeChild(kids[k]);
+    var g = document.createElementNS("http://www.w3.org/2000/svg","g");
+    g.setAttribute("class","draw");
+    g.innerHTML = out.join("");
+    svg.appendChild(g);
+
+    $("tlDesc").textContent = "Timeline from 2026 to "+(x1-1)+". Each region shows its energization window: "+
+      rows.map(function(x){ return x.g.name+" "+windowText(x); }).join(", ")+
+      ". The deadline line sits at the end of "+state.yr+".";
+    $("stageTR").textContent = "Deadline "+state.yr;
+    $("tlCap").textContent = "Window = earliest to latest realistic energization · dashed rule = your deadline";
+  }
+
+  function renderQueue(r){
+    var html = "";
+    r.order.forEach(function(x, i){
+      var g = x.g;
+      html += '<div class="qrow '+BANDCLASS[x.band]+'">'+
+        '<span class="rk">'+String(i+1).padStart(2,"0")+'</span>'+
+        '<div>'+
+          '<div class="nm">'+g.name+'<small>'+g.area+'</small></div>'+
+          '<div class="sub">'+g.con+(x.bridged ? " Bridged: on-site generation carries the first years." : "")+'</div>'+
+          '<div class="ev">queue <b>'+g.q+'</b> GW'+(g.qn?" ("+g.qn+")":"")+' · <b>'+fmt(g.co2)+'</b> gCO2/kWh · <b>'+g.price.toFixed(1)+'</b>¢/kWh industrial</div>'+
+          '<div class="band '+BANDCLASS[x.band]+'"><span class="mk"></span>'+BANDNAME[x.band]+' '+state.yr+'</div>'+
+        '</div>'+
+        '<div class="amt">'+windowText(x)+'<small>energization window</small></div>'+
+      '</div>';
+    });
+    $("queue").innerHTML = html;
+  }
+
+  function renderCells(r){
+    var makes = r.makes;
+    var cleanest = makes.length ? makes.slice().sort(function(a,b){ return a.g.co2-b.g.co2; })[0] : null;
+    var cheapest = makes.length ? makes.slice().sort(function(a,b){ return a.g.price-b.g.price; })[0] : null;
+    var cells = [
+      ["Fastest window", windowText(r.top), r.top.g.name.toUpperCase()],
+      ["Cleanest that makes it", cleanest ? fmt(cleanest.g.co2) : "—", cleanest ? cleanest.g.name.toUpperCase()+" · G/KWH" : "NONE"],
+      ["Cheapest that makes it", cheapest ? cheapest.g.price.toFixed(1) : "—", cheapest ? cheapest.g.name.toUpperCase()+" · ¢/KWH" : "NONE"],
+      ["Your ask, in racks", "≈ "+fmt(r.racks), "GB200 @ PUE 1.2"],
+      ["Active in US queues", fmt(NAT_QUEUE_GW), "GW"],
+      ["Ever gets built", "~"+NAT_BUILT+"%", "OF QUEUED CAPACITY"]
+    ];
+    $("cells").innerHTML = cells.map(function(c){
+      return '<div class="cell"><div class="k">'+c[0]+'</div><div class="v">'+c[1]+'<small>'+c[2]+'</small></div></div>';
+    }).join("");
+  }
+
+  function renderFlag(r){
+    var f;
+    if(r.makes.length === 0){
+      f = "Nothing on this list holds a "+state.yr+" date at "+fmt(state.mw)+" MW. The honest moves are to shrink the first phase below "+
+          fmt(FREE_MW)+" MW and grow in place, split the campus across two regions, or buy a project that already holds a signed interconnection agreement. All three are being done, loudly, right now.";
+    } else {
+      var top = r.makes[0];
+      f = top.bridged
+        ? "The fastest path is not a utility, it is your own generation: "+top.g.name+" lets you energize behind the meter while the grid catches up. The binding constraint stops being the queue and becomes the turbine order book, which is sold out for years."
+        : top.g.con+" That is the conversation to start this quarter.";
+    }
+    if(state.mw >= 700){
+      f += " And at "+fmt(state.mw)+" MW you are a top-ten load on any system you join: every band on this page stretches for you.";
+    }
+    $("flagText").textContent = f;
+  }
+
+  /* The whole result is rewritten on every keystroke, which a screen reader cannot
+     see. Mirror the verdict into a polite status region, debounced. */
+  var srTimer;
+  function announce(r){
+    clearTimeout(srTimer);
+    srTimer = setTimeout(function(){
+      $("srStatus").textContent = (r.makes.length
+        ? "Top region: "+r.makes[0].g.name+", window "+windowText(r.makes[0])+". "
+        : "No region makes "+state.yr+". ")+
+        r.counts.make+" make the deadline, "+r.counts.slip+" could slip, "+r.counts.miss+" miss.";
+    }, 500);
+  }
+
+  /* ---------- the region table ---------- */
+  function buildRef(){
+    $("refBody").innerHTML = REGIONS.map(function(g){
+      return '<tr><td class="name">'+g.name+'<br><span class="lbl" style="letter-spacing:.06em">'+g.area+'</span></td>'+
+        '<td class="m">'+g.lo+"–"+g.hi+' yrs</td>'+
+        '<td class="m">'+g.q+' GW'+(g.qn?'<br><span class="lbl" style="letter-spacing:.06em">'+g.qn+'</span>':'')+'</td>'+
+        '<td class="m">'+fmt(g.co2)+' g/kWh</td>'+
+        '<td class="m">'+g.price.toFixed(1)+'¢/kWh</td>'+
+        '<td><span class="tag'+(g.bridge?" l":"")+'">'+(g.bridge?"Bridgeable":"Grid only")+'</span></td>'+
+        '<td class="note">'+g.note+'</td></tr>';
+    }).join("");
+  }
+
+  function buildProv(){
+    var lo = Infinity, hi = 0;
+    REGIONS.forEach(function(g){ lo = Math.min(lo, g.lo); hi = Math.max(hi, g.hi); });
+    $("heroMeta").textContent = "LBNL Queued Up · "+REGIONS.length+" regions · lead bands "+lo+" to "+hi+" years · current as of August 2026";
+    $("stripQueue").innerHTML = fmt(NAT_QUEUE_GW)+'<span class="u">GW</span>';
+    $("stripBuilt").textContent = "~"+NAT_BUILT+"%";
+    $("stripWait").innerHTML = "&gt;"+NAT_WAIT+'<span class="u">YRS</span>';
+  }
+
+  /* ---------- the bridge picker: ARIA select-only combobox ---------- */
+  var picker = (function(){
+    var btn, list, wrap, opts, value = null, open = false, active = -1, onPick = null,
+        holding = false, down = null;
+
+    function idx(id){ for(var i=0;i<BRIDGEOPTS.length;i++){ if(BRIDGEOPTS[i].id===id) return i; } return 0; }
+    function row(ev){ return ev.target.closest ? ev.target.closest(".sel-opt") : null; }
+    function pos(li){ return Array.prototype.indexOf.call(opts, li); }
+    function here(){ return active>=0 ? active : idx(value); }
+
+    function set(id){
+      value = id;
+      $("bridgeName").textContent = BRIDGEOPTS[idx(id)].name;
+      for(var i=0;i<opts.length;i++) opts[i].setAttribute("aria-selected", BRIDGEOPTS[i].id===id);
+    }
+    function mark(i){
+      if(i<0 || i>=opts.length) return;
+      if(active>=0) opts[active].classList.remove("act");
+      active = i;
+      opts[i].classList.add("act");
+      btn.setAttribute("aria-activedescendant", opts[i].id);
+    }
+    function show(i){
+      if(!open){ open = true; list.hidden = false; btn.setAttribute("aria-expanded","true"); }
+      mark(i);
+    }
+    function close(){
+      if(!open) return;
+      open = false; list.hidden = true;
+      btn.setAttribute("aria-expanded","false");
+      btn.removeAttribute("aria-activedescendant");
+      if(active>=0) opts[active].classList.remove("act");
+      active = -1;
+    }
+    function commit(i){
+      var pick = i>=0 && i<BRIDGEOPTS.length ? BRIDGEOPTS[i].id : value, changed = pick!==value;
+      close();
+      btn.focus({ preventScroll: true });
+      if(changed){ set(pick); onPick(pick); }
+    }
+    function key(ev){
+      var k = ev.key, cur = here(), last = BRIDGEOPTS.length-1;
+      if(k==="Escape"){ if(open){ ev.preventDefault(); close(); } return; }
+      if(k==="Tab"){ if(open) commit(active); return; }
+      if(k==="Enter" || k===" "){ ev.preventDefault(); if(open) commit(active); else show(cur); return; }
+      if(k==="ArrowDown"){ ev.preventDefault(); show(ev.altKey && !open ? cur : Math.min(cur+1,last)); return; }
+      if(k==="ArrowUp"){ ev.preventDefault(); show(Math.max(cur-1,0)); return; }
+      if(k==="Home"){ ev.preventDefault(); show(0); return; }
+      if(k==="End"){ ev.preventDefault(); show(last); return; }
+    }
+
+    return {
+      init: function(cb){
+        btn = $("bridge"); list = $("bridgeList"); wrap = btn.parentNode; onPick = cb;
+        list.innerHTML = BRIDGEOPTS.map(function(o,i){
+          return '<li class="sel-opt" id="bridgeOpt'+i+'" role="option" aria-selected="false">'+
+                 '<span class="mk" aria-hidden="true"></span><span class="nm">'+o.name+'</span></li>';
+        }).join("");
+        opts = list.children;
+        btn.addEventListener("keydown", key);
+        btn.addEventListener("click", function(){ if(open) close(); else show(here()); });
+        btn.addEventListener("blur", function(){ if(!holding) close(); });
+        list.addEventListener("pointerdown", function(ev){ holding = true; down = row(ev); });
+        list.addEventListener("pointerup", function(ev){
+          var li = row(ev);
+          if(li && (li===down || ev.pointerType==="mouse")) commit(pos(li));
+        });
+        list.addEventListener("pointercancel", function(){ down = null; });
+        list.addEventListener("mouseover", function(ev){ var li = row(ev); if(li) mark(pos(li)); });
+        document.addEventListener("pointerup", function(){
+          holding = false; down = null;
+          if(open && document.activeElement!==btn) btn.focus({ preventScroll: true });
+        });
+        document.addEventListener("pointerdown", function(ev){ if(open && !wrap.contains(ev.target)) close(); });
+      },
+      set: set
+    };
+  })();
+
+  /* ---------- URL state ---------- */
+  function writeUrl(){
+    var q = new URLSearchParams();
+    q.set("mw", state.mw);
+    q.set("yr", state.yr);
+    if(state.bridge==="yes") q.set("br", "1");
+    if(state.srt!=="time") q.set("srt", state.srt);
+    if(state.per!==250) q.set("per", state.per);
+    if(state.floor!==2) q.set("fl", state.floor);
+    try{ history.replaceState(null,"","#"+q.toString()); }
+    catch(e){ try{ location.hash = q.toString(); }catch(e2){} }
+  }
+  function readUrl(){
+    if(!location.hash || location.hash.length<2) return false;
+    var h = location.hash.slice(1);
+    if(h.indexOf("=")===-1) return false;
+    var q = new URLSearchParams(h);
+    if(q.get("mw")) state.mw = Math.max(20, Math.min(2000, parseFloat(q.get("mw"))||300));
+    if(q.get("yr")) state.yr = Math.max(2027, Math.min(2036, parseInt(q.get("yr"),10)||2030));
+    if(q.get("br")==="1") state.bridge = "yes";
+    if(q.get("srt")==="carbon" || q.get("srt")==="price") state.srt = q.get("srt");
+    if(q.get("per")) state.per = Math.max(100, Math.min(1000, parseFloat(q.get("per"))||250));
+    if(q.get("fl")) state.floor = Math.max(0.5, Math.min(5, parseFloat(q.get("fl"))||2));
+    return true;
+  }
+  function syncInputs(){
+    $("mw").value = state.mw;
+    $("yr").value = state.yr;
+    $("per").value = state.per;
+    $("floor").value = state.floor;
+    picker.set(state.bridge);
+    sizeNum($("mw")); sizeNum($("yr"));
+  }
+
+  /* inline inputs grow with their value, so the sentence never gapes */
+  function sizeNum(el){ el.style.width = (String(el.value).length + 1.4)+"ch"; }
+
+  function bindNum(id, key, min, max, isInt){
+    var el = $(id);
+    el.addEventListener("input", function(){
+      sizeNum(el);
+      var v = parseFloat(el.value);
+      if(isNaN(v)) return;
+      v = Math.max(min, Math.min(max, v));
+      if(isInt) v = Math.round(v);
+      state[key] = v;
+      render();
+    });
+    el.addEventListener("blur", function(){ el.value = state[key]; sizeNum(el); });
+    sizeNum(el);
+  }
+
+  /* ---------- copy actions ---------- */
+  function toast(msg){
+    var t = $("toast"); t.textContent = msg; t.classList.add("on");
+    setTimeout(function(){ t.classList.remove("on"); }, 1600);
+  }
+  function copy(text, msg){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, function(){ fallback(text,msg); });
+    } else { fallback(text,msg); }
+  }
+  function fallback(text,msg){
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); toast(msg); }catch(e){ toast("Copy failed"); }
+    document.body.removeChild(ta);
+  }
+  function summary(){
+    var r = compute();
+    var L = [];
+    L.push(fmt(state.mw)+" MW by "+state.yr+(r.bridging ? ", bridging with on-site generation" : ", grid power only"));
+    L.push("");
+    r.byTime.forEach(function(x, i){
+      L.push((i+1)+". "+x.g.name+" ("+x.g.area+"): "+windowText(x)+" — "+BANDNAME[x.band]+" "+state.yr+
+             (x.bridged ? " (bridged)" : ""));
+    });
+    L.push("");
+    L.push(r.makes.length
+      ? "Start with: "+r.makes.slice(0,3).map(function(x){ return x.g.name; }).join(", ")
+      : "Nothing makes "+state.yr+" at this size. Shrink the phase, split the campus, or buy a queue position.");
+    L.push("");
+    L.push("Run your own: "+location.href);
+    return L.join("\n");
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    var shared = readUrl();
+    buildProv();
+    buildRef();
+    picker.init(function(id){ state.bridge = id; render(); });
+    syncInputs();
+
+    bindNum("mw","mw",20,2000,true);
+    bindNum("yr","yr",2027,2036,true);
+    bindNum("per","per",100,1000,true);
+    bindNum("floor","floor",0.5,5,false);
+
+    $("sTime").addEventListener("click", function(){ state.srt="time"; render(); });
+    $("sCarbon").addEventListener("click", function(){ state.srt="carbon"; render(); });
+    $("sPrice").addEventListener("click", function(){ state.srt="price"; render(); });
+
+    $("copyLink").addEventListener("click", function(){ copy(location.href, "Link copied"); });
+    $("copySummary").addEventListener("click", function(){ copy(summary(), "Brief copied"); });
+
+    window.addEventListener("beforeprint", function(){
+      $("printUrl").textContent = "Reproduce this screen: " + location.href;
+    });
+
+    // the timeline is drawn at the container's width, so a resize redraws it
+    var rsTimer;
+    window.addEventListener("resize", function(){
+      clearTimeout(rsTimer);
+      rsTimer = setTimeout(function(){ drawTimeline(compute()); }, 150);
+    });
+
+    render();
+
+    // a shared link should land on the ranking, not on the sales pitch
+    if(shared){
+      var html = document.documentElement;
+      html.style.scrollBehavior = "auto";
+      var top = $("screener").getBoundingClientRect().top + window.pageYOffset - 60;
+      window.scrollTo(0, top);
+      setTimeout(function(){ html.style.scrollBehavior = ""; }, 60);
+    }
+  });
+})();
+</script>
+<script>
+/* Scroll reveals. Content is visible by default; motion is opted into only when
+   the browser is happy to move things. */
+(function(){
+  "use strict";
+  if(!("IntersectionObserver" in window)) return;
+  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var els = document.querySelectorAll(".rv");
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add("rvIn"); io.unobserve(en.target); }
+    });
+  }, { rootMargin: "0px 0px -70px 0px" });
+  els.forEach(function(e){
+    var r = e.getBoundingClientRect();
+    if(r.top < window.innerHeight && r.bottom > 0) return;
+    e.classList.add("rv0");
+    io.observe(e);
+  });
+})();
+</script>
+</body>
+</html>

@@ -30,7 +30,7 @@ with every constant shown on the page. No accounts, no tracking, no lead forms.
 |---|------|-----------------|--------|
 | 01 | **[Rack Budget](rack-budget/)** | You have the megawatts. What actually fits, what heat comes off it, and how much floor it needs. | **Live** |
 | 02 | **[Crash Cart](crash-cart/)** | Which drives to pull this week, ranked by risk times blast radius, on 13 years of public fleet telemetry. | **Live** |
-| 03 | **Where the power is** | Where you can actually energize a few hundred megawatts before the end of the decade. | Planned |
+| 03 | **[Where the power is](where-the-power-is/)** | Where you can actually energize a few hundred megawatts before the end of the decade. | **Live** |
 | 04 | **Outage replay** | What the console showed during a real cloud incident, and how long the truth took to surface. | Planned |
 
 ## Rack Budget
@@ -57,6 +57,26 @@ and a floor plate scaled to the white space.
 Rack archetypes run from a 6 kW legacy 42U to the 600 kW Rubin Ultra / Kyber rack,
 so the density cliff is visible rather than described. Every input is encoded in the
 URL, so any configuration is a link you can paste into a thread and argue about.
+
+## Where the power is
+
+A siting screener for the era when the megawatts, not the building, set the schedule.
+State the ask in one sentence and get ten US grid regions ranked by the earliest
+realistic energization window, with the verdict drawn as a timeline against your
+deadline.
+
+```
+300 MW, needed by 2030, screened against ERCOT
+  -> published large-load band          = 2 to 4 years
+  -> size surcharge (300-200)/250       = +0.4 years of study
+  -> window from mid-2026               = 2028 to 2030 -> makes it
+  -> the same arithmetic puts PJM at 2030 to 2033, and CAISO at 2031 to 2034
+```
+
+The lead bands are assembled from utility filings and trade press; queue depth,
+grid carbon and industrial price ride along as context on every row. A toggle
+credits on-site gas bridging in the regions where behind-the-meter builds are
+practical, which is how the fast paths are actually being built.
 
 ## How these are built
 
@@ -104,7 +124,11 @@ Rack power figures come from NVIDIA platform disclosures as reported by
 [Silicon Report](https://www.siliconreport.com/nvidia-vera-rubin-everything-we-know-33727d4d)
 and [TechRadar Pro](https://www.techradar.com/pro/megawatt-class-ai-server-racks-may-well-become-the-norm-before-2030-as-nvidia-displays-600kw-kyber-rack-design).
 PUE bands come from [Uptime Institute](https://intelligence.uptimeinstitute.com/resource/mapping-pue-trends-data-center-region-age-and-size)
-survey data. Figures are public as of 2026 and change fast.
+survey data. Interconnection queue totals and completion rates come from
+Lawrence Berkeley National Laboratory's [Queued Up](https://emp.lbl.gov/queues)
+series, grid carbon from EPA [eGRID](https://www.epa.gov/egrid), and industrial
+power prices from [EIA](https://www.eia.gov/electricity/data.php).
+Figures are public as of 2026 and change fast.
 
 These are planning heuristics for the first conversation, not engineering
 submittals. Nothing here replaces a mechanical engineer.
