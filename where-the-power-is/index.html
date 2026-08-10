@@ -896,7 +896,10 @@
      repeats every value as text, so the chart is annotation, not gatekeeper. */
   function drawTimeline(r){
     var rows = r.byTime;
-    var W = 860, ROW = 34, PADT = 26, PADB = 34, LAB = 148, PADR = 24;
+    // drawn at the container's real pixel width, so the chart's type and bars
+    // render 1:1 with the rest of the page instead of scaling up with the stage
+    var W = Math.max(680, Math.round($("tl").parentNode.clientWidth) || 860);
+    var ROW = 34, PADT = 26, PADB = 34, LAB = 148, PADR = 24;
     var H = PADT + rows.length*ROW + PADB;
     var x0 = 2026, x1 = Math.max(2037, state.yr + 2) + 1;
     function X(yr){ return LAB + (yr - x0) / (x1 - x0) * (W - LAB - PADR); }
@@ -1219,6 +1222,13 @@
 
     window.addEventListener("beforeprint", function(){
       $("printUrl").textContent = "Reproduce this screen: " + location.href;
+    });
+
+    // the timeline is drawn at the container's width, so a resize redraws it
+    var rsTimer;
+    window.addEventListener("resize", function(){
+      clearTimeout(rsTimer);
+      rsTimer = setTimeout(function(){ drawTimeline(compute()); }, 150);
     });
 
     render();
