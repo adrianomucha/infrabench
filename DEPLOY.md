@@ -9,6 +9,8 @@ as-is.
     /rack-budget/og.png     tool social card
     /crash-cart/            Crash Cart
     /crash-cart/og.png      tool social card
+    /where-the-power-is/    Where the power is
+    /where-the-power-is/og.png  tool social card
     /assets/analytics.js    Web Analytics opt-out hook
 
 Every internal link is root-relative, so no configuration file, rewrite rule or
