@@ -899,7 +899,7 @@
     // drawn at the container's real pixel width, so the chart's type and bars
     // render 1:1 with the rest of the page instead of scaling up with the stage
     var W = Math.max(680, Math.round($("tl").parentNode.clientWidth) || 860);
-    var ROW = 34, PADT = 26, PADB = 34, LAB = 148, PADR = 24;
+    var ROW = 46, PADT = 34, PADB = 42, LAB = 172, PADR = 24;
     var H = PADT + rows.length*ROW + PADB;
     var x0 = 2026, x1 = Math.max(2037, state.yr + 2) + 1;
     function X(yr){ return LAB + (yr - x0) / (x1 - x0) * (W - LAB - PADR); }
@@ -910,25 +910,25 @@
     for(var y = x0; y < x1; y++){
       var gx = X(y);
       out.push('<line x1="'+gx.toFixed(1)+'" y1="'+PADT+'" x2="'+gx.toFixed(1)+'" y2="'+(H-PADB+6)+'" stroke="#1C2126" stroke-width="1"/>');
-      out.push('<text x="'+gx.toFixed(1)+'" y="'+(H-PADB+22)+'" fill="#7B838D" font-size="11" font-family="Geist Mono,monospace" text-anchor="start" dx="3">'+("’"+String(y).slice(2))+'</text>');
+      out.push('<text x="'+gx.toFixed(1)+'" y="'+(H-PADB+26)+'" fill="#7B838D" font-size="13" font-family="Geist Mono,monospace" text-anchor="start" dx="4">'+("’"+String(y).slice(2))+'</text>');
     }
 
     // the deadline: end of the chosen year
     var dx = X(state.yr + 1);
-    out.push('<line x1="'+dx.toFixed(1)+'" y1="'+(PADT-10)+'" x2="'+dx.toFixed(1)+'" y2="'+(H-PADB+6)+'" stroke="#EEF1F3" stroke-width="1.2" stroke-dasharray="3 4"/>');
-    out.push('<text x="'+dx.toFixed(1)+'" y="'+(PADT-14)+'" fill="#EEF1F3" font-size="11" font-family="Geist Mono,monospace" text-anchor="middle" letter-spacing="1">NEED IT BY '+state.yr+'</text>');
+    out.push('<line x1="'+dx.toFixed(1)+'" y1="'+(PADT-12)+'" x2="'+dx.toFixed(1)+'" y2="'+(H-PADB+6)+'" stroke="#EEF1F3" stroke-width="1.2" stroke-dasharray="3 4"/>');
+    out.push('<text x="'+dx.toFixed(1)+'" y="'+(PADT-18)+'" fill="#EEF1F3" font-size="13" font-family="Geist Mono,monospace" text-anchor="middle" letter-spacing="1.2">NEED IT BY '+state.yr+'</text>');
 
     rows.forEach(function(x, i){
       var cy = PADT + i*ROW + ROW/2;
       var c = COL[x.band];
       var bx0 = X(x.yLo), bx1 = X(x.yHi + 1);   // a window covering whole calendar years
-      out.push('<text x="'+(LAB-14)+'" y="'+(cy+4)+'" fill="'+(x.band==="miss"?"#7B838D":"#C7CDD4")+'" font-size="12.5" font-family="Geist Mono,monospace" text-anchor="end">'+x.g.name+'</text>');
+      out.push('<text x="'+(LAB-16)+'" y="'+(cy+5)+'" fill="'+(x.band==="miss"?"#7B838D":"#C7CDD4")+'" font-size="14.5" font-family="Geist Mono,monospace" text-anchor="end">'+x.g.name+'</text>');
       // faint lead-in from the clock start to the window
       out.push('<line x1="'+X(x0).toFixed(1)+'" y1="'+cy+'" x2="'+bx0.toFixed(1)+'" y2="'+cy+'" stroke="#2A3037" stroke-width="1"/>');
-      out.push('<rect x="'+bx0.toFixed(1)+'" y="'+(cy-5)+'" width="'+Math.max(bx1-bx0,3).toFixed(1)+'" height="10" fill="'+c+'" fill-opacity="0.32" stroke="'+c+'" stroke-width="1.1"/>');
-      out.push('<line x1="'+bx0.toFixed(1)+'" y1="'+(cy-5)+'" x2="'+bx0.toFixed(1)+'" y2="'+(cy+5)+'" stroke="'+c+'" stroke-width="2.4"/>');
+      out.push('<rect x="'+bx0.toFixed(1)+'" y="'+(cy-7)+'" width="'+Math.max(bx1-bx0,3).toFixed(1)+'" height="14" fill="'+c+'" fill-opacity="0.32" stroke="'+c+'" stroke-width="1.2"/>');
+      out.push('<line x1="'+bx0.toFixed(1)+'" y1="'+(cy-7)+'" x2="'+bx0.toFixed(1)+'" y2="'+(cy+7)+'" stroke="'+c+'" stroke-width="2.6"/>');
       if(x.bridged)
-        out.push('<text x="'+(bx1+8).toFixed(1)+'" y="'+(cy+3.5)+'" fill="#7B838D" font-size="10" font-family="Geist Mono,monospace">BRIDGED</text>');
+        out.push('<text x="'+(bx1+9).toFixed(1)+'" y="'+(cy+4)+'" fill="#7B838D" font-size="11.5" font-family="Geist Mono,monospace">BRIDGED</text>');
     });
 
     var svg = $("tl");
