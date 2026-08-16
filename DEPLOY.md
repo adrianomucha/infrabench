@@ -42,9 +42,9 @@ In Vercel: **Add New Project**, import `adrianomucha/infrabench`, framework pres
 **Other**, no build command, root directory `./`, deploy. Pushes to `main` publish;
 pushes to any other branch get a preview URL.
 
-### Pointing infrabench.io at it
+### Pointing infrabench.dev at it
 
-In the Vercel project, **Settings > Domains > Add**, enter `infrabench.io`. Vercel
+In the Vercel project, **Settings > Domains > Add**, enter `infrabench.dev`. Vercel
 then shows the exact records for your project. The general-purpose values are:
 
 | Host  | Type  | Value                    |
@@ -54,7 +54,7 @@ then shows the exact records for your project. The general-purpose values are:
 
 Add those at whichever registrar holds the domain. Confirm with:
 
-    vercel domains inspect infrabench.io
+    vercel domains inspect infrabench.dev
     vercel certs ls
 
 DNS propagation is usually minutes. The TLS certificate provisions automatically
@@ -118,8 +118,8 @@ so a single switch mutes the pair.
 
 Turn it on once per browser, per site:
 
-    https://infrabench.io/?va-disable=1     stop counting this browser
-    https://infrabench.io/?va-disable=0     count it again
+    https://infrabench.dev/?va-disable=1     stop counting this browser
+    https://infrabench.dev/?va-disable=0     count it again
 
 The parameter is stripped from the URL immediately after it is read, so it never
 reaches an event or gets copied into a shared link. Setting it by hand works too:
