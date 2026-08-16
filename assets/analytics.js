@@ -1,14 +1,19 @@
-/* Keep my own visits out of Vercel Web Analytics.
-   Loads before the insights script and drops every event while a
+/* Keep my own visits out of the analytics.
+   Loads before the insights and Google tags and mutes both while a
    `va-disable` flag is set in localStorage.
      ?va-disable=1  → stop counting this browser
      ?va-disable=0  → count it again                                        */
+
+/* GA4 measurement ID for infrabench.dev. Google reads window['ga-disable-<id>']
+   at send time, so the flag has to name the property exactly. */
+var GA_MEASUREMENT_ID = 'G-B4K7J0G5X6';
 
 /* Queue stub — the insights script drains window.vaq once it loads. */
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 
 (function () {
   const KEY = 'va-disable';
+  const GA_FLAG = 'ga-disable-' + GA_MEASUREMENT_ID;
 
   /* localStorage throws in some privacy modes; treat that as "count me". */
   function isMuted() {
@@ -30,8 +35,13 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
       history.replaceState(null, '', url.pathname + url.search + url.hash);
     } catch (e) {}
     console.info('[analytics] this browser is ' +
-      (param === '1' ? 'no longer counted' : 'counted again') + ' in Web Analytics');
+      (param === '1' ? 'no longer counted' : 'counted again') +
+      ' in Web Analytics and Google Analytics');
   }
 
+  /* Vercel: drop each event as it is queued. */
   window.va('beforeSend', function (event) { return isMuted() ? null : event; });
+
+  /* Google: one window flag, checked by gtag.js before every hit. */
+  window[GA_FLAG] = isMuted();
 })();

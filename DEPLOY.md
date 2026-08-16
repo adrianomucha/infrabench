@@ -11,7 +11,7 @@ as-is.
     /crash-cart/og.png      tool social card
     /where-the-power-is/    Where the power is
     /where-the-power-is/og.png  tool social card
-    /assets/analytics.js    Web Analytics opt-out hook
+    /assets/analytics.js    analytics opt-out hook, Vercel and Google
 
 Every internal link is root-relative, so no configuration file, rewrite rule or
 build command is required on any host.
@@ -42,9 +42,9 @@ In Vercel: **Add New Project**, import `adrianomucha/infrabench`, framework pres
 **Other**, no build command, root directory `./`, deploy. Pushes to `main` publish;
 pushes to any other branch get a preview URL.
 
-### Pointing infrabench.io at it
+### Pointing infrabench.dev at it
 
-In the Vercel project, **Settings > Domains > Add**, enter `infrabench.io`. Vercel
+In the Vercel project, **Settings > Domains > Add**, enter `infrabench.dev`. Vercel
 then shows the exact records for your project. The general-purpose values are:
 
 | Host  | Type  | Value                    |
@@ -54,7 +54,7 @@ then shows the exact records for your project. The general-purpose values are:
 
 Add those at whichever registrar holds the domain. Confirm with:
 
-    vercel domains inspect infrabench.io
+    vercel domains inspect infrabench.dev
     vercel certs ls
 
 DNS propagation is usually minutes. The TLS certificate provisions automatically
@@ -87,21 +87,39 @@ project and redirect it to `/rack-budget`.
 
 ---
 
-## Keeping your own visits out of Web Analytics
+## Analytics
 
-Vercel Web Analytics has no dashboard setting to ignore your own traffic. No IP
-filter, no toggle. The only supported hook is `beforeSend`, which runs in the
-browser on every event and can drop it before anything is sent.
+Two counters run side by side on every page:
 
-`assets/analytics.js` wires that hook to a `va-disable` key in `localStorage`.
-It loads un-deferred on all three pages, directly above the insights tag, so the
-hook is queued before the insights script runs. Order matters. Deferring it would
-let the first pageview escape.
+- **Vercel Web Analytics**, cookieless, for the deploy-side numbers.
+- **Google Analytics 4**, property stream `Infrabench`, measurement ID
+  `G-B4K7J0G5X6`, stream ID `15440681983`, stream URL `https://infrabench.dev/`.
+
+The head of each page carries them in this order, and the order is load-bearing:
+
+    /assets/analytics.js                      un-deferred, first
+    https://cdn.vercel-insights.com/...       deferred
+    https://www.googletagmanager.com/gtag/js  async, then the inline gtag config
+
+`assets/analytics.js` runs first and un-deferred so both opt-outs are in place
+before either counter can fire. Deferring it would let the first pageview escape.
+
+The GA4 measurement ID appears twice per page, in the loader `src` and in the
+`gtag('config', ...)` call, and once in `assets/analytics.js` as
+`GA_MEASUREMENT_ID`. Changing properties means changing all three.
+
+### Keeping your own visits out
+
+Neither counter has a reliable dashboard setting to ignore your own traffic.
+Vercel exposes a `beforeSend` hook that can drop an event in the browser before
+it is sent. Google reads a `window['ga-disable-G-B4K7J0G5X6']` flag before every
+hit. `assets/analytics.js` wires both to one `va-disable` key in `localStorage`,
+so a single switch mutes the pair.
 
 Turn it on once per browser, per site:
 
-    https://infrabench.io/?va-disable=1     stop counting this browser
-    https://infrabench.io/?va-disable=0     count it again
+    https://infrabench.dev/?va-disable=1     stop counting this browser
+    https://infrabench.dev/?va-disable=0     count it again
 
 The parameter is stripped from the URL immediately after it is read, so it never
 reaches an event or gets copied into a shared link. Setting it by hand works too:
@@ -110,17 +128,22 @@ reaches an event or gets copied into a shared link. Setting it by hand works too
     localStorage.removeItem('va-disable')
 
 Verify in the console on the site's own origin. `localStorage.getItem('va-disable')`
-returns `"1"` when muted and `null` when counted. For proof events are actually
-dropped rather than just flagged, filter the Network tab by `vercel-insights` and
-reload. A counted visit fires a beacon after the script loads, an opted-out one
-fires nothing. The script itself still loads either way, which is expected.
+returns `"1"` when muted and `null` when counted, and
+`window['ga-disable-G-B4K7J0G5X6']` returns `true` when muted. For proof events
+are actually dropped rather than just flagged, filter the Network tab by
+`vercel-insights` and by `google-analytics` and reload. A counted visit fires a
+beacon from each after the scripts load, an opted-out one fires neither. Both
+scripts still load either way, which is expected.
 
 Worth knowing:
 
 - `localStorage` is scoped per origin, so this is per site, per browser, per
   profile, per device. Incognito windows always count.
-- Local development is already uncounted. The insights script is only wired up on
-  the deployed site and generates no events against a file served off disk.
+- Local development is uncounted on the Vercel side. The insights script is only
+  wired up on the deployed site and generates no events against a file served off
+  disk. Google Analytics is not so polite: gtag.js fires from a `file://` or
+  `localhost` page too, so set the flag once in whatever browser you develop in,
+  or filter `localhost` out as internal traffic in the GA4 admin.
 - Clearing site data takes the flag with it. Privacy extensions that wipe storage
   on close will silently undo the opt-out.
 - Every `localStorage` access is wrapped in `try`/`catch`. Some privacy modes
@@ -130,7 +153,7 @@ Worth knowing:
   same escape hatch an ad blocker already gives them, and Web Analytics is
   cookieless and anonymous regardless.
 
-Adding a page means adding both script tags in the same order, or it counts you.
+Adding a page means adding every analytics tag in the same order, or it counts you.
 
 ---
 
@@ -141,8 +164,9 @@ Adding a page means adding both script tags in the same order, or it counts you.
 3. Change the tool name in the header, the `<title>`, and the og tags.
 4. Add a card to the `.tools` grid in the root `index.html` and flip its tag to Live.
 5. Keep the white maker band at the bottom. It is the same on every page by design.
-6. Keep both analytics script tags in the head, in order: `/assets/analytics.js`
-   first and un-deferred, then the deferred insights tag.
+6. Keep the analytics tags in the head, in order: `/assets/analytics.js` first and
+   un-deferred, then the deferred insights tag, then the async gtag.js loader and
+   its inline config.
 
 ## Conventions worth preserving
 
