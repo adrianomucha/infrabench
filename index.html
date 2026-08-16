@@ -254,6 +254,7 @@
         <a class="btn" href="/rack-budget/">Open Rack Budget</a>
         <a class="btn ghost" href="/crash-cart/">Open Crash Cart</a>
         <a class="btn ghost" href="/where-the-power-is/">Open Where the Power Is</a>
+        <a class="btn ghost" href="/outage-replay/">Open Outage Replay</a>
       </div>
     </div>
     <div class="stage rise d4">
@@ -284,6 +285,8 @@
       <span>US interconnection queue<b>2,061 GW</b></span>
       <span>Queued capacity ever built<b>~13%</b></span>
       <span>ERCOT large-load requests<b>239 GW</b></span>
+      <span>Median status-page lag<b>48 min</b></span>
+      <span>Longest documented lag<b>101 min</b></span>
       <span>Hidden assumptions<b>0</b></span>
     </div>
     <div class="half">
@@ -299,6 +302,8 @@
       <span>US interconnection queue<b>2,061 GW</b></span>
       <span>Queued capacity ever built<b>~13%</b></span>
       <span>ERCOT large-load requests<b>239 GW</b></span>
+      <span>Median status-page lag<b>48 min</b></span>
+      <span>Longest documented lag<b>101 min</b></span>
       <span>Hidden assumptions<b>0</b></span>
     </div>
   </div>
@@ -306,7 +311,7 @@
 
 <section id="tools">
   <div class="wrap">
-    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">01</span><span class="sec-rule"></span><span class="lbl">The bench &middot; 03 live &middot; 01 planned</span></div>
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">01</span><span class="sec-rule"></span><span class="lbl">The bench &middot; 04 live</span></div>
     <h2 class="rv">Four corrections, one method.</h2>
     <div class="tools">
 
@@ -340,15 +345,15 @@
         <span class="tag on">Live</span>
       </a>
 
-      <div class="tool rv">
+      <a class="tool rv" href="/outage-replay/">
         <span class="num">04</span>
         <div>
-          <h3>Outage replay</h3>
+          <h3>Outage replay <span class="arr" aria-hidden="true">&rarr;</span></h3>
           <p>Public cloud incidents reconstructed as an operator timeline. What the console showed, when it showed it, and how long the truth took to surface.</p>
         </div>
-        <div class="meta">AWS, Azure and GCP<br>status histories</div>
-        <span class="tag">Planned</span>
-      </div>
+        <div class="meta">AWS, Azure, GCP, Cloudflare, Fastly<br>6 incidents &middot; 48 min median gap</div>
+        <span class="tag on">Live</span>
+      </a>
 
     </div>
   </div>
