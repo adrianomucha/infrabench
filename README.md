@@ -31,7 +31,7 @@ with every constant shown on the page. No accounts, no tracking, no lead forms.
 | 01 | **[Rack Budget](rack-budget/)** | You have the megawatts. What actually fits, what heat comes off it, and how much floor it needs. | **Live** |
 | 02 | **[Crash Cart](crash-cart/)** | Which drives to pull this week, ranked by risk times blast radius, on 13 years of public fleet telemetry. | **Live** |
 | 03 | **[Where the power is](where-the-power-is/)** | Where you can actually energize a few hundred megawatts before the end of the decade. | **Live** |
-| 04 | **Outage replay** | What the console showed during a real cloud incident, and how long the truth took to surface. | Planned |
+| 04 | **[Outage replay](outage-replay/)** | What the console showed during a real cloud incident, and how long the truth took to surface. | **Live** |
 
 ## Rack Budget
 
@@ -77,6 +77,30 @@ The lead bands are assembled from utility filings and trade press; queue depth,
 grid carbon and industrial price ride along as context on every row. A toggle
 credits on-site gas bridging in the regions where behind-the-meter builds are
 practical, which is how the fast paths are actually being built.
+
+## Outage replay
+
+A status page is a published spec like any other, and it fails the same way:
+optimistically. Six documented cloud incidents replayed against the provider's own
+retrospective, measuring the one number nobody advertises, which is how long the
+console stayed green after customers started failing.
+
+```
+Google Cloud, 12 June 2025
+  -> first customer impact       17:51 UTC   (from Google's own report)
+  -> first public status post    19:05 UTC   (the dashboard moves)
+  -> 19:05 minus 17:51           = 74 minutes dark
+  -> Downdetector spiked 17:56   = the crowd had it 69 minutes earlier
+  -> your monitoring at 15 min   = 59 minutes ahead of the page
+```
+
+Set the threshold your own monitoring pages at and the tool ranks all six by whether
+you or the vendor would have told you first. The gaps run from 11 minutes to 101, on
+a median of 48. The timeline draws two lanes, what was actually happening against
+what the console showed, and the hatched column between them is the whole argument.
+
+Incidents are included only where a published retrospective states when impact began,
+since that is the one timestamp nobody can reconstruct from outside.
 
 ## How these are built
 
@@ -128,6 +152,13 @@ survey data. Interconnection queue totals and completion rates come from
 Lawrence Berkeley National Laboratory's [Queued Up](https://emp.lbl.gov/queues)
 series, grid carbon from EPA [eGRID](https://www.epa.gov/egrid), and industrial
 power prices from [EIA](https://www.eia.gov/electricity/data.php).
+Incident timings come from each provider's own retrospective: AWS
+[October 2025](https://aws.amazon.com/message/101925/) and
+[December 2021](https://aws.amazon.com/message/12721/), the
+[Azure status history](https://azure.status.microsoft/en-us/status/history/),
+[Google Cloud](https://status.cloud.google.com/incidents/ow5i3PPK96RduMcb1SsW),
+[Cloudflare](https://blog.cloudflare.com/18-november-2025-outage/) and
+[Fastly](https://www.fastly.com/blog/summary-of-june-8-outage).
 Figures are public as of 2026 and change fast.
 
 These are planning heuristics for the first conversation, not engineering

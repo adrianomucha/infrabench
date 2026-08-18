@@ -11,7 +11,13 @@ as-is.
     /crash-cart/og.png      tool social card
     /where-the-power-is/    Where the power is
     /where-the-power-is/og.png  tool social card
+    /outage-replay/         Outage replay
     /assets/analytics.js    analytics opt-out hook, Vercel and Google
+
+Outage replay has no card of its own yet, so its `og:image` points at the suite card
+at `/og.png`. Cut `/outage-replay/og.png` on the template the other three use and
+change the one meta tag. A card that 404s unfurls as nothing and fails silently,
+which is why it points somewhere real in the meantime.
 
 Every internal link is root-relative, so no configuration file, rewrite rule or
 build command is required on any host.

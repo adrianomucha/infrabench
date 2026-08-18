@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Outage replay · Infrabench</title>
+<meta name="description" content="Six public cloud incidents replayed as an operator timeline. What the status page showed, when it showed it, and how long the truth took to surface. Set your own detection threshold and see which outages you would have caught first. Every timestamp sourced.">
+<meta property="og:title" content="Outage replay · How long the status page stayed green">
+<meta property="og:description" content="Every status page lags the outage it describes. Six documented incidents, replayed against the provider's own postmortem, with the detection gap measured in minutes. Set your threshold, see who tells you first.">
+<meta property="og:type" content="website">
+<!-- Falls back to the suite card until /outage-replay/og.png is cut. A card that 404s
+     unfurls as nothing and fails silently, which is worse than a generic one. -->
+<meta property="og:image" content="/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://www.googletagmanager.com">
+<script src="/assets/analytics.js"></script>
+<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-B4K7J0G5X6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-B4K7J0G5X6');
+</script>
+<style>
+  :root{
+    color-scheme:dark;
+    /* --- suite chrome, shared with the rest of Infrabench --- */
+    --bg:#0A0C0E;          /* page surface */
+    --bg2:#0E1114;         /* raised, one step */
+    --line:#1C2126;        /* hairline */
+    --line2:#2A3037;       /* stronger rule */
+    --tx:#EEF1F3;          /* primary text */
+    --tx2:#A8B0B8;         /* secondary text */
+    --tx2b:#C7CDD4;        /* dense mono passages: one step brighter to stay readable */
+    --tx3:#7B838D;         /* labels only */
+    --grn:#3FE0A0;         /* signal green: data and live things only */
+    --grn2:#2FBF86;
+    /* --- the same validated three-step ramp Crash Cart set and the siting tool reuses.
+       Here it carries two meanings at once, and never carries either one alone:
+         as a console state   green = operational, amber = investigating, red = outage
+         as a verdict         green = you know first, amber = a coin flip, red = they do
+       Every band is also spelled out in words on the row or lane it colours. */
+    --r-make:#3FE0A0;      /* operational / you know first */
+    --r-slip:#FFEA6B;      /* investigating / too close to call */
+    --r-miss:#FF5B5B;      /* outage / the status page tells you */
+    --w-make:#0E1F1B;      /* row washes: the verdict at 10 percent over the surface */
+    --w-slip:#1F2015;
+    --w-miss:#201113;
+    --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:16px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+  .wrap{max-width:1260px;margin:0 auto;padding:0 32px}
+  @media(max-width:640px){.wrap{padding:0 20px}}
+  a{color:var(--tx);text-decoration:none}
+
+  /* micro-label: the only place uppercase mono is allowed */
+  .lbl{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+
+  /* first focusable element: lets keyboard and screen-reader users bypass the sticky header */
+  .skip{position:absolute;inset-inline-start:-9999px;top:0;z-index:60;font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:12px 18px;background:var(--tx);color:var(--bg);font-weight:600}
+  .skip:focus{inset-inline-start:0}
+  main{display:block;scroll-margin-top:64px}
+  :focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  /* announced to assistive tech only: the result summary and the copy confirmation */
+  .sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+
+  /* ---------- header ---------- */
+  header{position:sticky;top:0;z-index:40;background:rgba(10,12,14,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:16px;height:60px}
+  .mark{display:flex;align-items:center;gap:11px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx)}
+  .mark .suite{display:flex;align-items:center;gap:11px;color:var(--tx3);position:relative}
+  .mark .suite::after{content:"";position:absolute;inset:-16px -8px}
+  .mark .suite:hover{color:var(--tx)}
+  .mark .sep{color:var(--line2)}
+  .mark .tool{color:var(--tx)}
+  .sq{width:9px;height:9px;background:var(--grn);flex:none}
+  nav{display:flex;gap:28px}
+  nav a{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);position:relative;display:inline-block}
+  nav a::after{content:"";position:absolute;inset:-16px -10px}
+  nav a:hover{color:var(--tx)}
+  @media(max-width:860px){nav{display:none}}
+
+  /* ---------- shared type ---------- */
+  /* ---- shared hero type, identical across the suite ----
+     One scale across the suite. 84px is the largest that still holds every one of the
+     headlines to two lines. h1 .setup carries the two-tone on the headlines built as a
+     setup and a question: the question keeps full brightness, the setup steps back. */
+  h1{font-weight:500;font-size:clamp(40px,5.6vw,84px);line-height:1;letter-spacing:-.04em;margin:24px 0 0;max-width:25ch;text-wrap:balance;color:var(--tx)}
+  h1 .setup{color:var(--tx2)}
+  .lede{font-size:17px;color:var(--tx2);max-width:60ch;margin:0;text-wrap:pretty}
+  .hero-body{margin:38px 0 0}
+  @media(max-width:700px){.hero-body{margin-top:30px}}
+  /* ---- end shared hero type ---- */
+  h2{font-weight:500;font-size:clamp(26px,3vw,40px);line-height:1.1;letter-spacing:-.03em;margin:18px 0 18px;max-width:28ch;text-wrap:balance}
+  h3{font-weight:600;font-size:17px;letter-spacing:-.015em;margin:0 0 8px}
+  .lede a{color:var(--tx);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:4px}
+  .lede a:hover{color:var(--grn);text-decoration-color:var(--grn)}
+  @keyframes drop{from{opacity:0;transform:translateY(-5px)}}
+  @media (prefers-reduced-motion: no-preference){
+    html{scroll-behavior:smooth}
+    .toast{transition:opacity .22s ease, transform .22s ease}
+    .caret{transition:transform .18s ease, color .18s ease}
+    .sel-list{animation:drop .14s ease-out}
+    .btn{transition:background .15s ease,border-color .15s ease,color .15s ease}
+    .rise{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+    .rise.d1{animation-delay:.06s}.rise.d2{animation-delay:.12s}
+    @keyframes rise{from{opacity:0;transform:translateY(14px)}}
+    .big .cursor{animation:blink 1.15s steps(1) infinite}
+    @keyframes blink{50%{opacity:0}}
+  }
+  section{padding:96px 0;border-top:1px solid var(--line);scroll-margin-top:64px}
+  @media(max-width:700px){section{padding:64px 0}}
+
+  /* ---------- hero ---------- */
+  .hero{padding:88px 0 64px}
+  @media(max-width:700px){.hero{padding:56px 0 44px}}
+  .hero-meta{font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--tx3);margin:22px 0 0;line-height:1.7}
+
+  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:15px 24px;
+    background:var(--tx);color:var(--bg);border:1px solid var(--tx);cursor:pointer}
+  .btn:hover{background:#fff;border-color:#fff}
+  .btn.ghost{background:transparent;color:var(--tx);border-color:var(--line2)}
+  .btn.ghost:hover{border-color:var(--grn);color:var(--grn)}
+  .btn:active{transform:translateY(1px)}
+
+  /* ---------- console: the ask ----------
+     Not a form. You name the incident and your own paging threshold in one editable
+     sentence, and the tool answers in a sentence of its own, followed by the replay
+     and the ranked list. The editable values are the only green in the prose. */
+  .console-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:12px 72px;align-items:stretch;margin-top:6px}
+  @media(max-width:980px){.console-grid{grid-template-columns:1fr;gap:0}}
+  .config{font-size:clamp(20px,2.4vw,26px);line-height:1.55;color:var(--tx2);margin:8px 0 0;text-wrap:balance;letter-spacing:-.012em}
+  .config + .config{margin-top:.62em}
+  .iv-num{font-family:var(--mono);font-size:.92em;font-weight:500;color:var(--grn);background:transparent;line-height:1.15;
+    border:0;border-bottom:1px solid var(--line2);padding:0 1px 3px;text-align:center;font-variant-numeric:tabular-nums}
+  .iv-num:hover{border-bottom-color:var(--tx3)}
+  .iv-num:focus{outline:0;border-bottom-color:var(--grn)}
+  input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .iv-num{-moz-appearance:textfield;appearance:textfield}
+  .iv-num:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  .config-note{font-size:16px;color:var(--tx2);margin:26px 0 0;max-width:64ch;text-wrap:pretty}
+  .config-meta{font-family:var(--mono);font-size:12.5px;letter-spacing:.03em;color:var(--tx3);margin:14px 0 0;line-height:1.7}
+  .nb{white-space:nowrap}
+
+  /* ---------- the incident picker: the ARIA combobox worn inline as a word ---------- */
+  .sel{position:relative;display:inline-block;max-width:100%;vertical-align:baseline}
+  .sel-btn{display:inline-flex;align-items:baseline;gap:7px;font-family:var(--mono);font-size:.92em;font-weight:500;line-height:1.15;
+    color:var(--grn);background:transparent;border:0;border-bottom:1px solid var(--line2);padding:0 1px 3px;cursor:pointer;white-space:nowrap;max-width:100%}
+  .sel-btn:hover{border-bottom-color:var(--tx3)}
+  .sel-btn[aria-expanded="true"]{border-bottom-color:var(--grn)}
+  .sel-btn:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  .sel-btn .nm{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .caret{flex:none;width:.4em;height:.4em;color:var(--tx3);align-self:center}
+  .sel-btn:hover .caret{color:var(--grn)}
+  .sel-btn[aria-expanded="true"] .caret{color:var(--grn);transform:rotate(180deg)}
+  .sel-list{position:absolute;z-index:50;inset-inline-start:0;top:calc(100% + 7px);margin:0;padding:5px 0;list-style:none;
+    min-width:min(400px,88vw);background:var(--bg2);border:1px solid var(--line2);box-shadow:0 22px 48px rgba(0,0,0,.62);
+    max-height:min(54vh,340px);overflow-y:auto;overscroll-behavior:contain;font-size:14px;font-weight:400}
+  .sel-list[hidden]{display:none}
+  .sel-opt{display:flex;align-items:center;gap:12px;padding:11px 14px;font-family:var(--mono);font-size:14px;color:var(--tx2);cursor:pointer;white-space:nowrap}
+  @media(max-width:640px){.sel-opt{padding:14px;font-size:15px}}
+  .sel-opt .mk{width:6px;height:6px;flex:none}
+  .sel-opt .nm{flex:1}
+  .sel-opt .gp{color:var(--tx3);font-size:12px}
+  .sel-opt[aria-selected="true"],.sel-opt.act{color:var(--tx)}
+  .sel-opt[aria-selected="true"] .mk{background:var(--grn)}
+  .sel-opt.act{background:rgba(63,224,160,.07);box-shadow:inset 2px 0 0 var(--grn2)}
+
+  /* ---------- the answer ----------
+     The plate reads as an instrument: the stage's dot grid and glow behind it and the
+     brand's block cursor after the verdict, blinking the way the social cards freeze it. */
+  .headline-out{position:relative;overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--line);
+    background-color:var(--bg2);background-image:
+    radial-gradient(90% 110% at 18% 0%, rgba(63,224,160,.07), transparent 70%),
+    radial-gradient(circle, #161B20 1px, transparent 1.1px);
+    background-size:100% 100%, 22px 22px;
+    padding:28px 30px 26px;margin:10px 0 0}
+  @media(max-width:980px){.headline-out{margin-top:36px}}
+  .tick{position:absolute;width:9px;height:9px;border:0 solid var(--line2)}
+  .tick.tl{top:-1px;left:-1px;border-top-width:1px;border-left-width:1px}
+  .tick.tr{top:-1px;right:-1px;border-top-width:1px;border-right-width:1px}
+  .tick.bl{bottom:-1px;left:-1px;border-bottom-width:1px;border-left-width:1px}
+  .tick.br{bottom:-1px;right:-1px;border-bottom-width:1px;border-right-width:1px}
+  .headline-out .lbl{margin-bottom:14px}
+  .headline-out .lbl::before{content:"";display:inline-block;width:6px;height:6px;background:var(--grn);margin-right:10px;vertical-align:1px}
+  .big{font-weight:500;font-size:clamp(24px,2.6vw,34px);line-height:1.25;letter-spacing:-.025em;color:var(--tx);font-variant-numeric:tabular-nums;text-wrap:balance}
+  .big .a{color:var(--grn2);margin-inline-end:4px;font-family:var(--mono);font-weight:400;font-size:.95em}
+  .big .v{color:var(--grn);font-family:var(--mono);font-size:.95em}
+  /* the block cursor from the suite's social cards, live on the page */
+  .big .cursor{display:inline-block;width:.44em;height:.86em;background:var(--grn);margin-inline-start:9px;vertical-align:-.06em}
+  .headline-out .note{font-size:15px;color:var(--tx2);margin:14px 0 20px}
+  .headline-out .note b{font-family:var(--mono);font-size:.92em;font-weight:600;color:var(--tx);white-space:nowrap}
+  .bar-cap b{font-weight:500}
+  .bar-cap .cm{color:var(--r-make)}
+  .bar-cap .cs{color:var(--r-slip)}
+  .bar-cap .cx{color:var(--r-miss)}
+
+  /* the phase bar: one incident as a stacked strip, dark window first. Decorative;
+     the caption below carries the same split as text. */
+  .bar-wrap{margin-top:auto;padding-top:18px;border-top:1px solid var(--line)}
+  .bandbar{display:flex;height:8px;background:var(--line);gap:2px}
+  .bandbar span{display:block;height:100%;min-width:2px}
+  .bandbar .b-dark{background:var(--r-miss)}
+  .bandbar .b-open{background:var(--r-slip)}
+  .bandbar .b-rec{background:var(--r-make)}
+  .bar-cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-top:12px;line-height:1.7}
+
+  /* ---------- progressive disclosure ---------- */
+  details.more{border:1px solid var(--line);margin-top:26px}
+  details.more>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px;padding:15px 18px;
+    font-family:var(--mono);font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--tx2)}
+  details.more>summary::-webkit-details-marker{display:none}
+  details.more>summary::before{content:"+";font-family:var(--mono);font-weight:600;color:var(--grn);width:1ch}
+  details.more[open]>summary::before{content:"\2212"}
+  details.more>summary:hover{color:var(--tx)}
+  details.more>summary:focus-visible{outline:2px solid var(--grn);outline-offset:-2px}
+  details.more>.d-body{padding:4px 18px 20px}
+
+  /* ---------- the stage: the replay, two lanes ---------- */
+  .stage{position:relative;overflow:hidden;border:1px solid var(--line);background:
+    radial-gradient(58% 48% at 50% 56%, rgba(63,224,160,.05), transparent 72%),
+    radial-gradient(circle, #161B20 1px, transparent 1.1px);
+    background-size:100% 100%, 22px 22px;
+    padding:52px 26px 20px;margin-top:52px}
+  @media(max-width:700px){.stage{padding:46px 12px 14px}}
+  .hud{position:absolute;top:16px;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+  .hud.tl2{left:20px}
+  .hud.tr2{right:20px;color:var(--grn2)}
+  @media(max-width:640px){.hud.tr2{display:none}}
+  .stage svg{width:100%;height:auto;display:block}
+  /* on a phone the chart keeps a readable width and pans instead of shrinking */
+  .tlwrap{overflow-x:auto;overscroll-behavior-x:contain}
+  .tlwrap:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  @media(max-width:700px){.tlwrap svg{min-width:680px}}
+  .stage .cap{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-top:18px}
+
+  /* ---------- the log: what the console actually said ----------
+     The chart is the shape of the incident. This is the evidence: every row pairs the
+     status page's own words with what was true at that minute. */
+  .log{border-top:1px solid var(--line);margin-top:52px}
+  .lrow{display:grid;grid-template-columns:96px 15px 1fr 1fr;gap:0 26px;padding:20px 0 22px;border-bottom:1px solid var(--line);align-items:start}
+  .lrow .lt{font-family:var(--mono);font-size:13px;color:var(--tx);font-variant-numeric:tabular-nums;white-space:nowrap;padding-top:1px}
+  .lrow .lt small{display:block;font-size:11px;color:var(--tx3);letter-spacing:.06em;margin-top:5px}
+  .lrow .ld{width:9px;height:9px;margin-top:6px;background:var(--line2)}
+  .lrow.s-ok .ld{background:var(--r-make)}
+  .lrow.s-warn .ld{background:var(--r-slip)}
+  .lrow.s-down .ld{background:var(--r-miss)}
+  .lcol .h{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-bottom:9px}
+  .lcol .q{font-size:15px;line-height:1.65;color:var(--tx2b);text-wrap:pretty}
+  .lcol .q.said{color:var(--tx);border-inline-start:2px solid var(--line2);padding-inline-start:16px}
+  .lrow.s-ok .q.said{border-inline-start-color:var(--r-make)}
+  .lrow.s-warn .q.said{border-inline-start-color:var(--r-slip)}
+  .lrow.s-down .q.said{border-inline-start-color:var(--r-miss)}
+  .lhead{display:grid;grid-template-columns:96px 15px 1fr 1fr;gap:0 26px;padding:0 0 12px}
+  .lhead span{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3)}
+  @media(max-width:860px){
+    .lhead{display:none}
+    .lrow{grid-template-columns:15px 1fr;gap:0 16px;row-gap:14px}
+    .lrow .lt{grid-column:2;order:-1}
+    .lrow .ld{grid-row:1;margin-top:8px}
+    .lrow .lcol{grid-column:2}
+  }
+
+  /* ---------- the ranked list ---------- */
+  .q-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:52px 0 12px}
+  .q-t{font-family:var(--mono);font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--tx3)}
+  .uswitch{display:flex;margin:0}
+  .uswitch button{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;background:none;border:1px solid var(--line2);color:var(--tx3);cursor:pointer}
+  .uswitch button+button{border-inline-start:0}
+  .uswitch button[aria-pressed="true"]{color:var(--bg);border-color:var(--tx);background:var(--tx)}
+  @media(max-width:640px){.uswitch button{padding:12px 16px}}
+  .queue{border-top:1px solid var(--line);margin-bottom:34px}
+  .qrow{display:grid;grid-template-columns:26px 1fr auto;gap:14px;align-items:baseline;padding:18px 18px 19px;border-bottom:1px solid var(--line);border-inline-start:2px solid var(--line2);width:100%;text-align:start;background:none;font:inherit;color:inherit;cursor:pointer}
+  .qrow.b-make{border-inline-start-color:var(--r-make);background:var(--w-make)}
+  .qrow.b-slip{border-inline-start-color:var(--r-slip);background:var(--w-slip)}
+  .qrow.b-miss{border-inline-start-color:var(--r-miss);background:var(--w-miss)}
+  .qrow:hover .nm{color:var(--grn)}
+  .qrow[aria-current="true"] .nm::after{content:"\00a0\25C2";color:var(--grn)}
+  /* the row is a button, so every span inside it has to be told to behave like a block */
+  .qrow > span,.qrow .nm,.qrow .sub,.qrow .ev{display:block}
+  .qrow .rk{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--tx3);font-variant-numeric:tabular-nums}
+  .qrow .nm{font-weight:600;font-size:16px;color:var(--tx);letter-spacing:-.015em}
+  .qrow .nm small{font-family:var(--mono);font-weight:400;font-size:12px;letter-spacing:.04em;color:var(--tx3);margin-inline-start:10px}
+  .qrow .sub{font-size:14px;color:var(--tx2);margin-top:5px;line-height:1.5;max-width:72ch;text-wrap:pretty}
+  .qrow .ev{font-family:var(--mono);font-size:12px;letter-spacing:.01em;color:var(--tx2);margin-top:9px;line-height:1.8}
+  .qrow .ev b{color:var(--tx);font-weight:600}
+  .qrow .amt{font-family:var(--mono);font-size:17px;font-weight:600;color:var(--tx);text-align:end;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .qrow .amt small{display:block;font-size:11px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-top:7px}
+  .band{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--tx2);margin-top:12px}
+  .band .mk{width:8px;height:8px;flex:none;background:var(--line2)}
+  .band.b-make .mk{background:var(--r-make)}
+  .band.b-slip .mk{background:var(--r-slip)}
+  .band.b-miss .mk{background:var(--r-miss)}
+  @media(max-width:700px){
+    .qrow{grid-template-columns:22px 1fr;padding-inline:12px}
+    .qrow .amt{grid-column:2;text-align:start;margin-top:10px}
+    .qrow .amt small{display:inline;margin-inline-start:6px}
+  }
+
+  /* stats: hairline typography instead of boxed cells */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0 40px}
+  @media(max-width:620px){.grid{grid-template-columns:repeat(2,1fr);gap:0 24px}}
+  .cell{border-top:1px solid var(--line);padding:16px 0 22px}
+  .cell .k{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;line-height:1.5;min-height:2.6em}
+  .cell .v{font-family:var(--mono);font-weight:500;font-size:24px;letter-spacing:-.02em;line-height:1.1;color:var(--tx);font-variant-numeric:tabular-nums}
+  .cell .v small{font-size:11px;font-weight:400;letter-spacing:.1em;color:var(--tx3);margin-inline-start:6px}
+
+  .flag{border-inline-start:2px solid var(--grn2);padding:2px 0 2px 20px;margin-top:34px;font-size:15px;line-height:1.75;color:var(--tx2)}
+  .flag .t{font-family:var(--mono);font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--grn);margin-inline-end:16px;white-space:nowrap}
+  .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
+  @media(max-width:640px){.actions{flex-direction:column;align-items:stretch;width:100%}}
+
+  /* ---------- prose sections ---------- */
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:48px;margin-top:52px}
+  @media(max-width:820px){.three{grid-template-columns:1fr;gap:36px}}
+  .three .c{border-top:1px solid var(--line2);padding-top:22px}
+  .three .c .i{font-family:var(--mono);font-size:12px;color:var(--grn);margin-bottom:14px}
+  .three .c p{margin:0;font-size:15px;color:var(--tx2);text-wrap:pretty}
+
+  /* the numbers that make the argument, on an instrument readout of their own */
+  .strip{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:64px;
+    border:1px solid var(--line);background:var(--bg2)}
+  .strip > div{padding:38px 40px 34px}
+  .strip > div + div{border-inline-start:1px solid var(--line)}
+  @media(max-width:700px){
+    .strip{grid-template-columns:1fr}
+    .strip > div{padding:26px 24px 24px}
+    .strip > div + div{border-inline-start:0;border-top:1px solid var(--line)}
+  }
+  .strip .n{font-family:var(--mono);font-weight:500;font-size:clamp(34px,3.6vw,54px);letter-spacing:-.03em;line-height:1.05;color:var(--tx);font-variant-numeric:tabular-nums}
+  .strip .n .u{font-size:.42em;letter-spacing:.08em;color:var(--tx3);margin-inline-start:4px}
+  .strip .n.g{color:var(--grn)}
+  .strip .l{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-top:16px}
+
+  .steps{display:grid;grid-template-columns:repeat(2,1fr);gap:44px 48px;margin-top:52px}
+  @media(max-width:820px){.steps{grid-template-columns:1fr;gap:36px}}
+  .step{border-top:1px solid var(--line2);padding-top:22px}
+  .step .n{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--grn);margin-bottom:14px}
+  .step p{margin:0 0 10px;font-size:15px;color:var(--tx2);text-wrap:pretty}
+  .step p:last-child{margin-bottom:0}
+  .step b{color:var(--tx);font-weight:500}
+
+  .worked{border:1px solid var(--line);background:var(--bg2);padding:32px 34px;margin-top:56px;position:relative}
+  @media(max-width:700px){.worked{padding:24px 20px}}
+  .worked .t{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin-bottom:20px}
+  .chain{font-family:var(--mono);font-size:15px;line-height:2.2;color:var(--tx2b);overflow-x:auto}
+  .chain .a{color:var(--grn)}
+  .chain b{font-weight:600;color:var(--tx)}
+  .worked .out{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);font-size:16px;color:var(--tx2)}
+
+  /* ---------- table ---------- */
+  .tscroll{overflow-x:auto}
+  .tscroll:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  table{width:100%;border-collapse:collapse;font-size:15px;margin-top:44px}
+  th,td{text-align:start;padding:14px 16px 14px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--tx2)}
+  th{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);font-weight:400}
+  td.m{font-family:var(--mono);font-size:14px;white-space:nowrap;color:var(--tx);font-variant-numeric:tabular-nums}
+  td.name{font-weight:500;color:var(--tx);white-space:nowrap}
+  td.note{min-width:26ch}
+  td a{color:var(--tx2);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+  td a:hover{color:var(--grn);text-decoration-color:var(--grn)}
+  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line2);padding:3px 8px;color:var(--tx3);white-space:nowrap}
+  .tag.l{border-color:rgba(63,224,160,.4);color:var(--grn)}
+
+  /* the model as a framed ledger */
+  .method-grid{display:grid;grid-template-columns:minmax(0,11fr) minmax(0,9fr);gap:24px 40px;align-items:stretch;margin-top:48px}
+  @media(max-width:980px){.method-grid{grid-template-columns:1fr;gap:24px}}
+  .model{position:relative;border:1px solid var(--line);background:var(--bg2);padding:26px 30px 12px;display:flex;flex-direction:column}
+  @media(max-width:700px){.model{padding:20px 18px 8px}}
+  .model-hd{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+  .model-hd .g{color:var(--grn2)}
+  .frow{display:grid;grid-template-columns:minmax(130px,170px) 1fr;gap:4px 26px;padding:13px 0 14px;
+    border-bottom:1px solid var(--line);font-family:var(--mono);font-size:14px;line-height:1.75}
+  .frow:last-child{border-bottom:0}
+  @media(max-width:640px){.frow{grid-template-columns:1fr}}
+  .frow .ft{color:var(--grn);font-weight:500}
+  .frow .fx{color:var(--tx2b);overflow-wrap:break-word}
+  ul.plain{padding-inline-start:0;list-style:none;margin:40px 0 0;max-width:78ch}
+  .model ul.plain{margin:0;max-width:none;flex:1;display:flex;flex-direction:column}
+  .model ul.plain li{flex:1;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:12px 0;padding-inline-start:0;margin:0;border-bottom:1px solid var(--line);font-size:15px;line-height:1.7}
+  .model ul.plain li:last-child{border-bottom:0}
+  .model ul.plain li:before{content:none}
+  ul.plain li{position:relative;padding-inline-start:28px;margin-bottom:14px;font-size:16px;color:var(--tx2)}
+  ul.plain li:before{content:"\2014";position:absolute;left:0;font-family:var(--mono);color:var(--grn2)}
+  ul.plain li b{color:var(--tx);font-weight:500}
+
+  /* ---------- section index: outlined ghost numerals ---------- */
+  .sec-row{display:flex;align-items:center;gap:26px;margin-bottom:38px}
+  .sec-num{font-family:var(--mono);font-weight:600;font-size:clamp(44px,4.8vw,70px);line-height:.9;color:var(--line2);flex:none;font-variant-numeric:tabular-nums}
+  @supports (-webkit-text-stroke:1px black){.sec-num{color:transparent;-webkit-text-stroke:1px var(--line2)}}
+  .sec-rule{flex:1;height:1px;background:var(--line)}
+
+  /* scroll reveals: elements are visible by default; a script opts them in,
+     and only when motion is welcome */
+  .rv0{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
+  .rv0.rvIn{opacity:1;transform:none}
+
+  /* ---------- built by: the nameplate ---------- */
+  .plate{position:relative;border:1px solid var(--line);background:var(--bg2)}
+  .plate-main{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:40px 88px;padding:52px 52px 44px}
+  .p-name{font-weight:500;font-size:clamp(34px,3.8vw,58px);letter-spacing:-.035em;line-height:1.05;margin-top:16px;color:var(--tx)}
+  .p-bio{font-size:16px;color:var(--tx2);max-width:44ch;margin:18px 0 0;text-wrap:pretty}
+  .p-spec{margin:0;align-self:center}
+  .p-spec > div{display:grid;grid-template-columns:96px 1fr;gap:24px;padding:15px 0 16px;border-top:1px solid var(--line);align-items:baseline}
+  .p-spec > div:last-child{border-bottom:1px solid var(--line)}
+  .p-spec dt{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+  .p-spec dd{margin:0;font-family:var(--mono);font-size:14px;color:var(--tx)}
+  .p-spec dd.on{color:var(--grn)}
+  .p-spec dd.on::before{content:"";display:inline-block;width:6px;height:6px;background:var(--grn);margin-right:10px;vertical-align:1px}
+  .plate-ft{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;border-top:1px solid var(--line);padding:20px 52px}
+  .lnk{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx2);white-space:nowrap;padding:14px 2px}
+  .lnk:hover{color:var(--grn)}
+  @media(max-width:860px){
+    .plate-main{grid-template-columns:1fr;gap:36px;padding:32px 24px 30px}
+    .plate-ft{padding:16px 24px;flex-direction:column;align-items:stretch}
+    .plate-ft .btn{justify-content:center}
+    .lnk{text-align:center}
+  }
+
+  footer{border-top:1px solid var(--line);padding:44px 0 72px;font-size:15px;color:var(--tx3)}
+  footer a{color:var(--tx2)}
+  footer a:hover{color:var(--grn)}
+  footer .lbl{margin-bottom:14px}
+
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--tx);color:var(--bg);font-family:var(--mono);font-weight:600;font-size:12px;letter-spacing:.13em;text-transform:uppercase;padding:13px 20px;opacity:0;pointer-events:none;z-index:60}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .print-url{display:none}
+
+  /* print: a one-page incident brief. Only the replay survives, on white. */
+  @media print{
+    @page{margin:11mm}
+    :root{--bg:#fff;--bg2:#fff;--line:#c7cdd5;--line2:#a8b1bc;--tx:#12161b;--tx2:#39424d;--tx2b:#39424d;--tx3:#66707c;--grn:#0b7f58;--grn2:#0b7f58;
+      --r-make:#0b7f58;--r-slip:#8a6d00;--r-miss:#a83232;--w-make:#fff;--w-slip:#fff;--w-miss:#fff}
+    body{background:#fff;font-size:14px}
+    header{position:static;background:#fff;backdrop-filter:none;box-shadow:none}
+    header nav{display:none}
+    section:not(#replay),footer,.toast{display:none}
+    #replay{display:block;padding:12px 0 0;border-top:0}
+    .actions,.skip,.caret,.sel-list,details.more,.config-note,.uswitch,.hud{display:none}
+    .config{font-size:15px;line-height:1.7;margin-top:4px}
+    .stage{background:none;padding:10px;margin-top:20px}
+    .headline-out,.grid,.flag,.qrow,.lrow{break-inside:avoid}
+    .print-url{display:block;margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--tx3);word-break:break-all}
+  }
+
+  /* large screens: use them */
+  @media(min-width:1680px){
+    .wrap{max-width:1520px}
+    .lede{font-size:18px}
+    .three .c p,.step p{font-size:16px}
+    .config{font-size:28px}
+  }
+  @media(min-width:2200px){.wrap{max-width:1720px}}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header>
+  <div class="wrap bar">
+    <div class="mark">
+      <a class="suite" href="/"><span class="sq" aria-hidden="true"></span>Infrabench</a>
+      <span class="sep">/</span>
+      <span class="tool">Outage replay</span>
+    </div>
+    <nav aria-label="Page sections">
+      <a href="#replay">Replay</a>
+      <a href="#how">How it works</a>
+      <a href="#incidents">Incidents</a>
+      <a href="#method">Method</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" tabindex="-1">
+
+<!-- ================= HERO ================= -->
+<div class="wrap">
+  <div class="hero">
+    <div class="lbl rise">Tool 04 &mdash; Incident communication</div>
+    <h1 class="rise d1"><span class="setup">The dashboard was green.</span> How long had it been wrong?</h1>
+    <div class="hero-body rise d2">
+      <p class="lede">A status page is a published spec like any other, and it fails the same way: optimistically. Every one of these six incidents was already breaking customers before the provider posted a word, and every one of them is documented well enough to measure the gap. Set the threshold your own monitoring pages at and see which outages you would have heard about first. The arithmetic is in <a href="#method">the method</a>.</p>
+      <!-- counted off the incident data on this page, so it cannot drift from what the tool replays -->
+      <p class="hero-meta" id="heroMeta"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ================= REPLAY ================= -->
+<section id="replay">
+  <div class="wrap">
+    <div class="sec-row"><span class="sec-num" aria-hidden="true">01</span><span class="sec-rule"></span><span class="lbl">The replay</span></div>
+
+    <!-- stable region, populated on every recalculation so the result is announced -->
+    <p class="sr" id="srStatus" role="status"></p>
+    <span class="sr" id="incLabel">Incident to replay</span>
+
+    <div class="console-grid">
+      <div>
+        <!-- divs, not <p>: the picker's listbox may not sit inside a paragraph -->
+        <div class="config">Replay
+          <span class="sel"><span class="sel-btn" id="inc" role="combobox" tabindex="0" aria-controls="incList" aria-expanded="false" aria-labelledby="incLabel"><span class="nm" id="incName"></span><svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span><ul class="sel-list" id="incList" role="listbox" aria-labelledby="incLabel" hidden></ul></span>.</div>
+        <div class="config">My own monitoring pages someone <span class="nb"><input class="iv-num" type="number" inputmode="numeric" id="thr" value="15" min="1" max="240" step="1" aria-label="Minutes before your own monitoring pages someone"> minutes</span> after users start failing.</div>
+
+        <p class="config-note" id="incNote"></p>
+        <p class="config-meta" id="askMeta"></p>
+      </div>
+
+      <div class="headline-out">
+        <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+        <div class="lbl">The detection gap</div>
+        <div class="big" id="bigLine"><span class="a" aria-hidden="true">&rarr;</span> <span id="bigText">&mdash;</span><span class="cursor" aria-hidden="true"></span></div>
+        <div class="note" id="outNote"></div>
+        <div class="bar-wrap"><div class="bandbar" id="bandbar" aria-hidden="true"></div><div class="bar-cap" id="barCap"></div></div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+      <span class="hud tl2" aria-hidden="true">Reality against the console &mdash; all times UTC</span>
+      <span class="hud tr2" id="stageTR" aria-hidden="true"></span>
+      <div class="tlwrap" tabindex="0" role="region" aria-label="Incident timeline, scrolls horizontally on small screens">
+        <svg id="tl" role="img" aria-labelledby="tlTitle tlDesc">
+          <title id="tlTitle">What was happening against what the status page showed</title>
+          <desc id="tlDesc"></desc>
+        </svg>
+      </div>
+      <div class="cap" id="tlCap"></div>
+    </div>
+
+    <div class="q-head">
+      <div class="q-t">What the console said, minute by minute</div>
+    </div>
+    <div class="lhead" aria-hidden="true">
+      <span>Time</span><span></span><span>The status page</span><span>What was true</span>
+    </div>
+    <div class="log" id="log"></div>
+
+    <div class="q-head">
+      <div class="q-t">All six, ranked by how long they stayed dark</div>
+      <div class="uswitch" role="group" aria-label="Ranking order">
+        <button id="sGap" aria-pressed="true">By gap</button>
+        <button id="sLen" aria-pressed="false">By length</button>
+        <button id="sDate" aria-pressed="false">By date</button>
+      </div>
+    </div>
+    <div class="queue" id="queue"></div>
+
+    <div class="grid" id="cells"></div>
+    <div class="flag"><span class="t">The decision</span><span id="flagText"></span></div>
+    <div class="actions">
+      <button class="btn" id="copyLink">Copy shareable link</button>
+      <button class="btn ghost" id="copySummary">Copy incident brief</button>
+    </div>
+    <div class="print-url" id="printUrl"></div>
+  </div>
+</section>
+
+<!-- ================= WHY THIS EXISTS ================= -->
+<section>
+  <div class="wrap">
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">02</span><span class="sec-rule"></span><span class="lbl">Why the tool exists</span></div>
+    <h2 class="rv">A status page is a press release with a clock on it.</h2>
+    <div class="three rv">
+      <div class="c">
+        <div class="i">01</div>
+        <h3>It is written, not measured</h3>
+        <p>Nothing on a status page is emitted by the failing system. A human decides that the blast radius is now large enough to admit to, writes a sentence, and gets it approved. That pipeline has a floor of several minutes on its very best day.</p>
+      </div>
+      <div class="c">
+        <div class="i">02</div>
+        <h3>It often shares fate with the outage</h3>
+        <p>In December 2021 AWS posted that the incident was "affecting some of our monitoring and incident response tooling, which is delaying our ability to provide updates." The instrument was downstream of the thing it was measuring. That is not rare.</p>
+      </div>
+      <div class="c">
+        <div class="i">03</div>
+        <h3>You are on the clock before it moves</h3>
+        <p>Your users started failing at the first timestamp, not the second. Every minute of that gap is a minute you spent deciding whether it was you, and the only instrument that could have told you sits inside your own account.</p>
+      </div>
+    </div>
+
+    <div class="strip rv" id="strip">
+      <div><div class="n g" id="stripMed">&mdash;</div><div class="l">Median gap before the page moved</div></div>
+      <div><div class="n" id="stripMax">&mdash;</div><div class="l">Longest documented gap</div></div>
+      <div><div class="n" id="stripDown">&mdash;</div><div class="l">Total impact replayed here</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section id="how">
+  <div class="wrap">
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">03</span><span class="sec-rule"></span><span class="lbl">How it works</span></div>
+    <h2 class="rv">Two clocks, one subtraction.</h2>
+    <div class="steps rv">
+      <div class="step">
+        <div class="n">01 &middot; The first clock</div>
+        <p><b>When customers started failing.</b> Taken from the provider's own retrospective, which is written after the fact with access to internal telemetry and is consistently the earliest honest number anyone publishes. AWS puts its October 2025 start at 11:48 PM PDT. Cloudflare puts its November 2025 start at 11:20 UTC.</p>
+        <p>Nobody outside the provider could have known this time on the day. That is the point of using it.</p>
+      </div>
+      <div class="step">
+        <div class="n">02 &middot; The second clock</div>
+        <p><b>When the status page first said anything at all.</b> Not when it was accurate, not when it named a root cause, just the first public acknowledgement that something was wrong. It is the friendliest possible reading of the provider's behaviour, and the gap is still measured in tens of minutes.</p>
+      </div>
+      <div class="step">
+        <div class="n">03 &middot; The gap</div>
+        <p><b>Second clock minus first clock.</b> That is the window in which your dashboard was green, your users were not, and no external source would have backed you up. Everything else on the page is context around that one number.</p>
+      </div>
+      <div class="step">
+        <div class="n">04 &middot; Your threshold against it</div>
+        <p><b>Your own paging delay, subtracted from the gap.</b> A positive margin means you would have been first and the status page later confirmed what you already knew. A negative margin means you were still waiting when they told you, which is the only outcome where the status page was worth anything as an alerting tool.</p>
+      </div>
+    </div>
+
+    <div class="worked rv">
+      <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+      <div class="t">Worked example &mdash; Google Cloud, 12 June 2025</div>
+      <div class="chain" id="chain"></div>
+      <div class="out" id="chainOut"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= INCIDENTS ================= -->
+<section id="incidents">
+  <div class="wrap">
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">04</span><span class="sec-rule"></span><span class="lbl">The incidents</span></div>
+    <h2 class="rv">Six that are documented well enough to argue with.</h2>
+    <p class="lede rv">Chosen because each one has a published retrospective that states when impact began, which is the number nobody can reconstruct from outside. Incidents where that timestamp was never published are not in here, however famous they are.</p>
+    <div class="tscroll rv" tabindex="0" role="region" aria-label="Incident table, scrolls horizontally on small screens">
+      <table>
+        <caption class="sr">Every incident replayed by this tool, with its detection gap, total impact and source</caption>
+        <thead>
+          <tr><th scope="col">Incident</th><th scope="col">Impact began</th><th scope="col">Page moved</th><th scope="col">Gap</th><th scope="col">Total</th><th scope="col">What broke</th></tr>
+        </thead>
+        <tbody id="incTable"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= METHOD ================= -->
+<section id="method">
+  <div class="wrap">
+    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">05</span><span class="sec-rule"></span><span class="lbl">Method</span></div>
+    <h2 class="rv">Every timestamp, and where it came from.</h2>
+    <div class="method-grid rv">
+      <div class="model">
+        <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+        <div class="model-hd"><span class="lbl">The model</span><span class="lbl g">5 lines</span></div>
+        <div class="frow"><span class="ft">gap</span><span class="fx">first public status post &minus; first customer impact</span></div>
+        <div class="frow"><span class="ft">margin</span><span class="fx">gap &minus; your paging threshold</span></div>
+        <div class="frow"><span class="ft">dark</span><span class="fx">impact &rarr; first post. Console green, users failing</span></div>
+        <div class="frow"><span class="ft">open</span><span class="fx">first post &rarr; mitigation. Acknowledged, unresolved</span></div>
+        <div class="frow"><span class="ft">recovering</span><span class="fx">mitigation &rarr; all clear. Backlog draining</span></div>
+      </div>
+      <div class="model">
+        <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+        <div class="model-hd"><span class="lbl">What this does not measure</span></div>
+        <ul class="plain">
+          <li><b>Whether the post was true.</b> The gap closes the moment anything is admitted, however vague. A page that says "investigating elevated error rates" during a total regional failure counts as having moved.</li>
+          <li><b>Your actual blast radius.</b> Two accounts in the same region had wildly different days. This measures information, not impact.</li>
+          <li><b>Malice.</b> Every gap here has a mundane explanation, and in at least two cases the tooling needed to update the page was inside the failure. Slow is not the same as dishonest.</li>
+        </ul>
+      </div>
+    </div>
+
+    <ul class="plain rv" style="margin-top:48px">
+      <li><b>All times are UTC</b>, converted where the source published local time. The provider's own wording is quoted verbatim in the log where it was published; where a post was paraphrased in secondary coverage it is marked as reported rather than quoted.</li>
+      <li><b>Impact start always comes from the retrospective</b>, never from a third-party detector. Downdetector spikes and traffic-graph dips appear in the log as context because they are what an outsider actually saw, but they never set the clock.</li>
+      <li><b>Two acknowledgement timestamps are weaker than the rest</b> and are labelled as such in the table: the AWS December 2021 first dashboard post, and the Azure Front Door first advisory. Both are taken from secondary reporting rather than a surviving status-page archive. If you have the primary record for either, the whole page is one edit away from being corrected.</li>
+      <li><b>Nothing here is scraped live.</b> These are historical incidents with closed retrospectives. The page ships the data it draws, so it renders identically offline and cannot drift when a vendor reorganises its status history.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= CTA ================= -->
+<section class="cta">
+  <div class="wrap">
+    <div class="plate rv">
+      <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
+      <div class="plate-main">
+        <div>
+          <div class="lbl">Built by</div>
+          <div class="p-name">Adrian Mucha</div>
+          <p class="p-bio">Product designer for the software most designers avoid: operator consoles where a wrong click costs real money.</p>
+        </div>
+        <dl class="p-spec">
+          <div><dt>Focus</dt><dd>Data centers &middot; AI tooling</dd></div>
+          <div><dt>Base</dt><dd>Los Angeles, CA</dd></div>
+          <div><dt>Status</dt><dd class="on">Open to new work</dd></div>
+        </dl>
+      </div>
+      <div class="plate-ft">
+        <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Get in touch</a>
+        <a class="lnk" href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">See the work &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="lbl">Sources and fine print</div>
+    Incident timings come from each provider's own published retrospective:
+    AWS <a href="https://aws.amazon.com/message/101925/" target="_blank" rel="noopener">DynamoDB service disruption, October 2025</a> and
+    <a href="https://aws.amazon.com/message/12721/" target="_blank" rel="noopener">US-EAST-1 service event, December 2021</a>,
+    Microsoft's <a href="https://azure.status.microsoft/en-us/status/history/" target="_blank" rel="noopener">Azure status history</a> post incident review for Azure Front Door,
+    Google Cloud's <a href="https://status.cloud.google.com/incidents/ow5i3PPK96RduMcb1SsW" target="_blank" rel="noopener">Service Control incident report</a>,
+    <a href="https://blog.cloudflare.com/18-november-2025-outage/" target="_blank" rel="noopener">Cloudflare's 18 November 2025 postmortem</a> and
+    <a href="https://www.fastly.com/blog/summary-of-june-8-outage" target="_blank" rel="noopener">Fastly's summary of the June 8 outage</a>.
+    Where a status-page post could not be recovered from a primary archive it is marked as reported in the incident table and taken from contemporaneous coverage.
+    All times are UTC. This is a communication timeline, not an availability measurement:
+    it says when you would have been told, not how much of your own traffic failed.
+    <br><br>
+    Outage replay is part of <a href="/">Infrabench</a>, a set of open tools for the people who build data centers.
+    Built by <a href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">Adrian Mucha</a> / FruitBat Design, Los Angeles.
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status">Copied</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================================
+     THE DATA. Six incidents, each with the two timestamps the whole tool turns on:
+     t0, when customers started failing, taken from the provider's retrospective,
+     and ack, the first public post on the status page. Everything else on the page
+     is derived from this block, so correcting it is a single edit here.
+       t0     first customer impact, from the provider's own retrospective
+       ack    first public acknowledgement of any kind on the status page
+       mit    mitigation applied and recovery under way, where the source states it
+       end    all clear
+       conf   "primary" if ack came from the provider's own record, "reported" if it
+              came from contemporaneous secondary coverage. Shown in the table.
+       posts  the log. s is what the console showed at that moment:
+              ok = operational, warn = investigating or degraded, down = outage
+              said = the status page, verbatim where quoted. true = what was actually
+              happening, from the retrospective.
+     ========================================================================= */
+  var INCIDENTS = [
+    {
+      id:"aws2025", name:"AWS us-east-1", prov:"Amazon Web Services", when:"20 October 2025",
+      t0:"2025-10-20T06:48Z", ack:"2025-10-20T07:11Z", mit:"2025-10-20T08:15Z", end:"2025-10-20T21:20Z",
+      conf:"primary",
+      cause:"A race between two DNS automation processes let a stale plan overwrite a newer one, and the cleanup job then deleted it, leaving the DynamoDB endpoint in us-east-1 with no records at all.",
+      blast:"DynamoDB, then EC2 instance launches, Lambda, and network load balancer health checks, and then most of the consumer internet that sits on top of them.",
+      src:"https://aws.amazon.com/message/101925/", srcName:"AWS post-event summary",
+      posts:[
+        {t:"2025-10-20T06:48Z", s:"ok",   said:"All services operating normally.", tru:"DynamoDB in us-east-1 begins returning elevated API error rates. The endpoint's DNS record set is empty, so nothing can even find the database."},
+        {t:"2025-10-20T07:11Z", s:"warn", said:"Increased error rates for multiple services in the US-EAST-1 region. Investigating.", tru:"Twenty three minutes in. Every service with a DynamoDB dependency is already failing, which by this hour of the morning is most of them."},
+        {t:"2025-10-20T07:38Z", s:"warn", said:"Investigating continues.", tru:"Engineers identify the empty DynamoDB DNS state as the source. The cause is known internally, and the page still says only that error rates are elevated."},
+        {t:"2025-10-20T08:15Z", s:"down", said:"Root cause identified as DNS resolution of the DynamoDB API endpoints. Applying mitigations.", tru:"Temporary mitigations let internal services reconnect, which unblocks the tooling needed to fix everything else."},
+        {t:"2025-10-20T09:25Z", s:"down", said:"DynamoDB recovering. Other services still impaired.", tru:"All DNS information restored, global table replicas caught up seven minutes later. The database is fine. The cascade is not."},
+        {t:"2025-10-20T21:20Z", s:"ok",   said:"All services have returned to normal operations.", tru:"Fourteen and a half hours after the first failed call. The database outage lasted about three hours. The other eleven were everything that had queued up behind it."}
+      ]
+    },
+    {
+      id:"aws2021", name:"AWS us-east-1", prov:"Amazon Web Services", when:"7 December 2021",
+      t0:"2021-12-07T15:30Z", ack:"2021-12-07T16:22Z", mit:null, end:"2021-12-07T22:22Z",
+      conf:"reported",
+      cause:"An automated capacity scaling action produced a surge of connections on the internal network. A latent defect in client back-off logic turned that surge into sustained congestion that would not clear itself.",
+      blast:"EC2 control plane APIs, Route 53, the Management Console, STS, and the ability to open a support case, which was impaired for very nearly the whole event.",
+      src:"https://aws.amazon.com/message/12721/", srcName:"AWS service event summary",
+      posts:[
+        {t:"2021-12-07T15:30Z", s:"ok",   said:"All services operating normally.", tru:"Internal network congestion begins. Customer API calls start failing across the region. Support case creation is impaired from three minutes later."},
+        {t:"2021-12-07T16:22Z", s:"warn", said:"Investigating increased error rates for the AWS Management Console.", tru:"Reported, not archived. Roughly fifty minutes in, and the first admission is scoped to the console rather than the region."},
+        {t:"2021-12-07T17:37Z", s:"down", said:"We are seeing impact to multiple AWS APIs in the US-EAST-1 Region. This issue is also affecting some of our monitoring and incident response tooling, which is delaying our ability to provide updates.", tru:"The clearest sentence any provider has published about this problem. The instrument was downstream of the failure it was supposed to report."},
+        {t:"2021-12-07T22:22Z", s:"ok",   said:"Network device impairment resolved. Services returning to normal.", tru:"Just under seven hours. Support case creation had been impaired for nearly all of it, so the escape hatch was shut for the duration."}
+      ]
+    },
+    {
+      id:"azure2025", name:"Azure Front Door", prov:"Microsoft Azure", when:"29 October 2025",
+      t0:"2025-10-29T15:45Z", ack:"2025-10-29T17:26Z", mit:null, end:"2025-10-30T00:05Z",
+      conf:"reported",
+      cause:"An inadvertent tenant configuration change propagated an inconsistent configuration across the Front Door fleet. The protection mechanism that should have caught it failed because of a software defect.",
+      blast:"Azure Portal, Entra ID, App Service, Azure SQL, Container Registry, Sentinel, Purview, Virtual Desktop, and the Microsoft 365 surfaces sitting behind the same edge.",
+      src:"https://azure.status.microsoft/en-us/status/history/", srcName:"Azure status history and preliminary PIR",
+      posts:[
+        {t:"2025-10-29T15:45Z", s:"ok",   said:"All services operating normally.", tru:"Front Door begins serving errors and timeouts as the bad configuration spreads. Anything fronted by it starts failing, including the portal customers would use to check."},
+        {t:"2025-10-29T17:26Z", s:"warn", said:"Azure Portal failed away from Azure Front Door.", tru:"Reported, not archived. This is the earliest action in Microsoft's published timeline, so the true first advisory may have been earlier. Even read generously it is more than an hour and a half."},
+        {t:"2025-10-29T17:51Z", s:"down", said:"Customers may experience issues with Azure Front Door. Impact began at approximately 16:00 UTC.", tru:"The provider's own estimate of its start time, published two hours after the actual start, and fifteen minutes later than the retrospective would eventually settle on."},
+        {t:"2025-10-30T00:05Z", s:"ok",   said:"Services restored. Configuration changes blocked pending review.", tru:"Eight and a third hours. Recovery required rolling back to a last known good configuration and freezing further changes to stop it recurring mid-repair."}
+      ]
+    },
+    {
+      id:"gcp2025", name:"Google Cloud", prov:"Google Cloud", when:"12 June 2025",
+      t0:"2025-06-12T17:51Z", ack:"2025-06-12T19:05Z", mit:null, end:"2025-06-13T01:18Z",
+      conf:"primary",
+      cause:"A quota policy feature shipped without a feature flag hit a policy record with blank fields, and the unhandled null crashed the Service Control binary globally, taking IAM token issuance with it.",
+      blast:"IAM, and therefore effectively everything: Cloud Storage, Cloud Shell, Memorystore, and every product that needs a token to serve a request.",
+      src:"https://status.cloud.google.com/incidents/ow5i3PPK96RduMcb1SsW", srcName:"Google Cloud incident report",
+      posts:[
+        {t:"2025-06-12T17:51Z", s:"ok",   said:"All services operating normally.", tru:"Service Control crash loops worldwide. IAM stops issuing tokens, so authenticated calls fail everywhere at once."},
+        {t:"2025-06-12T17:56Z", s:"ok",   said:"All services operating normally.", tru:"Downdetector reports for Google Cloud spike. The crowd has the story five minutes in. The dashboard still does not."},
+        {t:"2025-06-12T19:05Z", s:"warn", said:"We are investigating an issue with multiple Google Cloud products.", tru:"Seventy four minutes. The longest gap of the six, on the incident where the failing component was the one that authorises every request."},
+        {t:"2025-06-13T01:18Z", s:"ok",   said:"The issue with multiple Google Cloud products has been resolved for all affected projects.", tru:"Seven and a half hours end to end. Most regions recovered far earlier; the largest ones took longest because everything retried at once when the fix landed."}
+      ]
+    },
+    {
+      id:"cf2025", name:"Cloudflare", prov:"Cloudflare", when:"18 November 2025",
+      t0:"2025-11-18T11:20Z", ack:"2025-11-18T12:03Z", mit:"2025-11-18T14:30Z", end:"2025-11-18T17:06Z",
+      conf:"primary",
+      cause:"A database permissions change made a query return duplicate rows, which doubled the size of a bot management feature file. The oversized file was distributed fleet-wide and the proxy rejected it.",
+      blast:"Core CDN and security traffic, Workers KV, Access, the dashboard and the API. Roughly a fifth of the web sits behind it, so the failure looked like an internet outage.",
+      src:"https://blog.cloudflare.com/18-november-2025-outage/", srcName:"Cloudflare postmortem",
+      posts:[
+        {t:"2025-11-18T11:05Z", s:"ok",   said:"All services operating normally.", tru:"The database permissions change is deployed. Nothing is visibly wrong yet."},
+        {t:"2025-11-18T11:20Z", s:"ok",   said:"All services operating normally.", tru:"Core network traffic begins failing. Widespread HTTP 5xx errors, and the dashboard and API are failing alongside the traffic they would be used to diagnose."},
+        {t:"2025-11-18T12:03Z", s:"warn", said:"Cloudflare is aware of, and investigating an issue which impacts multiple customers: Widespread 500 errors, Cloudflare Dashboard and API also failing.", tru:"Forty three minutes. Notably, the post names the dashboard failure in the same breath, which is more candour than most first posts carry."},
+        {t:"2025-11-18T13:05Z", s:"down", said:"Bot Management identified. Working on remediation.", tru:"Bot management is bypassed for the worst-affected paths, which stops most of the bleeding well before the real fix."},
+        {t:"2025-11-18T14:30Z", s:"warn", said:"A fix has been implemented. Monitoring.", tru:"A known good feature file is deployed and core traffic is largely restored. Downstream services keep failing for another two and a half hours."},
+        {t:"2025-11-18T17:06Z", s:"ok",   said:"All systems operational.", tru:"Five and three quarter hours end to end, on a failure that took eleven minutes to start and one file to cause."}
+      ]
+    },
+    {
+      id:"fastly2021", name:"Fastly", prov:"Fastly", when:"8 June 2021",
+      t0:"2021-06-08T09:47Z", ack:"2021-06-08T09:58Z", mit:"2021-06-08T10:36Z", end:"2021-06-08T12:44Z",
+      conf:"primary",
+      cause:"A valid customer configuration change tripped a latent bug in a software deployment from a month earlier, and 85 percent of the network began returning errors.",
+      blast:"Most of Fastly's edge at once, which meant Reddit, Amazon, GitHub, the Guardian and a long tail of government sites went dark together.",
+      src:"https://www.fastly.com/blog/summary-of-june-8-outage", srcName:"Fastly outage summary",
+      posts:[
+        {t:"2021-06-08T09:47Z", s:"ok",   said:"All services operating normally.", tru:"Global disruption begins. 85 percent of the network starts returning errors."},
+        {t:"2021-06-08T09:48Z", s:"ok",   said:"All services operating normally.", tru:"Fastly's own monitoring identifies the disruption. One minute. This is what the ceiling looks like when detection is automated."},
+        {t:"2021-06-08T09:58Z", s:"warn", said:"We are currently investigating potential impact to performance with our CDN services.", tru:"Eleven minutes, the fastest of the six, and ten of those eleven were the write-and-approve step rather than detection."},
+        {t:"2021-06-08T10:36Z", s:"warn", said:"The issue has been identified and a fix is being implemented.", tru:"Impacted services begin recovering, forty nine minutes after the outage started."},
+        {t:"2021-06-08T12:44Z", s:"ok",   said:"This incident has been resolved.", tru:"Just under three hours to the all clear, on an outage most people remember as one of the worst of the decade."}
+      ]
+    }
+  ];
+
+  var MIN = 60000;
+  var state = { inc:"gcp2025", thr:15, srt:"gap" };
+
+  function $(id){ return document.getElementById(id); }
+  function T(s){ return Date.parse(s); }
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  /* ---------- formatting ---------- */
+  function mins(a, b){ return Math.round((T(b) - T(a)) / MIN); }
+  function dur(m){
+    if(m < 60) return m + " min";
+    var h = Math.floor(m/60), r = m % 60;
+    return r ? h + "h " + r + "m" : h + "h";
+  }
+  function plural(n, w){ return n + " " + w + (n === 1 ? "" : "s"); }
+  function durWords(m){
+    if(m < 60) return plural(m, "minute");
+    var h = Math.floor(m/60), r = m % 60;
+    return r ? plural(h, "hour") + " " + plural(r, "minute") : plural(h, "hour");
+  }
+  function hhmm(iso){
+    var d = new Date(T(iso));
+    return pad(d.getUTCHours()) + ":" + pad(d.getUTCMinutes());
+  }
+  function pad(n){ return n < 10 ? "0" + n : String(n); }
+  var MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  function dayOf(iso){
+    var d = new Date(T(iso));
+    return d.getUTCDate() + " " + MON[d.getUTCMonth()];
+  }
+
+  function byId(id){
+    for(var i=0;i<INCIDENTS.length;i++){ if(INCIDENTS[i].id===id) return INCIDENTS[i]; }
+    return INCIDENTS[0];
+  }
+
+  /* ---------- the model ---------- */
+  function measure(x){
+    var gap = mins(x.t0, x.ack);
+    var total = mins(x.t0, x.end);
+    var margin = gap - state.thr;                 /* positive: you are first */
+    var band = margin >= 15 ? "make" : (margin > 0 ? "slip" : "miss");
+    return {
+      x:x, gap:gap, total:total, margin:margin, band:band,
+      open: x.mit ? mins(x.ack, x.mit) : mins(x.ack, x.end),
+      rec:  x.mit ? mins(x.mit, x.end) : 0
+    };
+  }
+  function compute(){
+    var all = INCIDENTS.map(measure);
+    var cur = null;
+    for(var i=0;i<all.length;i++){ if(all[i].x.id===state.inc) cur = all[i]; }
+    var order = all.slice();
+    if(state.srt==="gap")  order.sort(function(a,b){ return b.gap - a.gap; });
+    if(state.srt==="len")  order.sort(function(a,b){ return b.total - a.total; });
+    if(state.srt==="date") order.sort(function(a,b){ return T(b.x.t0) - T(a.x.t0); });
+    return {
+      cur:cur, all:all, order:order,
+      first: all.filter(function(m){ return m.margin > 0; }).length,
+      last:  all.filter(function(m){ return m.margin <= 0; }).length
+    };
+  }
+
+  /* median of the six gaps, used in the hero, the strip and the decision line */
+  function medianGap(){
+    var g = INCIDENTS.map(function(x){ return mins(x.t0, x.ack); }).sort(function(a,b){ return a-b; });
+    var h = g.length/2;
+    return g.length % 2 ? g[Math.floor(h)] : Math.round((g[h-1] + g[h]) / 2);
+  }
+
+  /* ---------- render ---------- */
+  function render(){
+    var r = compute();
+    renderAsk(r);
+    renderHeadline(r);
+    drawTimeline(r);
+    renderLog(r);
+    renderQueue(r);
+    renderCells(r);
+    renderFlag(r);
+    announce(r);
+    writeUrl();
+  }
+
+  function renderAsk(r){
+    var x = r.cur.x;
+    $("incNote").textContent = x.cause;
+    $("askMeta").innerHTML =
+      esc(x.prov) + " &middot; " + esc(x.when) + " &middot; impact " + hhmm(x.t0) +
+      " to " + hhmm(x.end) + " UTC<br>Source: " + esc(x.srcName) +
+      (x.conf === "reported" ? " &middot; first post reported, not archived" : "");
+  }
+
+  function renderHeadline(r){
+    var m = r.cur, x = m.x;
+    $("bigText").innerHTML = '<span class="v">' + durWords(m.gap) + "</span> of green dashboard";
+
+    var youBy = Math.abs(m.margin);
+    var verdict = m.margin > 0
+      ? "Your " + state.thr + " minute threshold would have paged you <b>" + dur(youBy) + "</b> before the status page said a word."
+      : (m.margin === 0
+          ? "Your " + state.thr + " minute threshold lands on the same minute the status page moved. A coin flip, on the one day you want certainty."
+          : "Your " + state.thr + " minute threshold is slower than this gap. On this incident, the status page would have told you <b>" + dur(youBy) + "</b> before your own monitoring did.");
+
+    $("outNote").innerHTML =
+      esc(x.prov) + " puts first customer impact at <b>" + hhmm(x.t0) + " UTC</b>. The first public post went up at <b>" +
+      hhmm(x.ack) + "</b>. " + verdict;
+
+    var total = m.total || 1;
+    var seg = [
+      { k:"dark", v:m.gap },
+      { k:"open", v:m.open },
+      { k:"rec",  v:m.rec }
+    ].filter(function(s){ return s.v > 0; });
+    $("bandbar").innerHTML = seg.map(function(s){
+      return '<span class="b-' + s.k + '" style="flex:' + (s.v / total) + '"></span>';
+    }).join("");
+
+    $("barCap").innerHTML =
+      '<b class="cx">' + dur(m.gap) + " dark</b> &middot; " +
+      '<b class="cs">' + dur(m.open) + " acknowledged</b>" +
+      (m.rec > 0 ? ' &middot; <b class="cm">' + dur(m.rec) + " recovering</b>" : "") +
+      " &middot; " + dur(m.total) + " total";
+  }
+
+  /* ---------- the replay, two lanes ----------
+     Top lane is what was actually happening. Bottom lane is what the console showed.
+     The gap between where they disagree is the whole point of the drawing, so it gets
+     the hatch and the callout. Decorative: the log below carries the same content. */
+  function drawTimeline(r){
+    var m = r.cur, x = m.x;
+    var svg = $("tl");
+    var host = svg.parentNode;
+    var W = Math.max(680, Math.round(host.clientWidth || 900));
+    var H = 208;
+    var LAB = 128, PADR = 26, T0 = T(x.t0), T1 = T(x.end);
+    var span = T1 - T0, padT = span * 0.03;
+    var x0 = T0 - padT, x1 = T1 + padT;
+
+    function X(t){ return LAB + (t - x0) / (x1 - x0) * (W - LAB - PADR); }
+
+    var yReal = 54, yCons = 116, BH = 26;
+    var p = [];
+
+    /* the dark window, behind everything: where the two lanes disagree */
+    var dx0 = X(T0), dx1 = X(T(x.ack));
+    p.push('<rect x="' + dx0 + '" y="38" width="' + Math.max(1, dx1 - dx0) + '" height="118" fill="url(#dark)"/>');
+    p.push('<line x1="' + dx1 + '" y1="30" x2="' + dx1 + '" y2="164" stroke="#FF5B5B" stroke-width="1"/>');
+
+    /* lane labels */
+    p.push('<text x="0" y="' + (yReal + 17) + '" fill="#A8B0B8" font-family="Geist Mono, monospace" font-size="12">What was true</text>');
+    p.push('<text x="0" y="' + (yCons + 17) + '" fill="#A8B0B8" font-family="Geist Mono, monospace" font-size="12">The console</text>');
+
+    /* lane 1: reality. Red for the whole impact, one step lighter once mitigated. */
+    var mitX = x.mit ? X(T(x.mit)) : X(T1);
+    p.push('<rect x="' + X(T0) + '" y="' + yReal + '" width="' + Math.max(2, mitX - X(T0)) + '" height="' + BH + '" fill="#FF5B5B"/>');
+    if(x.mit){
+      p.push('<rect x="' + mitX + '" y="' + yReal + '" width="' + Math.max(2, X(T1) - mitX) + '" height="' + BH + '" fill="#8A3B3F"/>');
+    }
+
+    /* lane 2: the console. Green until the first post, amber until the all clear. */
+    p.push('<rect x="' + X(x0 + padT * 0) + '" y="' + yCons + '" width="' + Math.max(2, dx1 - X(x0)) + '" height="' + BH + '" fill="#2A6552"/>');
+    p.push('<rect x="' + dx1 + '" y="' + yCons + '" width="' + Math.max(2, X(T1) - dx1) + '" height="' + BH + '" fill="#FFEA6B"/>');
+    p.push('<rect x="' + X(T1) + '" y="' + yCons + '" width="' + Math.max(2, X(x1) - X(T1)) + '" height="' + BH + '" fill="#3FE0A0"/>');
+
+    /* the callout on the dark window */
+    var midD = (dx0 + dx1) / 2;
+    var lblY = 26;
+    p.push('<text x="' + midD + '" y="' + lblY + '" fill="#FF5B5B" font-family="Geist Mono, monospace" font-size="12" font-weight="600" text-anchor="' +
+           (dx1 - dx0 < 90 ? "start" : "middle") + '">' + dur(m.gap) + ' dark</text>');
+
+    /* your threshold pin */
+    var thrT = T0 + state.thr * MIN;
+    if(thrT < T1){
+      var tx = X(thrT);
+      p.push('<line x1="' + tx + '" y1="34" x2="' + tx + '" y2="168" stroke="#EEF1F3" stroke-width="1" stroke-dasharray="3 3"/>');
+      p.push('<text x="' + (tx + 6) + '" y="' + 178 + '" fill="#EEF1F3" font-family="Geist Mono, monospace" font-size="11">you, ' + state.thr + ' min</text>');
+    }
+
+    /* axis: ticks on a round interval, always including start and end */
+    var step = niceStep(m.total);
+    var ticks = [];
+    for(var t = T0; t <= T1 + 1; t += step * MIN) ticks.push(t);
+    if(ticks[ticks.length-1] < T1 - MIN) ticks.push(T1);
+    p.push('<line x1="' + LAB + '" y1="' + 156 + '" x2="' + (W - PADR) + '" y2="156" stroke="#1C2126" stroke-width="1"/>');
+    ticks.forEach(function(t){
+      var tx = X(t);
+      p.push('<line x1="' + tx + '" y1="156" x2="' + tx + '" y2="161" stroke="#2A3037" stroke-width="1"/>');
+      p.push('<text x="' + tx + '" y="' + 196 + '" fill="#7B838D" font-family="Geist Mono, monospace" font-size="11" text-anchor="middle">' + hhmm(new Date(t).toISOString()) + '</text>');
+    });
+
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.setAttribute("width", W);
+    svg.setAttribute("height", H);
+    svg.innerHTML =
+      '<title id="tlTitle">What was happening against what the status page showed</title>' +
+      '<desc id="tlDesc">' + esc(x.prov + " on " + x.when + ". Impact ran from " + hhmm(x.t0) + " to " + hhmm(x.end) +
+        " UTC. The status page showed no incident for the first " + durWords(m.gap) + ".") + '</desc>' +
+      '<defs><pattern id="dark" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">' +
+      '<rect width="7" height="7" fill="rgba(255,91,91,.07)"/>' +
+      '<line x1="0" y1="0" x2="0" y2="7" stroke="rgba(255,91,91,.28)" stroke-width="1.4"/></pattern></defs>' +
+      p.join("");
+
+    $("stageTR").textContent = x.name + ", " + x.when;
+    $("tlCap").innerHTML =
+      "Red is impact, green and amber are the console. The hatched column is the " +
+      dur(m.gap) + " in which they disagreed.";
+  }
+
+  function niceStep(totalMin){
+    var opts = [15, 30, 60, 120, 180, 360, 720];
+    for(var i=0;i<opts.length;i++){ if(totalMin / opts[i] <= 8) return opts[i]; }
+    return 1440;
+  }
+
+  function renderLog(r){
+    var x = r.cur.x, t0 = x.t0;
+    $("log").innerHTML = x.posts.map(function(pt){
+      var off = mins(t0, pt.t);
+      var rel = off === 0 ? "start" : (off < 0 ? dur(-off) + " before" : "+" + dur(off));
+      return '<div class="lrow s-' + pt.s + '">' +
+        '<div class="lt">' + hhmm(pt.t) + '<small>' + esc(rel) + '</small></div>' +
+        '<div class="ld" aria-hidden="true"></div>' +
+        '<div class="lcol"><div class="h">The status page</div><div class="q said">' + esc(pt.said) + '</div></div>' +
+        '<div class="lcol"><div class="h">What was true</div><div class="q">' + esc(pt.tru) + '</div></div>' +
+      '</div>';
+    }).join("");
+  }
+
+  var BANDNAME = { make:"You would know first", slip:"Too close to call", miss:"They would tell you first" };
+
+  function renderQueue(r){
+    $("queue").innerHTML = r.order.map(function(m, i){
+      var x = m.x, cur = x.id === state.inc;
+      var marg = m.margin > 0 ? "you are " + dur(m.margin) + " ahead"
+               : (m.margin === 0 ? "dead heat" : "they are " + dur(-m.margin) + " ahead");
+      return '<button type="button" class="qrow b-' + m.band + '" data-id="' + x.id + '"' +
+             (cur ? ' aria-current="true"' : "") + '>' +
+        '<span class="rk">' + pad(i+1) + '</span>' +
+        '<span>' +
+          '<span class="nm">' + esc(x.name) + '<small>' + esc(x.when) + '</small></span>' +
+          '<span class="sub">' + esc(x.cause) + '</span>' +
+          '<span class="ev">Impact ' + hhmm(x.t0) + ' &middot; first post ' + hhmm(x.ack) +
+            ' &middot; all clear ' + hhmm(x.end) + ' &middot; <b>' + esc(marg) + '</b></span>' +
+          '<span class="band b-' + m.band + '"><span class="mk" aria-hidden="true"></span>' + BANDNAME[m.band] + '</span>' +
+        '</span>' +
+        '<span class="amt">' + dur(m.gap) + '<small>dark</small></span>' +
+      '</button>';
+    }).join("");
+
+    var rows = $("queue").children;
+    for(var i=0;i<rows.length;i++){
+      rows[i].addEventListener("click", function(){
+        state.inc = this.getAttribute("data-id");
+        picker.set(state.inc);
+        render();
+      });
+    }
+  }
+
+  function renderCells(r){
+    var m = r.cur;
+    var med = medianGap();
+    $("cells").innerHTML = [
+      { k:"Dark window, this incident", v:dur(m.gap) },
+      { k:"Your margin at " + state.thr + " min", v:(m.margin > 0 ? "+" : "") + dur(Math.abs(m.margin)) },
+      { k:"Total impact, this incident", v:dur(m.total) },
+      { k:"Incidents you would catch first", v:r.first + '<small>OF ' + r.all.length + "</small>" },
+      { k:"Median gap across all six", v:dur(med) },
+      { k:"Threshold that beats all six", v:dur(Math.max(1, Math.min.apply(null, r.all.map(function(a){ return a.gap; })) - 1)) }
+    ].map(function(c){
+      return '<div class="cell"><div class="k">' + c.k + '</div><div class="v">' + c.v + "</div></div>";
+    }).join("");
+  }
+
+  function renderFlag(r){
+    var med = medianGap();
+    var minGap = Math.min.apply(null, r.all.map(function(a){ return a.gap; }));
+    var safe = dur(Math.max(1, minGap - 1));   /* the same figure the stat cell shows */
+    var txt;
+    if(r.last === 0){
+      txt = "At " + state.thr + " minutes you are first on all " + r.all.length +
+            " of these. That is the whole argument: the status page is a confirmation channel, not an alerting one. " +
+            "Wire your failover trigger to your own error rates and treat the coloured dot as something you read afterwards, to write the incident report.";
+    } else if(r.last === r.all.length){
+      txt = "At " + state.thr + " minutes the status page beats you on every one of these, which means you are currently outsourcing detection to a company " +
+            "whose median admission takes " + dur(med) + ". Anything at " + safe + " or under puts you back in front.";
+    } else {
+      txt = "At " + state.thr + " minutes you are first on " + r.first + " of " + r.all.length + " and second on " + r.last +
+            ". The median gap across all six is " + dur(med) + ", so a threshold of " + safe +
+            " or under puts you in front of every incident here. Your failover trigger belongs on your own error rates, not on their dashboard.";
+    }
+    $("flagText").textContent = txt;
+  }
+
+  function announce(r){
+    var m = r.cur;
+    $("srStatus").textContent =
+      m.x.name + ", " + m.x.when + ". The status page showed no incident for " + durWords(m.gap) +
+      " after customers began failing. At your threshold of " + state.thr + " minutes you would have known " +
+      (m.margin > 0 ? durWords(m.margin) + " before the status page." : durWords(-m.margin) + " after the status page.") +
+      " Across all six incidents you would be first on " + r.first + ".";
+  }
+
+  /* ---------- the static furniture: hero count, strip, table, worked example ---------- */
+  function buildStatics(){
+    var gaps = INCIDENTS.map(function(x){ return mins(x.t0, x.ack); });
+    var lo = Math.min.apply(null, gaps), hi = Math.max.apply(null, gaps);
+    var totalDown = INCIDENTS.reduce(function(a,x){ return a + mins(x.t0, x.end); }, 0);
+    var yrs = INCIDENTS.map(function(x){ return new Date(T(x.t0)).getUTCFullYear(); });
+
+    $("heroMeta").innerHTML =
+      INCIDENTS.length + " incidents &middot; " + Math.min.apply(null, yrs) + " to " + Math.max.apply(null, yrs) +
+      " &middot; gaps from " + dur(lo) + " to " + dur(hi) + "<br>" +
+      "Every impact time taken from the provider's own retrospective &middot; Hidden assumptions: 0";
+
+    $("stripMed").innerHTML = medianGap() + '<span class="u">MIN</span>';
+    $("stripMax").innerHTML = hi + '<span class="u">MIN</span>';
+    $("stripDown").innerHTML = Math.round(totalDown/60) + '<span class="u">HRS</span>';
+
+    $("incTable").innerHTML = INCIDENTS.map(function(x){
+      var g = mins(x.t0, x.ack);
+      return "<tr>" +
+        '<td class="name">' + esc(x.name) + "<br><span style=\"font-weight:400;color:var(--tx3)\">" + esc(x.when) + "</span></td>" +
+        '<td class="m">' + hhmm(x.t0) + "</td>" +
+        '<td class="m">' + hhmm(x.ack) + (x.conf === "reported" ? ' <span class="tag">reported</span>' : "") + "</td>" +
+        '<td class="m">' + dur(g) + "</td>" +
+        '<td class="m">' + dur(mins(x.t0, x.end)) + "</td>" +
+        '<td class="note">' + esc(x.blast) + ' <a href="' + x.src + '" target="_blank" rel="noopener">' + esc(x.srcName) + "</a></td>" +
+      "</tr>";
+    }).join("");
+
+    var g = byId("gcp2025"), gg = mins(g.t0, g.ack);
+    $("chain").innerHTML = [
+      'first customer impact <b>17:51 UTC</b>            <span class="a">from Google\'s own report</span>',
+      'first public status post <b>19:05 UTC</b>         <span class="a">the dashboard moves</span>',
+      '&rarr; 19:05 minus 17:51                          = <b>' + gg + ' minutes dark</b>',
+      '&rarr; Downdetector spiked at <b>17:56</b>        = the crowd had it ' + (gg - 5) + ' minutes earlier',
+      '&rarr; your monitoring at 15 min                  = <b>' + (gg - 15) + ' minutes ahead of the page</b>'
+    ].join("<br>");
+    $("chainOut").innerHTML =
+      "IAM stopped issuing tokens at 17:51, which means every authenticated call in Google Cloud was failing. " +
+      "The console showed nothing wrong for another <b>" + durWords(gg) + "</b>. Anyone watching their own error rate " +
+      "knew inside a minute or two. Anyone watching the dashboard was still explaining to their manager that it was probably their own deploy.";
+  }
+
+  /* ---------- the incident picker: ARIA select-only combobox ---------- */
+  var picker = (function(){
+    var btn, list, wrap, opts, value = null, open = false, active = -1, onPick = null,
+        holding = false, down = null;
+
+    function idx(id){ for(var i=0;i<INCIDENTS.length;i++){ if(INCIDENTS[i].id===id) return i; } return 0; }
+    function row(ev){ return ev.target.closest ? ev.target.closest(".sel-opt") : null; }
+    function pos(li){ return Array.prototype.indexOf.call(opts, li); }
+    function here(){ return active>=0 ? active : idx(value); }
+
+    function set(id){
+      value = id;
+      $("incName").textContent = INCIDENTS[idx(id)].name + ", " + INCIDENTS[idx(id)].when;
+      for(var i=0;i<opts.length;i++) opts[i].setAttribute("aria-selected", INCIDENTS[i].id===id);
+    }
+    function mark(i){
+      if(i<0 || i>=opts.length) return;
+      if(active>=0) opts[active].classList.remove("act");
+      active = i;
+      opts[i].classList.add("act");
+      btn.setAttribute("aria-activedescendant", opts[i].id);
+    }
+    function show(i){
+      if(!open){ open = true; list.hidden = false; btn.setAttribute("aria-expanded","true"); }
+      mark(i);
+    }
+    function close(){
+      if(!open) return;
+      open = false; list.hidden = true;
+      btn.setAttribute("aria-expanded","false");
+      btn.removeAttribute("aria-activedescendant");
+      if(active>=0) opts[active].classList.remove("act");
+      active = -1;
+    }
+    function commit(i){
+      var pick = i>=0 && i<INCIDENTS.length ? INCIDENTS[i].id : value, changed = pick!==value;
+      close();
+      btn.focus({ preventScroll: true });
+      if(changed){ set(pick); onPick(pick); }
+    }
+    function key(ev){
+      var k = ev.key, cur = here(), last = INCIDENTS.length-1;
+      if(k==="Escape"){ if(open){ ev.preventDefault(); close(); } return; }
+      if(k==="Tab"){ if(open) commit(active); return; }
+      if(k==="Enter" || k===" "){ ev.preventDefault(); if(open) commit(active); else show(cur); return; }
+      if(k==="ArrowDown"){ ev.preventDefault(); show(ev.altKey && !open ? cur : Math.min(cur+1,last)); return; }
+      if(k==="ArrowUp"){ ev.preventDefault(); show(Math.max(cur-1,0)); return; }
+      if(k==="Home"){ ev.preventDefault(); show(0); return; }
+      if(k==="End"){ ev.preventDefault(); show(last); return; }
+    }
+
+    return {
+      init: function(cb){
+        btn = $("inc"); list = $("incList"); wrap = btn.parentNode; onPick = cb;
+        list.innerHTML = INCIDENTS.map(function(o,i){
+          return '<li class="sel-opt" id="incOpt'+i+'" role="option" aria-selected="false">'+
+                 '<span class="mk" aria-hidden="true"></span><span class="nm">'+esc(o.name)+'</span>'+
+                 '<span class="gp">'+esc(o.when)+'</span></li>';
+        }).join("");
+        opts = list.children;
+        btn.addEventListener("keydown", key);
+        btn.addEventListener("click", function(){ if(open) close(); else show(here()); });
+        btn.addEventListener("blur", function(){ if(!holding) close(); });
+        list.addEventListener("pointerdown", function(ev){ holding = true; down = row(ev); });
+        list.addEventListener("pointerup", function(ev){
+          var li = row(ev);
+          if(li && (li===down || ev.pointerType==="mouse")) commit(pos(li));
+        });
+        list.addEventListener("pointercancel", function(){ down = null; });
+        list.addEventListener("mouseover", function(ev){ var li = row(ev); if(li) mark(pos(li)); });
+        document.addEventListener("pointerup", function(){
+          holding = false; down = null;
+          if(open && document.activeElement!==btn) btn.focus({ preventScroll: true });
+        });
+        document.addEventListener("pointerdown", function(ev){ if(open && !wrap.contains(ev.target)) close(); });
+      },
+      set: set
+    };
+  })();
+
+  /* ---------- URL state ---------- */
+  function writeUrl(){
+    var q = new URLSearchParams();
+    q.set("i", state.inc);
+    q.set("t", state.thr);
+    if(state.srt!=="gap") q.set("srt", state.srt);
+    try{ history.replaceState(null,"","#"+q.toString()); }
+    catch(e){ try{ location.hash = q.toString(); }catch(e2){} }
+  }
+  function readUrl(){
+    if(!location.hash || location.hash.length<2) return false;
+    var h = location.hash.slice(1);
+    if(h.indexOf("=")===-1) return false;
+    var q = new URLSearchParams(h);
+    var i = q.get("i");
+    if(i){ for(var k=0;k<INCIDENTS.length;k++){ if(INCIDENTS[k].id===i) state.inc = i; } }
+    if(q.get("t")) state.thr = Math.max(1, Math.min(240, parseInt(q.get("t"),10)||15));
+    if(q.get("srt")==="len" || q.get("srt")==="date") state.srt = q.get("srt");
+    return true;
+  }
+  function syncInputs(){
+    $("thr").value = state.thr;
+    picker.set(state.inc);
+    sizeNum($("thr"));
+    setSort(state.srt);
+  }
+  function setSort(s){
+    state.srt = s;
+    $("sGap").setAttribute("aria-pressed", s==="gap");
+    $("sLen").setAttribute("aria-pressed", s==="len");
+    $("sDate").setAttribute("aria-pressed", s==="date");
+  }
+
+  /* inline inputs grow with their value, so the sentence never gapes */
+  function sizeNum(el){ el.style.width = (String(el.value).length + 1.4)+"ch"; }
+
+  function bindNum(id, key, min, max){
+    var el = $(id);
+    el.addEventListener("input", function(){
+      sizeNum(el);
+      var v = parseFloat(el.value);
+      if(isNaN(v)) return;
+      state[key] = Math.round(Math.max(min, Math.min(max, v)));
+      render();
+    });
+    el.addEventListener("blur", function(){ el.value = state[key]; sizeNum(el); });
+    sizeNum(el);
+  }
+
+  /* ---------- copy actions ---------- */
+  function toast(msg){
+    var t = $("toast"); t.textContent = msg; t.classList.add("on");
+    setTimeout(function(){ t.classList.remove("on"); }, 1600);
+  }
+  function copy(text, msg){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, function(){ fallback(text,msg); });
+    } else { fallback(text,msg); }
+  }
+  function fallback(text,msg){
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); toast(msg); }catch(e){ toast("Copy failed"); }
+    document.body.removeChild(ta);
+  }
+  function summary(){
+    var r = compute(), m = r.cur, x = m.x, L = [];
+    L.push(x.name + ", " + x.when + " (" + x.prov + ")");
+    L.push("");
+    L.push("Impact began      " + hhmm(x.t0) + " UTC");
+    L.push("First status post " + hhmm(x.ack) + " UTC");
+    L.push("All clear         " + hhmm(x.end) + " UTC");
+    L.push("Detection gap     " + dur(m.gap) + " of green dashboard");
+    L.push("Total impact      " + dur(m.total));
+    L.push("");
+    L.push("At a " + state.thr + " minute paging threshold you are " +
+      (m.margin > 0 ? dur(m.margin) + " ahead of the status page." : dur(-m.margin) + " behind it."));
+    L.push("");
+    L.push("All " + r.all.length + " incidents by dark window:");
+    r.all.slice().sort(function(a,b){ return b.gap - a.gap; }).forEach(function(a, i){
+      L.push((i+1) + ". " + a.x.name + " (" + a.x.when + "): " + dur(a.gap) + " dark, " + dur(a.total) + " total");
+    });
+    L.push("");
+    L.push("Median gap across all six: " + dur(medianGap()) + ".");
+    L.push("Your failover trigger belongs on your own error rates, not on their dashboard.");
+    L.push("");
+    L.push("Run your own: " + location.href);
+    return L.join("\n");
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    var shared = readUrl();
+    buildStatics();
+    picker.init(function(id){ state.inc = id; render(); });
+    syncInputs();
+
+    bindNum("thr","thr",1,240);
+
+    $("sGap").addEventListener("click", function(){ setSort("gap"); render(); });
+    $("sLen").addEventListener("click", function(){ setSort("len"); render(); });
+    $("sDate").addEventListener("click", function(){ setSort("date"); render(); });
+
+    $("copyLink").addEventListener("click", function(){ copy(location.href, "Link copied"); });
+    $("copySummary").addEventListener("click", function(){ copy(summary(), "Brief copied"); });
+
+    window.addEventListener("beforeprint", function(){
+      $("printUrl").textContent = "Reproduce this screen: " + location.href;
+    });
+
+    // the timeline is drawn at the container's width, so a resize redraws it
+    var rsTimer;
+    window.addEventListener("resize", function(){
+      clearTimeout(rsTimer);
+      rsTimer = setTimeout(function(){ drawTimeline(compute()); }, 150);
+    });
+
+    render();
+
+    // a shared link should land on the replay, not on the sales pitch
+    if(shared){
+      var html = document.documentElement;
+      html.style.scrollBehavior = "auto";
+      var top = $("replay").getBoundingClientRect().top + window.pageYOffset - 60;
+      window.scrollTo(0, top);
+      setTimeout(function(){ html.style.scrollBehavior = ""; }, 60);
+    }
+  });
+})();
+</script>
+<script>
+/* Scroll reveals. Content is visible by default; motion is opted into only when
+   the browser is happy to move things. */
+(function(){
+  "use strict";
+  if(!("IntersectionObserver" in window)) return;
+  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var els = document.querySelectorAll(".rv");
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add("rvIn"); io.unobserve(en.target); }
+    });
+  }, { rootMargin: "0px 0px -70px 0px" });
+  els.forEach(function(e){
+    var r = e.getBoundingClientRect();
+    if(r.top < window.innerHeight && r.bottom > 0) return;
+    e.classList.add("rv0");
+    io.observe(e);
+  });
+})();
+</script>
+</body>
+</html>
