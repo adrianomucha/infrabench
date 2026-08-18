@@ -201,7 +201,7 @@
   .big .v{color:var(--grn);font-family:var(--mono);font-size:.95em}
   /* the block cursor from the suite's social cards, live on the page */
   .big .cursor{display:inline-block;width:.44em;height:.86em;background:var(--grn);margin-inline-start:9px;vertical-align:-.06em}
-  .headline-out .note{font-size:15px;color:var(--tx2);margin:14px 0 20px}
+  .headline-out .note{font-size:15px;color:var(--tx2);margin:14px 0 20px;text-wrap:pretty}
   .headline-out .note b{font-family:var(--mono);font-size:.92em;font-weight:600;color:var(--tx);white-space:nowrap}
   .bar-cap b{font-weight:500}
   .bar-cap .cm{color:var(--r-make)}
@@ -259,7 +259,7 @@
   .lrow.s-warn .ld{background:var(--r-slip)}
   .lrow.s-down .ld{background:var(--r-miss)}
   .lcol .h{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-bottom:9px}
-  .lcol .q{font-size:15px;line-height:1.65;color:var(--tx2b);text-wrap:pretty}
+  .lcol .q{font-size:15px;line-height:1.65;color:var(--tx2b);text-wrap:pretty;max-width:64ch}
   .lcol .q.said{color:var(--tx);border-inline-start:2px solid var(--line2);padding-inline-start:16px}
   .lrow.s-ok .q.said{border-inline-start-color:var(--r-make)}
   .lrow.s-warn .q.said{border-inline-start-color:var(--r-slip)}
@@ -631,7 +631,7 @@
     <div class="worked rv">
       <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
       <div class="t">Worked example &mdash; Google Cloud, 12 June 2025</div>
-      <div class="chain" id="chain"></div>
+      <div class="chain" id="chain" tabindex="0" role="region" aria-label="Worked example arithmetic, scrolls horizontally on small screens"></div>
       <div class="out" id="chainOut"></div>
     </div>
   </div>
@@ -1183,12 +1183,15 @@
     }).join("");
 
     var g = byId("gcp2025"), gg = mins(g.t0, g.ack);
+    /* Flowing lines with inline markers, the same shape tool 03's worked example uses.
+       Runs of spaces collapse in HTML, so columns cannot be aligned this way. */
     $("chain").innerHTML = [
-      'first customer impact <b>17:51 UTC</b>            <span class="a">from Google\'s own report</span>',
-      'first public status post <b>19:05 UTC</b>         <span class="a">the dashboard moves</span>',
-      '&rarr; 19:05 minus 17:51                          = <b>' + gg + ' minutes dark</b>',
-      '&rarr; Downdetector spiked at <b>17:56</b>        = the crowd had it ' + (gg - 5) + ' minutes earlier',
-      '&rarr; your monitoring at 15 min                  = <b>' + (gg - 15) + ' minutes ahead of the page</b>'
+      'Service Control crash loops worldwide and IAM stops issuing tokens',
+      '<span class="a" aria-hidden="true">&rarr;</span> first customer impact, from Google\'s own report <span class="a">=</span> <b>17:51 UTC</b>',
+      '<span class="a" aria-hidden="true">&rarr;</span> first public post on the status dashboard <span class="a">=</span> <b>19:05 UTC</b>',
+      '<span class="a" aria-hidden="true">&rarr;</span> 19:05 &minus; 17:51 <span class="a">=</span> <b>' + gg + ' minutes dark</b>',
+      '<span class="a" aria-hidden="true">&rarr;</span> Downdetector spiked at 17:56, so the crowd had it <b>' + (gg - 5) + ' minutes</b> earlier',
+      '<span class="a" aria-hidden="true">&rarr;</span> a 15 minute paging threshold <span class="a">=</span> <b>' + (gg - 15) + ' minutes</b> ahead of the page'
     ].join("<br>");
     $("chainOut").innerHTML =
       "IAM stopped issuing tokens at 17:51, which means every authenticated call in Google Cloud was failing. " +
