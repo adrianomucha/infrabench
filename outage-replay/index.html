@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Outage replay · Infrabench</title>
-<meta name="description" content="Six public cloud incidents replayed as an operator timeline. What the status page showed, when it showed it, and how long the truth took to surface. Set your own detection threshold and see which outages you would have caught first. Every timestamp sourced.">
+<meta name="description" content="Replay six historical cloud incidents. Explore the detection window, compare customer impact with public status, and test your hypothetical alert delay.">
 <meta property="og:title" content="Outage replay · How long the status page stayed green">
 <meta property="og:description" content="Every status page lags the outage it describes. Six documented incidents, replayed against the provider's own postmortem, with the detection gap measured in minutes. Set your threshold, see who tells you first.">
 <meta property="og:type" content="website">
@@ -30,788 +30,62 @@
   gtag('config', 'G-B4K7J0G5X6');
 </script>
 <style>
-  :root{
-    color-scheme:dark;
-    /* --- suite chrome, shared with the rest of Infrabench --- */
-    --bg:#0A0C0E;          /* page surface */
-    --bg2:#0E1114;         /* raised, one step */
-    --line:#1C2126;        /* hairline */
-    --line2:#2A3037;       /* stronger rule */
-    --tx:#EEF1F3;          /* primary text */
-    --tx2:#A8B0B8;         /* secondary text */
-    --tx2b:#C7CDD4;        /* dense mono passages: one step brighter to stay readable */
-    --tx3:#7B838D;         /* labels only */
-    --grn:#3FE0A0;         /* signal green: data and live things only */
-    --grn2:#2FBF86;
-    /* --- the same validated three-step ramp Crash Cart set and the siting tool reuses.
-       Here it carries two meanings at once, and never carries either one alone:
-         as a console state   green = operational, amber = investigating, red = outage
-         as a verdict         green = you know first, amber = a coin flip, red = they do
-       Every band is also spelled out in words on the row or lane it colours. */
-    --r-make:#3FE0A0;      /* operational / you know first */
-    --r-slip:#FFEA6B;      /* investigating / too close to call */
-    --r-miss:#FF5B5B;      /* outage / the status page tells you */
-    --w-make:#0E1F1B;      /* row washes: the verdict at 10 percent over the surface */
-    --w-slip:#1F2015;
-    --w-miss:#201113;
-    --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
-    --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  }
-  *{box-sizing:border-box}
-  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
-  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:16px;line-height:1.65;
-    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-  .wrap{max-width:1260px;margin:0 auto;padding:0 32px}
-  @media(max-width:640px){.wrap{padding:0 20px}}
-  a{color:var(--tx);text-decoration:none}
+:root{color-scheme:dark;--bg:#0A0C0E;--panel:#0E1114;--line:#2A3037;--muted:#A8B0B8;--text:#EEF1F3;--mint:#3FE0A0;--red:#FF5B5B;--amber:#FFEA6B;--mono:'Geist Mono',monospace;--sans:'Archivo',sans-serif}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 var(--sans)}button,input,select{font:inherit}button,a,input,select{touch-action:manipulation}button,select{cursor:pointer}button{color:inherit}a{color:inherit;text-decoration:none}button{border:0;background:none}button:hover,a:hover{color:var(--mint)}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--mint);outline-offset:5px}button:disabled{opacity:.45;cursor:default}.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}.skip{position:fixed;top:-60px;left:20px;background:var(--mint);color:#102019;padding:12px;z-index:20}.skip:focus{top:10px}.topbar{height:76px;display:flex;align-items:center;gap:25px;padding:0 34px;border-bottom:1px solid var(--line)}.brand{font:500 15px var(--mono);letter-spacing:1.6px;display:flex;gap:10px;align-items:center}.brandmark{color:var(--mint);font-size:26px;line-height:1}.divider{color:#586263}.product-name{font-size:14px;color:#bdc6c5}.toplinks{margin-left:auto;display:flex;gap:35px;align-items:center}.archive-label,.eyebrow{font:500 12px/1.5 var(--mono);letter-spacing:1.25px;color:var(--muted)}.text-button{padding:0;font-size:14px}.text-button span{margin-left:10px}.app-shell{display:grid;grid-template-columns:292px minmax(0,1fr);max-width:1800px;margin:auto}.archive{padding:33px 20px;border-right:1px solid var(--line);background:#0E1114;display:flex;flex-direction:column;align-self:stretch}.archive-heading{display:flex;align-items:center;justify-content:space-between;padding:0 8px}.count{font:12px var(--mono);border:1px solid #3b4445;border-radius:4px;padding:2px 5px;color:var(--muted)}h1{font-size:26px;line-height:1.2;letter-spacing:-1px;font-weight:500;margin:26px 8px 12px}.archive-intro{font-size:14px;color:var(--muted);margin:0 8px 32px;line-height:1.65}.library-tools{display:flex;justify-content:space-between;gap:5px;align-items:center;margin:0 8px 14px;font-size:12px;color:var(--muted)}.library-tools select{border:0;background:transparent;font-size:12px;color:#d4dcda;width:94px}.incident-option{width:100%;text-align:left;display:block;padding:17px 14px;border:1px solid transparent;border-radius:7px;margin-bottom:8px;color:#c9d1cf;position:relative}.incident-option:hover{background:#151C20;color:var(--text)}.incident-option.selected{background:#0E1F1B;border-color:#2FBF86;color:var(--text)}.incident-option.selected:before{content:'';position:absolute;left:-21px;top:22px;height:38px;width:3px;background:var(--mint)}.incident-option .row{display:flex;align-items:center;gap:11px;font-weight:550;font-size:15px}.provider-icon{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:#242b2b;color:#e3e8e7;font-weight:600;font-size:17px;flex-shrink:0}.incident-option .provider-icon{width:26px;height:26px;font-size:14px}.incident-option .meta{display:flex;justify-content:space-between;margin-top:11px;font:12px var(--mono);color:#a5afab}.incident-option .gap{color:#becdbf}.incident-option.selected .gap{color:var(--mint)}.archive-note{display:flex;gap:10px;border-top:1px solid var(--line);margin:30px 8px 0;padding-top:22px}.archive-note p{font-size:13px;color:var(--muted);margin:0;line-height:1.7}.archive-note button{font-size:12px;color:#d3dcd7;margin-top:8px}.note-icon{color:var(--mint);font-size:22px}.back-link{font-size:13px;color:var(--muted);margin:32px 8px}main{padding:29px 40px 0;min-width:0}.workspace-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.breadcrumb{display:flex;gap:12px;align-items:center;font-size:13px;color:var(--muted)}.small-dot{width:3px;height:3px;border-radius:100%;background:#66736d}.quiet-button{background:#1b2121;border:1px solid #343d3b;border-radius:5px;padding:8px 13px;font-size:13px}.quiet-button span{margin-right:7px}.incident-heading{display:flex;justify-content:space-between;gap:20px;padding:31px 0 28px}.provider-line{display:flex;align-items:center;gap:10px;font-size:14px;color:#c4ceca}.historical-tag{font:10px var(--mono);letter-spacing:1px;border:1px solid #3c4642;padding:3px 6px;border-radius:3px;color:#aab6af;margin-left:5px}h2{font-weight:500;letter-spacing:-1.5px;font-size:clamp(28px,2.7vw,43px);line-height:1.2;margin:16px 0 9px}.incident-heading p{color:var(--muted);font-size:14px;margin:0}.gap-summary{min-width:230px;border-left:1px solid var(--line);padding-left:28px;text-align:right;display:flex;flex-direction:column;justify-content:center}.gap-summary .eyebrow{font-size:10px;letter-spacing:.7px}.gap-summary strong{font:400 53px/1.3 var(--mono);letter-spacing:-3px;color:var(--amber)}.gap-summary div>span{font:14px var(--mono);margin-left:8px;color:#b6bcb5}.gap-caption{font-size:12px;color:var(--muted)}.replay-panel{background:var(--panel);border:1px solid #343c38;border-radius:10px;overflow:hidden}.replay-top{padding:26px 27px 18px;display:flex;justify-content:space-between;align-items:center;gap:15px}.time-display .eyebrow{font-size:11px;display:block}.time-display .eyebrow span{color:#bcc4bd;letter-spacing:.5px;margin-left:12px;padding-left:12px;border-left:1px solid #475149}.time-display>div{display:flex;align-items:baseline;gap:10px;margin-top:5px}#clock{font:400 clamp(35px,3.8vw,54px)/1.2 var(--mono);letter-spacing:-2.6px}.timezone{color:var(--muted);font:13px var(--mono)}.elapsed{font:12px var(--mono);color:var(--muted)}.playback{display:flex;align-items:center;gap:10px}.icon-button{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;font-size:23px;color:#bfc8c1;border-radius:5px}.icon-button:hover{background:#28322d}.play-button{display:flex;align-items:center;justify-content:center;gap:9px;color:#15251c;background:var(--mint);border-radius:5px;padding:12px 17px;font-weight:600;font-size:14px;min-width:138px}.play-button:hover{background:#b0f9d5;color:#13271b}.play-button svg{width:15px;height:15px}.speed{height:43px;border:1px solid #424c45;border-radius:5px;padding:0 6px;color:#d9e3da;background:#1a201c;font:13px var(--mono)}.timeline{margin:9px 27px 0}.timeline-legend{display:flex;align-items:center;gap:20px;font-size:12px;color:#b6c1bc;margin-bottom:20px}.timeline-legend>span{display:flex;align-items:center;gap:7px}.timeline-legend .timeline-note{margin-left:auto;font:10px var(--mono);color:#8d9993}.swatch{display:inline-block;width:7px;height:7px;border-radius:2px}.impact{background:var(--red)}.status{background:var(--amber)}.timeline-grid{position:relative;display:grid;grid-template-columns:94px minmax(0,1fr);row-gap:15px;align-items:center}.track-label{font-size:12px;color:var(--muted)}.track{height:33px;position:relative;border-radius:3px;font:10px var(--mono);color:#e6beb3;display:flex;align-items:center;background-image:linear-gradient(to right,transparent calc(100% - 1px),#ffffff09 1px);background-size:16.666% 100%}.impact-track{background-color:#52342f;border:1px solid #a76456}.track-text{padding-left:12px}.public-track{background-color:#34372b;overflow:hidden;border:1px solid #655b40}.dark-window{height:100%;background:repeating-linear-gradient(135deg,#7783771c 0px,#7783771c 1px,transparent 1px,transparent 6px);border-right:1px dashed #748775;display:flex;align-items:center;overflow:hidden;flex-shrink:0}.dark-window span{padding-left:9px;white-space:nowrap;color:#c6d5c8;font-size:9px}.ack-window{display:flex;align-items:center;overflow:hidden;height:100%;background:#5b5032;color:#e9d6a6;flex:1}.ack-window span{padding-left:12px;white-space:nowrap}.axis{display:flex;justify-content:space-between;color:#8b9b91;font:10px var(--mono);margin-top:-5px}.playhead{position:absolute;top:-8px;bottom:21px;width:1px;background:var(--mint);pointer-events:none;z-index:2}.playhead>span{position:absolute;top:-3px;left:-4px;width:9px;height:9px;background:var(--mint);clip-path:polygon(0 0,100% 0,100% 60%,50% 100%,0 60%)}.alert-marker{position:absolute;top:30px;height:44px;border-left:1px dotted #cdddda;pointer-events:none;z-index:1}.alert-marker>span{font:9px var(--mono);color:var(--mint);position:absolute;top:-15px;left:5px;white-space:nowrap}#scrubber{display:block;width:calc(100% - 94px);margin:18px 0 0 94px;height:5px;accent-color:var(--mint);cursor:ew-resize}.scrub-caption{display:flex;justify-content:space-between;align-items:center;margin:13px 0 19px 94px;font-size:11px;color:var(--muted)}.scrub-caption button{font-size:12px;color:#d2ded5}.moment-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px 16px}.moment-card{border:1px solid #343e36;border-radius:7px;padding:20px 21px;background:#0E1114;display:flex;flex-direction:column}.customer-card{background:#201113;border-color:#663337}.card-eyebrow{display:flex;justify-content:space-between;align-items:center;gap:7px;font:10px var(--mono);letter-spacing:.4px;color:#c2b6ae}.public-card .card-eyebrow{color:#acbdb0}.status-pill{font:10px var(--mono);letter-spacing:0;padding:3px 6px;border-radius:3px;background:#4d3028;color:#f3b9a4;white-space:nowrap}.status-pill.ok{background:#273d30;color:#a6ecc0}.status-pill.warn{background:#49402b;color:#f1ce87}.moment-card h3{font-weight:500;letter-spacing:-.6px;font-size:23px;margin:15px 0 8px;line-height:1.25}.moment-card p{font-size:14px;line-height:1.6;color:#bfbab3;margin:0 0 15px}.public-card p{color:#b2c0b5}.source-hint{font-size:11px;color:#928f87;margin-top:auto}.alert-strip{border-top:1px solid var(--line);display:flex;align-items:center;gap:15px;padding:18px 24px;background:#0E1114}.alert-strip>div:first-child{display:flex;align-items:center;gap:11px;flex:1}.alert-symbol{font-size:27px;color:var(--mint)}.alert-strip label{display:block;font-size:13px;color:#dae3db}.alert-strip div>span:not(.alert-symbol){font-size:11px;color:var(--muted)}.threshold-control{border:1px solid #536051;border-radius:4px;display:flex;align-items:center;padding:4px 9px;background:#111713}.threshold-control input{font:14px var(--mono);width:47px;background:transparent;color:#e2eadf;border:0;height:28px}.alert-strip p{font-size:13px;max-width:145px;color:var(--mint);margin:0;text-align:right}.event-section{margin-top:30px}.section-heading{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:16px}.section-heading h3{font-size:16px;font-weight:500;margin:0}.section-heading h3 span{font:11px var(--mono);color:var(--muted);margin-left:8px}.reveal-toggle{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);white-space:nowrap}.reveal-toggle input{accent-color:var(--mint);width:14px;height:14px}.event-row{display:grid;grid-template-columns:65px 20px 1fr auto;align-items:start;gap:15px;padding:18px 5px;border-top:1px solid var(--line)}.event-row time{font:13px var(--mono);padding-top:3px;color:#b7c2ba}.event-dot{width:8px;height:8px;border:2px solid var(--red);border-radius:50%;margin-top:8px;position:relative}.event-dot:after{content:'';position:absolute;width:1px;height:calc(100% + 45px);top:10px;left:1.5px;background:#343d36}.event-row:last-child .event-dot:after{display:none}.event-row h4{font-size:14px;font-weight:500;margin:0 0 4px}.event-row p{font-size:13px;line-height:1.65;margin:0;color:var(--muted)}.event-jump{font:12px var(--mono);color:#b2c4b9;padding:4px 7px;border:1px solid #3b463e;border-radius:4px}.locked-events{padding:18px 100px;font-size:13px;color:#88988e;border-top:1px solid var(--line)}.debrief{display:grid;grid-template-columns:1fr 1fr;gap:40px;border-top:1px solid var(--line);margin-top:24px;padding:28px 0}.debrief h3{font-size:20px;font-weight:500;margin:9px 0}.debrief p{color:var(--muted);font-size:14px;line-height:1.7}.debrief a{font-size:13px;color:var(--mint)}.debrief .evidence-note{font-size:11px}footer{padding:20px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:20px;color:#8d9b91;font-size:11px}footer a{color:#cad8cc}dialog{width:min(600px,calc(100vw - 32px));background:#0E1114;color:var(--text);border:1px solid #4a5b4c;border-radius:12px;padding:28px;max-height:85vh}dialog::backdrop{background:#030705bd;backdrop-filter:blur(5px)}.dialog-top{display:flex;align-items:center;justify-content:space-between}dialog h2{font-size:30px}dialog p{font-size:15px;color:#bbc9be}dialog h3{font-weight:500;font-size:18px;margin-bottom:6px}dialog .dialog-footnote{font-size:12px;border-top:1px solid var(--line);padding-top:15px}.dialog-footnote a{text-decoration:underline}#toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,20px);border:1px solid #668874;background:#d0f4df;color:#173523;padding:12px 20px;border-radius:7px;font-size:14px;opacity:0;pointer-events:none;transition:.2s;z-index:30}#toast.visible{opacity:1;transform:translate(-50%,0)}
+@media(min-width:1550px){main{padding-left:60px;padding-right:60px}.incident-heading{padding-top:40px;padding-bottom:35px}.replay-top{padding-top:32px}.moment-card{padding:24px}.moment-card h3{font-size:26px}.moment-card p{font-size:16px}.card-eyebrow{font-size:12px}.track{height:39px}.event-row p{font-size:15px}}@media(max-width:1150px){.app-shell{grid-template-columns:245px minmax(0,1fr)}main{padding-left:24px;padding-right:24px}.archive{padding-left:13px;padding-right:13px}.incident-option.selected:before{left:-14px}.gap-summary{min-width:175px;padding-left:18px}.gap-summary .eyebrow{max-width:170px}.gap-caption{font-size:10px}.timeline-legend .timeline-note{display:none}.moment-card{padding:16px}.card-eyebrow{align-items:flex-start;flex-direction:column;gap:8px}.alert-strip{flex-wrap:wrap}.alert-strip p{max-width:none;text-align:left;padding-left:38px;width:100%}.archive-label{display:none}}@media(max-width:850px){.topbar{padding:0 20px;height:65px;gap:15px}.app-shell{display:block}.archive{border-right:0;border-bottom:1px solid var(--line);padding:20px}.archive-heading{padding:0}.archive h1,.archive-intro,.archive-note,.back-link,.library-tools{display:none}#incident-list{display:flex;overflow:auto;gap:8px;padding-top:15px;scrollbar-width:thin}.incident-option{min-width:210px;margin-bottom:0;padding:11px 12px;background:#191f1c;border-color:#303b33}.incident-option.selected:before{display:none}main{padding:22px 20px 0}.incident-heading{padding-top:24px}.gap-summary{min-width:175px}.archive-heading .eyebrow{font-size:11px}.toplinks{gap:0}.product-name{font-size:13px}.toplinks button{font-size:12px}}@media(max-width:560px){.topbar{gap:12px}.brand{font-size:12px;letter-spacing:.8px}.brandmark{font-size:21px}.toplinks{display:none}.workspace-top .eyebrow{font-size:10px}.breadcrumb{font-size:11px;gap:7px}.quiet-button{padding:7px 9px;font-size:11px}.incident-heading{display:block}.incident-heading h2{font-size:32px}.gap-summary{margin-top:20px;padding:12px 0 0;border-left:0;border-top:1px solid var(--line);text-align:left;display:block}.gap-summary .eyebrow{max-width:none;font-size:10px;display:block}.gap-summary div{display:inline-block}.gap-summary strong{font-size:32px;letter-spacing:-1px}.gap-summary .gap-caption{margin-left:15px;font-size:11px}.replay-top{padding:20px 16px;align-items:flex-start;gap:10px}.playback{gap:5px;margin-top:15px}.playback .icon-button{display:none}.play-button{min-width:42px;width:42px;height:42px;padding:12px}.play-button span{display:none}.speed{width:48px}#clock{font-size:35px}.time-display .eyebrow{font-size:9px}.time-display .eyebrow span{margin-left:6px;padding-left:6px}.elapsed{font-size:10px}.timeline{margin:0 16px}.timeline-legend{font-size:10px;gap:10px}.timeline-grid{grid-template-columns:63px minmax(0,1fr)}.track-label{font-size:10px}.track-text,.ack-window span{font-size:8px;padding-left:5px}.dark-window span{font-size:0}.axis{font-size:8px}#scrubber{width:calc(100% - 63px);margin-left:63px}.scrub-caption{margin-left:0}.moment-grid{grid-template-columns:1fr;padding:0 12px 12px}.card-eyebrow{flex-direction:row;align-items:center}.moment-card h3{font-size:22px}.moment-card p{font-size:15px}.alert-strip{padding:15px}.alert-strip label{font-size:12px}.alert-strip div>span:not(.alert-symbol){font-size:10px}.alert-symbol{display:none}.alert-strip p{padding-left:0;font-size:12px}.section-heading{align-items:flex-start}.section-heading h3{font-size:15px;max-width:175px}.section-heading h3 span{display:block;margin-left:0;margin-top:3px}.reveal-toggle{font-size:11px}.event-row{grid-template-columns:44px 10px 1fr;gap:10px}.event-row time{font-size:11px}.event-jump{grid-column:3;justify-self:start;font-size:10px}.event-row p{font-size:14px}.locked-events{padding:15px 0}.debrief{grid-template-columns:1fr;gap:10px}footer{flex-direction:column;gap:8px}.status-pill{font-size:9px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+/* Investigation workspace. Archivo + Geist Mono; InfraBench's exact signal palette. */
+:root{--tx:#EEF1F3;--bg2:#0E1114;--tx2:#A8B0B8;--line:#1C2126;--line2:#2A3037;--mint:#3FE0A0;--red:#FF5B5B;--amber:#FFEA6B}
+[hidden]{display:none!important}body{font-size:16px;-webkit-font-smoothing:antialiased}.app-shell{max-width:none;grid-template-columns:276px minmax(0,1fr)}
+.topbar{height:62px;position:sticky;top:0;z-index:10;padding:0 26px;background:#0A0C0Ef2;backdrop-filter:blur(12px);border-bottom:1px solid var(--line2)}
+.brand{font-size:12px;letter-spacing:.14em;gap:12px}.brandmark{width:9px;height:9px;background:var(--mint);display:block}.product-name{font:12px var(--mono);text-transform:uppercase;letter-spacing:.12em}.divider{font-family:var(--mono)}
+.archive{padding:31px 16px 22px;position:sticky;top:62px;height:calc(100dvh - 62px);overflow:auto;border-right:1px solid var(--line2)}.archive-heading{padding:0 12px}.count{border:0;border-radius:0;font-size:12px;color:var(--mint)}
+h1{font-size:29px;letter-spacing:-.045em;line-height:1.1;margin:23px 12px 15px;font-weight:500}.archive-intro{margin:0 12px 25px;font-size:14px;line-height:1.65}.library-tools{margin:0 12px 18px;font-size:12px}.library-tools select{font-size:12px;width:100px;background:var(--bg2)}
+.incident-option{padding:15px 13px 13px;margin:0;border-radius:0;border:0;border-bottom:1px solid var(--line);background:none}.incident-option.selected{background:var(--bg);box-shadow:inset 2px 0 var(--mint);border-color:var(--line2)}.incident-option.selected:before{display:none}.incident-option .row{font-size:15px;gap:9px}.provider-icon{border-radius:0;background:none;color:var(--tx2)!important;font:12px var(--mono);width:auto;min-width:24px;min-height:24px;height:auto;border:1px solid var(--line2)}.incident-option .provider-icon{width:24px;height:24px;font-size:11px}.incident-option .meta{font-size:12px;margin-top:8px}.mini-gap{display:block;height:2px;background:var(--line);margin-top:13px}.mini-gap i{height:100%;display:block;background:#486358}.incident-option.selected .mini-gap i{background:var(--mint)}.incident-option.selected .gap{color:var(--mint)}
+.archive-note{margin:24px 12px 0;border-top:0;padding:0}.note-icon{display:none}.back-link{margin:25px 12px 0;font-size:13px}.archive-note p{font-size:12px}.archive-note button{font-size:12px}
+main{padding:25px 34px 0;max-width:1536px;width:100%;margin:auto}.workspace-top{height:31px}.breadcrumb{font-size:12px}.quiet-button{border-radius:0;background:transparent;border-color:var(--line2);font-size:13px;min-height:40px}.eyebrow{font-size:12px;letter-spacing:.13em;color:var(--tx2)}
+.incident-heading{padding:26px 0 24px;gap:26px;align-items:center}.provider-line{font-size:14px;gap:9px}.historical-tag{border-radius:0;border-color:var(--line2);font-size:10px;color:var(--tx2)}.incident-heading h2{font-size:clamp(27px,2.75vw,42px);letter-spacing:-.045em;margin-top:13px;max-width:25ch}.incident-heading p{font-size:14px}.gap-summary{min-width:224px;position:relative;padding-left:28px;align-self:stretch;border-left:1px solid var(--line2)}.gap-summary .eyebrow{font-size:10px;max-width:none;letter-spacing:.1em}.gap-summary strong{font-size:70px;color:var(--tx);letter-spacing:-.07em}.gap-summary div>span{font-size:15px}.gap-caption{font-size:11px;max-width:240px;color:var(--tx2)}
+.replay-panel{border-radius:0;border-color:var(--line2);background:var(--bg);position:relative}.replay-panel:before,.replay-panel:after{content:'';position:absolute;width:6px;height:6px;border-color:var(--tx2);pointer-events:none}.replay-panel:before{left:-1px;top:-1px;border-left:1px solid;border-top:1px solid}.replay-panel:after{right:-1px;bottom:-1px;border-right:1px solid;border-bottom:1px solid}
+.replay-top{padding:22px 24px;border-bottom:1px solid var(--line);background:var(--bg2);gap:24px}.time-display .eyebrow{font-size:11px}.time-display .eyebrow span{font-size:10px;border-color:var(--line2)}#clock{font-size:49px;letter-spacing:-.04em;line-height:1.2;font-variant-numeric:tabular-nums}.time-display>div{margin:5px 0}.elapsed{font-size:12px;color:var(--tx2)}.playback{gap:9px}.play-button{border-radius:0;background:var(--text);color:var(--bg);font-size:14px;min-height:44px;font-weight:500;padding:12px 16px}.play-button:hover{background:white;color:var(--bg)}.speed{background:var(--bg);border-radius:0;border-color:var(--line2);color:var(--text);min-height:44px;font-size:12px;width:92px}.icon-button{border:1px solid var(--line2);border-radius:0;width:44px;height:44px;color:var(--tx2)}.icon-button:hover{background:var(--bg2)}
+.timeline{margin:0;padding:23px 24px 18px;background-image:radial-gradient(circle,#20282d 1px,transparent 1px);background-size:18px 18px}.timeline-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:27px}.timeline-heading>.eyebrow{font-size:10px;color:var(--tx2);letter-spacing:.11em}.zoom-switch{display:flex;background:var(--bg);border:1px solid var(--line2)}.zoom-switch button{font-size:12px;color:var(--tx2);padding:8px 10px;min-height:34px}.zoom-switch button[aria-pressed=true]{color:var(--tx);background:#20272C;box-shadow:inset 0 -1px var(--mint)}.timeline-legend{font-size:12px;margin-bottom:27px;gap:18px}.timeline-legend .timeline-note{font-size:10px}.swatch{border-radius:0}.timeline-grid{grid-template-columns:118px minmax(0,1fr);row-gap:15px}.track-label{display:flex;flex-direction:column;gap:1px;font-family:var(--sans);color:var(--tx)}.track-label b{font-size:14px;font-weight:500}.track-label small{font-size:11px;color:var(--tx2)}.track{height:40px;border-radius:0;position:relative;overflow:hidden}.impact-track{border:1px solid #CF484E!important;background:#201113!important;display:block}.impact-fill{position:absolute;top:0;bottom:0;background:var(--red)}.impact-fill.recovery{background:#8A3B3F}.track-text{position:relative;z-index:1;display:flex;align-items:center;height:100%;font-size:12px;color:#080B0C;padding-left:12px;pointer-events:none}.public-track{background:#0E1F1B;border-color:#456548}.dark-window{background:repeating-linear-gradient(135deg,#3FE0A01a 0,#3FE0A01a 1px,transparent 1px,transparent 6px);border-right:1px solid var(--mint)}.dark-window span{color:var(--mint);font-size:12px;padding-left:12px}.ack-window{background:var(--amber);color:#0A0C0E}.ack-window span{font-size:12px;padding-left:12px}.axis{font-size:11px;color:var(--tx2);font-variant-numeric:tabular-nums;margin-top:0}.playhead{background:var(--text);top:-8px;bottom:26px;z-index:3}.playhead>span{background:var(--text);width:9px;height:9px}.playhead>b{position:absolute;top:-26px;left:0;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:2px 5px;font:11px var(--mono);white-space:nowrap}.alert-marker{border-color:var(--mint);height:48px;top:35px}.alert-marker>span{font-size:10px;background:var(--bg);padding:2px 4px;top:7px;left:6px}.scrub-caption{font-size:12px;margin:13px 0 0 118px}.scrub-caption button{font-size:13px}#scrubber{width:calc(100% - 118px);margin:15px 0 0 118px;height:22px;accent-color:var(--mint);background:transparent}
+.moment-grid{padding:0;border-top:1px solid var(--line2);gap:0;grid-template-columns:1fr 1fr}.moment-card{border:0;border-radius:0;padding:23px 24px 21px;position:relative;background:var(--bg2);min-height:210px}.moment-card+.moment-card{border-left:1px solid var(--line2)}.customer-card:before,.public-card:before{content:'';position:absolute;left:24px;top:0;width:34px;height:2px;background:var(--red)}.public-card:before{background:var(--mint)}.card-eyebrow{font-size:10px;color:var(--tx2);gap:10px;flex-direction:row;align-items:center}.public-card .card-eyebrow{color:var(--tx2)}.status-pill{background:transparent!important;color:var(--red);padding:0;border-radius:0;font-size:11px}.status-pill.ok{color:var(--mint)}.status-pill.warn{color:var(--amber)}.moment-card h3{font-size:clamp(24px,2.5vw,35px);font-weight:500;line-height:1.08;letter-spacing:-.04em;max-width:21ch;margin:16px 0 14px}.customer-card h3{color:var(--red)}.public-card h3{color:var(--mint)}.public-card[data-state=warn] h3{color:var(--amber)}.public-card[data-state=down] h3{color:var(--red)}.customer-card[data-state=ok] h3{color:var(--mint)}.customer-card[data-state=warn] h3{color:var(--amber)}.moment-card p,.public-card p{font-size:15px;line-height:1.65;color:var(--tx2);margin-bottom:14px}.source-hint{font-size:11px;color:var(--tx2)}
+.alert-strip{padding:17px 24px;background:var(--bg);gap:14px;flex-wrap:nowrap}.alert-strip label{font-size:14px;color:var(--text)}.alert-strip div>span:not(.alert-symbol){font-size:12px}.alert-strip .alert-symbol{display:none}.alert-strip p{font-size:14px;color:var(--mint);max-width:195px;width:auto;padding-left:0;text-align:right}.threshold-control{border-radius:0;border-color:var(--line2);padding:6px 8px;background:var(--bg2)}.threshold-control input{width:53px;color:var(--tx);font-size:16px}.threshold-control span{font-size:13px!important}
+.detail-nav{display:flex;border-bottom:1px solid var(--line2);margin:29px 0 0;gap:28px;align-items:stretch}.detail-nav>button{padding:0 0 15px;font-size:14px;color:var(--tx2);position:relative;min-height:44px}.detail-nav>button[aria-pressed=true]{color:var(--tx)}.detail-nav>button[aria-pressed=true]:after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--mint)}.detail-nav button span{font:11px var(--mono);color:var(--tx2);margin-left:8px}.detail-nav .brief-button{margin-left:auto;font-size:13px}.event-section{margin-top:22px}.section-heading h3{font-size:16px}.reveal-toggle{font-size:13px}.event-row{grid-template-columns:67px 12px minmax(0,1fr) auto;padding:18px 0;gap:16px}.event-row p{font-size:15px;line-height:1.6}.event-row h4{font-size:15px}.event-dot{border-radius:0;width:7px;height:7px;background:currentColor;border:0!important;color:var(--red);margin-top:8px}.event-dot:after{background:var(--line2);left:3px}.event-jump{border-radius:0;font-size:12px;min-height:36px;padding:7px 9px;border-color:var(--line2)}.future-tag{font:10px var(--mono);margin-left:10px;color:var(--tx2)}.locked-events{padding:18px 96px;font-size:14px}.debrief{margin-top:22px;padding-top:26px;gap:40px}.debrief h3{font-size:23px;letter-spacing:-.03em}.debrief p{font-size:16px}.debrief a{font-size:14px}.debrief .evidence-note{font-size:12px}.debrief .eyebrow{font-size:11px}footer{font-size:12px;padding:24px 0;color:var(--tx2)}
+.comparison-header{display:flex;align-items:baseline;gap:22px;justify-content:space-between;margin:26px 0 14px}.comparison-header h3{font-size:20px;font-weight:500;letter-spacing:-.025em;margin:0}.comparison-header p{font-size:13px;color:var(--tx2);margin:0}.comparison-scroll{overflow:auto}.comparison-scroll table{border-collapse:collapse;width:100%;font-size:14px}.comparison-scroll th{font:12px var(--mono);color:var(--tx2);text-align:left;padding:14px 12px;border-bottom:1px solid var(--line2);white-space:nowrap}.comparison-scroll td{padding:16px 12px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:13px;white-space:nowrap}.comparison-scroll td:first-child{font-family:var(--sans);font-size:15px;white-space:normal;min-width:185px}.comparison-scroll td small{display:block;font:12px var(--mono);color:var(--tx2);margin-top:5px}.comparison-scroll button{padding:0;text-align:left;font-size:15px}.comparison-scroll tr.selected{background:#0E1F1B}.comparison-scroll .ahead{color:var(--mint)}.comparison-scroll .close{color:var(--amber)}.comparison-scroll .behind{color:var(--red)}.comparison-note{font-size:12px;color:var(--tx2);line-height:1.6}
+dialog{background:var(--bg2);border-radius:0;border-color:var(--line2)}dialog p{color:var(--tx2);font-size:16px}dialog h2{font-size:32px}dialog .dialog-footnote{font-size:13px}#toast{background:var(--text);color:var(--bg);border-radius:0;max-width:calc(100vw - 32px);width:max-content}a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline-offset:3px}
+@media(min-width:1680px){.app-shell{grid-template-columns:306px minmax(0,1fr)}main{padding:28px 48px 0}.archive{padding-left:26px;padding-right:26px}.incident-heading h2{font-size:43px}.gap-summary{min-width:270px}.gap-summary strong{font-size:84px}.replay-top{padding:24px 30px}.timeline{padding:26px 30px 22px}.track{height:44px}.moment-card{padding:26px 30px}.moment-card p{font-size:16px}#clock{font-size:56px}}
+@media(max-width:1150px){.app-shell{grid-template-columns:236px minmax(0,1fr)}.archive{padding-left:10px;padding-right:10px}main{padding-left:24px;padding-right:24px}.incident-heading{gap:18px}.gap-summary{min-width:165px;padding-left:18px}.gap-summary .eyebrow{max-width:160px}.gap-summary strong{font-size:57px}.gap-caption{max-width:160px;font-size:11px}.card-eyebrow{flex-direction:column;align-items:flex-start;gap:7px}.timeline-heading{flex-direction:column;align-items:flex-start;gap:14px;margin-bottom:28px}.alert-strip{flex-wrap:wrap}.alert-strip p{max-width:none;width:100%;text-align:left;margin:0}.incident-heading h2{font-size:30px}.timeline-grid{grid-template-columns:99px minmax(0,1fr)}#scrubber{width:calc(100% - 99px);margin-left:99px}.scrub-caption{margin-left:99px}.track-label small{font-size:10px}.moment-card h3{font-size:28px}.track-text,.ack-window span,.dark-window span{font-size:11px}.detail-nav{gap:18px}.detail-nav>button{font-size:13px}.detail-nav .brief-button{font-size:12px}}
+@media(max-width:850px){.app-shell{display:block}.archive{position:static;height:auto;padding:16px 20px;border-right:0;border-bottom:1px solid var(--line2)}.archive-heading{padding:0}.archive-heading .eyebrow{font-size:11px}.archive h1,.archive-intro,.archive-note,.back-link,.library-tools{display:none}#incident-list{padding-top:12px;gap:8px}.incident-option{min-width:205px;border:1px solid var(--line2);padding:10px 12px}.incident-option.selected{box-shadow:inset 0 -2px var(--mint)}.mini-gap{display:none}.incident-option .row{font-size:14px}.incident-option .meta{font-size:11px}main{padding:20px 20px 0}.topbar{padding:0 20px}.incident-heading{padding:20px 0}.incident-heading h2{font-size:35px}.gap-summary{min-width:185px}.gap-summary strong{font-size:61px}.card-eyebrow{flex-direction:row;align-items:center}.timeline-heading{flex-direction:row;align-items:center}.timeline-grid{grid-template-columns:105px minmax(0,1fr)}#scrubber{width:calc(100% - 105px);margin-left:105px}.scrub-caption{margin-left:105px}.alert-strip{flex-wrap:nowrap}.alert-strip p{width:auto;max-width:180px;text-align:right}.archive-label{display:none}.timeline-legend .timeline-note{display:none}}
+@media(max-width:560px){.topbar{height:56px;padding:0 16px;gap:15px}.brand{font-size:11px}.product-name{font-size:11px}.toplinks{display:none}.archive{padding:13px 16px}.incident-option{min-width:191px}.incident-option .meta{font-size:11px}main{padding:17px 16px 0}.workspace-top{gap:8px}.breadcrumb{font-size:11px}.breadcrumb .eyebrow{font-size:10px}.quiet-button{font-size:12px;padding:7px 9px;min-height:36px}.incident-heading{display:block}.provider-line{font-size:13px}.incident-heading h2{font-size:32px;max-width:21ch}.incident-heading p{font-size:13px;line-height:1.55}.gap-summary{display:grid;grid-template-columns:1fr auto;margin-top:18px;padding-top:14px;gap:3px 12px;text-align:left;border-left:0;padding-left:0;border-top:1px solid var(--line2);align-items:center}.gap-summary .eyebrow{font-size:10px;max-width:none;grid-column:1;grid-row:1}.gap-summary div{grid-column:2;grid-row:1/3}.gap-summary strong{font-size:45px}.gap-summary .gap-caption{margin:0;max-width:none;font-size:11px;grid-column:1;grid-row:2}.replay-top{padding:18px 16px;gap:10px;align-items:center}.playback{margin:0;gap:7px}.playback .icon-button{display:none}.play-button{width:44px;min-width:44px;padding:13px}.play-button span{display:none}.speed{width:78px;font-size:11px}#clock{font-size:35px}.time-display .eyebrow{font-size:10px}.time-display .eyebrow span{font-size:9px}.elapsed{font-size:10px}.timezone{font-size:11px}.timeline{padding:18px 14px}.timeline-heading{display:block;margin-bottom:24px}.timeline-heading>.eyebrow{display:block;margin-bottom:14px;font-size:9px}.zoom-switch{width:max-content;max-width:100%}.zoom-switch button{font-size:12px;padding:7px 10px}.timeline-legend{gap:12px;font-size:10px;margin-bottom:24px}.timeline-grid{grid-template-columns:72px minmax(0,1fr);row-gap:13px}.track-label b{font-size:12px}.track-label small{font-size:9px;max-width:70px}.track{height:38px}.track-text,.ack-window span,.dark-window span{font-size:10px;padding-left:6px}.axis{font-size:9px}.axis span:nth-child(even){visibility:hidden}.playhead>b{font-size:10px}.alert-marker>span{font-size:9px;left:2px;top:8px}#scrubber{width:calc(100% - 72px);margin-left:72px}.scrub-caption{margin-left:0;font-size:11px}.scrub-caption button{font-size:12px}.moment-grid{grid-template-columns:1fr}.moment-card{padding:19px 18px;min-height:0}.moment-card+.moment-card{border-left:0;border-top:1px solid var(--line2)}.moment-card h3{font-size:29px;margin:14px 0 12px}.moment-card p{font-size:15px}.card-eyebrow{font-size:10px;flex-direction:row}.status-pill{font-size:10px}.source-hint{font-size:11px}.customer-card:before,.public-card:before{left:18px}.alert-strip{flex-wrap:wrap;padding:17px 18px;gap:12px}.alert-strip label{font-size:13px}.alert-strip div>span:not(.alert-symbol){font-size:11px}.alert-strip>div:first-child{min-width:170px}.alert-strip p{width:100%;max-width:none;text-align:left;font-size:14px}.threshold-control input{width:48px}.detail-nav{flex-wrap:wrap;column-gap:25px;row-gap:0;margin-top:22px}.detail-nav>button{font-size:14px}.detail-nav .brief-button{font-size:12px;margin-left:0}.detail-nav button span{font-size:10px}.event-row{grid-template-columns:46px 7px minmax(0,1fr);gap:12px}.event-row time{font-size:12px}.event-row h4,.event-row p{font-size:14px}.event-jump{grid-column:3;font-size:12px;justify-self:start;padding:5px 8px;min-height:32px}.locked-events{padding:18px 0}.section-heading h3{font-size:15px}.reveal-toggle{font-size:12px}.debrief{grid-template-columns:1fr;gap:8px}.debrief p{font-size:15px}.comparison-header{display:block}.comparison-header p{margin-top:9px}.comparison-note{font-size:12px}footer{font-size:11px;gap:8px}.playhead{bottom:24px}}
+@media print{body{background:white;color:#101010}.topbar,.archive,.workspace-top,.playback,.timeline-heading,.player-scrub,#scrubber,.scrub-caption,.detail-nav,.reveal-toggle,#toast,.alert-strip,dialog{display:none!important}.app-shell{display:block}main{max-width:none;padding:0}.incident-heading{padding-top:0}.incident-heading h2,.provider-line,.gap-summary strong,.moment-card h3{color:#111}.replay-panel,.moment-card,.timeline,.replay-top{background:white!important}.moment-card p,.source-hint,.event-row p,.event-row time,.debrief p,footer,.elapsed,.time-display .eyebrow{color:#333}.event-row,.moment-card{break-inside:avoid}.event-jump{display:none}#event-section{display:block!important}.comparison-scroll th,.comparison-scroll td{color:#333}.gap-summary{border-color:#aaa}#comparison{display:none!important}}
 
-  /* micro-label: the only place uppercase mono is allowed */
-  .lbl{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
-
-  /* first focusable element: lets keyboard and screen-reader users bypass the sticky header */
-  .skip{position:absolute;inset-inline-start:-9999px;top:0;z-index:60;font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:12px 18px;background:var(--tx);color:var(--bg);font-weight:600}
-  .skip:focus{inset-inline-start:0}
-  main{display:block;scroll-margin-top:64px}
-  :focus-visible{outline:2px solid var(--grn);outline-offset:3px}
-  /* announced to assistive tech only: the result summary and the copy confirmation */
-  .sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
-
-  /* ---------- header ---------- */
-  header{position:sticky;top:0;z-index:40;background:rgba(10,12,14,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-  .bar{display:flex;align-items:center;justify-content:space-between;gap:16px;height:60px}
-  .mark{display:flex;align-items:center;gap:11px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx)}
-  .mark .suite{display:flex;align-items:center;gap:11px;color:var(--tx3);position:relative}
-  .mark .suite::after{content:"";position:absolute;inset:-16px -8px}
-  .mark .suite:hover{color:var(--tx)}
-  .mark .sep{color:var(--line2)}
-  .mark .tool{color:var(--tx)}
-  .sq{width:9px;height:9px;background:var(--grn);flex:none}
-  nav{display:flex;gap:28px}
-  nav a{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);position:relative;display:inline-block}
-  nav a::after{content:"";position:absolute;inset:-16px -10px}
-  nav a:hover{color:var(--tx)}
-  @media(max-width:860px){nav{display:none}}
-
-  /* ---------- shared type ---------- */
-  /* ---- shared hero type, identical across the suite ----
-     One scale across the suite. 84px is the largest that still holds every one of the
-     headlines to two lines. h1 .setup carries the two-tone on the headlines built as a
-     setup and a question: the question keeps full brightness, the setup steps back. */
-  h1{font-weight:500;font-size:clamp(40px,5.6vw,84px);line-height:1;letter-spacing:-.04em;margin:24px 0 0;max-width:25ch;text-wrap:balance;color:var(--tx)}
-  h1 .setup{color:var(--tx2)}
-  .lede{font-size:17px;color:var(--tx2);max-width:60ch;margin:0;text-wrap:pretty}
-  .hero-body{margin:38px 0 0}
-  @media(max-width:700px){.hero-body{margin-top:30px}}
-  /* ---- end shared hero type ---- */
-  h2{font-weight:500;font-size:clamp(26px,3vw,40px);line-height:1.1;letter-spacing:-.03em;margin:18px 0 18px;max-width:28ch;text-wrap:balance}
-  h3{font-weight:600;font-size:17px;letter-spacing:-.015em;margin:0 0 8px}
-  .lede a{color:var(--tx);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:4px}
-  .lede a:hover{color:var(--grn);text-decoration-color:var(--grn)}
-  @keyframes drop{from{opacity:0;transform:translateY(-5px)}}
-  @media (prefers-reduced-motion: no-preference){
-    html{scroll-behavior:smooth}
-    .toast{transition:opacity .22s ease, transform .22s ease}
-    .caret{transition:transform .18s ease, color .18s ease}
-    .sel-list{animation:drop .14s ease-out}
-    .btn{transition:background .15s ease,border-color .15s ease,color .15s ease}
-    .rise{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
-    .rise.d1{animation-delay:.06s}.rise.d2{animation-delay:.12s}
-    @keyframes rise{from{opacity:0;transform:translateY(14px)}}
-    .big .cursor{animation:blink 1.15s steps(1) infinite}
-    @keyframes blink{50%{opacity:0}}
-  }
-  section{padding:96px 0;border-top:1px solid var(--line);scroll-margin-top:64px}
-  @media(max-width:700px){section{padding:64px 0}}
-
-  /* ---------- hero ---------- */
-  .hero{padding:88px 0 64px}
-  @media(max-width:700px){.hero{padding:56px 0 44px}}
-  .hero-meta{font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--tx3);margin:22px 0 0;line-height:1.7}
-
-  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;
-    display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:15px 24px;
-    background:var(--tx);color:var(--bg);border:1px solid var(--tx);cursor:pointer}
-  .btn:hover{background:#fff;border-color:#fff}
-  .btn.ghost{background:transparent;color:var(--tx);border-color:var(--line2)}
-  .btn.ghost:hover{border-color:var(--grn);color:var(--grn)}
-  .btn:active{transform:translateY(1px)}
-
-  /* ---------- console: the ask ----------
-     Not a form. You name the incident and your own paging threshold in one editable
-     sentence, and the tool answers in a sentence of its own, followed by the replay
-     and the ranked list. The editable values are the only green in the prose. */
-  .console-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:12px 72px;align-items:stretch;margin-top:6px}
-  @media(max-width:980px){.console-grid{grid-template-columns:1fr;gap:0}}
-  .config{font-size:clamp(20px,2.4vw,26px);line-height:1.55;color:var(--tx2);margin:8px 0 0;text-wrap:balance;letter-spacing:-.012em}
-  .config + .config{margin-top:.62em}
-  .iv-num{font-family:var(--mono);font-size:.92em;font-weight:500;color:var(--grn);background:transparent;line-height:1.15;
-    border:0;border-bottom:1px solid var(--line2);padding:0 1px 3px;text-align:center;font-variant-numeric:tabular-nums}
-  .iv-num:hover{border-bottom-color:var(--tx3)}
-  .iv-num:focus{outline:0;border-bottom-color:var(--grn)}
-  input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-  .iv-num{-moz-appearance:textfield;appearance:textfield}
-  .iv-num:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
-  .config-note{font-size:16px;color:var(--tx2);margin:26px 0 0;max-width:64ch;text-wrap:pretty}
-  .config-meta{font-family:var(--mono);font-size:12.5px;letter-spacing:.03em;color:var(--tx3);margin:14px 0 0;line-height:1.7}
-  .nb{white-space:nowrap}
-
-  /* ---------- the incident picker: the ARIA combobox worn inline as a word ---------- */
-  .sel{position:relative;display:inline-block;max-width:100%;vertical-align:baseline}
-  .sel-btn{display:inline-flex;align-items:baseline;gap:7px;font-family:var(--mono);font-size:.92em;font-weight:500;line-height:1.15;
-    color:var(--grn);background:transparent;border:0;border-bottom:1px solid var(--line2);padding:0 1px 3px;cursor:pointer;white-space:nowrap;max-width:100%}
-  .sel-btn:hover{border-bottom-color:var(--tx3)}
-  .sel-btn[aria-expanded="true"]{border-bottom-color:var(--grn)}
-  .sel-btn:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
-  .sel-btn .nm{min-width:0;overflow:hidden;text-overflow:ellipsis}
-  .caret{flex:none;width:.4em;height:.4em;color:var(--tx3);align-self:center}
-  .sel-btn:hover .caret{color:var(--grn)}
-  .sel-btn[aria-expanded="true"] .caret{color:var(--grn);transform:rotate(180deg)}
-  .sel-list{position:absolute;z-index:50;inset-inline-start:0;top:calc(100% + 7px);margin:0;padding:5px 0;list-style:none;
-    min-width:min(400px,88vw);background:var(--bg2);border:1px solid var(--line2);box-shadow:0 22px 48px rgba(0,0,0,.62);
-    max-height:min(54vh,340px);overflow-y:auto;overscroll-behavior:contain;font-size:14px;font-weight:400}
-  .sel-list[hidden]{display:none}
-  .sel-opt{display:flex;align-items:center;gap:12px;padding:11px 14px;font-family:var(--mono);font-size:14px;color:var(--tx2);cursor:pointer;white-space:nowrap}
-  @media(max-width:640px){.sel-opt{padding:14px;font-size:15px}}
-  .sel-opt .mk{width:6px;height:6px;flex:none}
-  .sel-opt .nm{flex:1}
-  .sel-opt .gp{color:var(--tx3);font-size:12px}
-  .sel-opt[aria-selected="true"],.sel-opt.act{color:var(--tx)}
-  .sel-opt[aria-selected="true"] .mk{background:var(--grn)}
-  .sel-opt.act{background:rgba(63,224,160,.07);box-shadow:inset 2px 0 0 var(--grn2)}
-
-  /* ---------- the answer ----------
-     The plate reads as an instrument: the stage's dot grid and glow behind it and the
-     brand's block cursor after the verdict, blinking the way the social cards freeze it. */
-  .headline-out{position:relative;overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--line);
-    background-color:var(--bg2);background-image:
-    radial-gradient(90% 110% at 18% 0%, rgba(63,224,160,.07), transparent 70%),
-    radial-gradient(circle, #161B20 1px, transparent 1.1px);
-    background-size:100% 100%, 22px 22px;
-    padding:28px 30px 26px;margin:10px 0 0}
-  @media(max-width:980px){.headline-out{margin-top:36px}}
-  .tick{position:absolute;width:9px;height:9px;border:0 solid var(--line2)}
-  .tick.tl{top:-1px;left:-1px;border-top-width:1px;border-left-width:1px}
-  .tick.tr{top:-1px;right:-1px;border-top-width:1px;border-right-width:1px}
-  .tick.bl{bottom:-1px;left:-1px;border-bottom-width:1px;border-left-width:1px}
-  .tick.br{bottom:-1px;right:-1px;border-bottom-width:1px;border-right-width:1px}
-  .headline-out .lbl{margin-bottom:14px}
-  .headline-out .lbl::before{content:"";display:inline-block;width:6px;height:6px;background:var(--grn);margin-right:10px;vertical-align:1px}
-  .big{font-weight:500;font-size:clamp(24px,2.6vw,34px);line-height:1.25;letter-spacing:-.025em;color:var(--tx);font-variant-numeric:tabular-nums;text-wrap:balance}
-  .big .a{color:var(--grn2);margin-inline-end:4px;font-family:var(--mono);font-weight:400;font-size:.95em}
-  .big .v{color:var(--grn);font-family:var(--mono);font-size:.95em}
-  /* the block cursor from the suite's social cards, live on the page */
-  .big .cursor{display:inline-block;width:.44em;height:.86em;background:var(--grn);margin-inline-start:9px;vertical-align:-.06em}
-  .headline-out .note{font-size:15px;color:var(--tx2);margin:14px 0 20px;text-wrap:pretty}
-  .headline-out .note b{font-family:var(--mono);font-size:.92em;font-weight:600;color:var(--tx);white-space:nowrap}
-  .bar-cap b{font-weight:500}
-  .bar-cap .cm{color:var(--r-make)}
-  .bar-cap .cs{color:var(--r-slip)}
-  .bar-cap .cx{color:var(--r-miss)}
-
-  /* the phase bar: one incident as a stacked strip, dark window first. Decorative;
-     the caption below carries the same split as text. */
-  .bar-wrap{margin-top:auto;padding-top:18px;border-top:1px solid var(--line)}
-  .bandbar{display:flex;height:8px;background:var(--line);gap:2px}
-  .bandbar span{display:block;height:100%;min-width:2px}
-  .bandbar .b-dark{background:var(--r-miss)}
-  .bandbar .b-open{background:var(--r-slip)}
-  .bandbar .b-rec{background:var(--r-make)}
-  .bar-cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-top:12px;line-height:1.7}
-
-  /* ---------- progressive disclosure ---------- */
-  details.more{border:1px solid var(--line);margin-top:26px}
-  details.more>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px;padding:15px 18px;
-    font-family:var(--mono);font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--tx2)}
-  details.more>summary::-webkit-details-marker{display:none}
-  details.more>summary::before{content:"+";font-family:var(--mono);font-weight:600;color:var(--grn);width:1ch}
-  details.more[open]>summary::before{content:"\2212"}
-  details.more>summary:hover{color:var(--tx)}
-  details.more>summary:focus-visible{outline:2px solid var(--grn);outline-offset:-2px}
-  details.more>.d-body{padding:4px 18px 20px}
-
-  /* ---------- the stage: the replay, two lanes ---------- */
-  .stage{position:relative;overflow:hidden;border:1px solid var(--line);background:
-    radial-gradient(58% 48% at 50% 56%, rgba(63,224,160,.05), transparent 72%),
-    radial-gradient(circle, #161B20 1px, transparent 1.1px);
-    background-size:100% 100%, 22px 22px;
-    padding:52px 26px 20px;margin-top:52px}
-  @media(max-width:700px){.stage{padding:46px 12px 14px}}
-  .hud{position:absolute;top:16px;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
-  .hud.tl2{left:20px}
-  .hud.tr2{right:20px;color:var(--grn2)}
-  @media(max-width:640px){.hud.tr2{display:none}}
-  .stage svg{width:100%;height:auto;display:block}
-  /* on a phone the chart keeps a readable width and pans instead of shrinking */
-  .tlwrap{overflow-x:auto;overscroll-behavior-x:contain}
-  .tlwrap:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
-  @media(max-width:700px){.tlwrap svg{min-width:680px}}
-  .stage .cap{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-top:18px}
-
-  /* ---------- the log: what the console actually said ----------
-     The chart is the shape of the incident. This is the evidence: every row pairs the
-     status page's own words with what was true at that minute. */
-  .log{border-top:1px solid var(--line);margin-top:52px}
-  .lrow{display:grid;grid-template-columns:96px 15px 1fr 1fr;gap:0 26px;padding:20px 0 22px;border-bottom:1px solid var(--line);align-items:start}
-  .lrow .lt{font-family:var(--mono);font-size:13px;color:var(--tx);font-variant-numeric:tabular-nums;white-space:nowrap;padding-top:1px}
-  .lrow .lt small{display:block;font-size:11px;color:var(--tx3);letter-spacing:.06em;margin-top:5px}
-  .lrow .ld{width:9px;height:9px;margin-top:6px;background:var(--line2)}
-  .lrow.s-ok .ld{background:var(--r-make)}
-  .lrow.s-warn .ld{background:var(--r-slip)}
-  .lrow.s-down .ld{background:var(--r-miss)}
-  .lcol .h{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-bottom:9px}
-  .lcol .q{font-size:15px;line-height:1.65;color:var(--tx2b);text-wrap:pretty;max-width:64ch}
-  .lcol .q.said{color:var(--tx);border-inline-start:2px solid var(--line2);padding-inline-start:16px}
-  .lrow.s-ok .q.said{border-inline-start-color:var(--r-make)}
-  .lrow.s-warn .q.said{border-inline-start-color:var(--r-slip)}
-  .lrow.s-down .q.said{border-inline-start-color:var(--r-miss)}
-  .lhead{display:grid;grid-template-columns:96px 15px 1fr 1fr;gap:0 26px;padding:0 0 12px}
-  .lhead span{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3)}
-  @media(max-width:860px){
-    .lhead{display:none}
-    .lrow{grid-template-columns:15px 1fr;gap:0 16px;row-gap:14px}
-    .lrow .lt{grid-column:2;order:-1}
-    .lrow .ld{grid-row:1;margin-top:8px}
-    .lrow .lcol{grid-column:2}
-  }
-
-  /* ---------- the ranked list ---------- */
-  .q-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:52px 0 12px}
-  .q-t{font-family:var(--mono);font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--tx3)}
-  .uswitch{display:flex;margin:0}
-  .uswitch button{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;background:none;border:1px solid var(--line2);color:var(--tx3);cursor:pointer}
-  .uswitch button+button{border-inline-start:0}
-  .uswitch button[aria-pressed="true"]{color:var(--bg);border-color:var(--tx);background:var(--tx)}
-  @media(max-width:640px){.uswitch button{padding:12px 16px}}
-  .queue{border-top:1px solid var(--line);margin-bottom:34px}
-  .qrow{display:grid;grid-template-columns:26px 1fr auto;gap:14px;align-items:baseline;padding:18px 18px 19px;border-bottom:1px solid var(--line);border-inline-start:2px solid var(--line2);width:100%;text-align:start;background:none;font:inherit;color:inherit;cursor:pointer}
-  .qrow.b-make{border-inline-start-color:var(--r-make);background:var(--w-make)}
-  .qrow.b-slip{border-inline-start-color:var(--r-slip);background:var(--w-slip)}
-  .qrow.b-miss{border-inline-start-color:var(--r-miss);background:var(--w-miss)}
-  .qrow:hover .nm{color:var(--grn)}
-  .qrow[aria-current="true"] .nm::after{content:"\00a0\25C2";color:var(--grn)}
-  /* the row is a button, so every span inside it has to be told to behave like a block */
-  .qrow > span,.qrow .nm,.qrow .sub,.qrow .ev{display:block}
-  .qrow .rk{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--tx3);font-variant-numeric:tabular-nums}
-  .qrow .nm{font-weight:600;font-size:16px;color:var(--tx);letter-spacing:-.015em}
-  .qrow .nm small{font-family:var(--mono);font-weight:400;font-size:12px;letter-spacing:.04em;color:var(--tx3);margin-inline-start:10px}
-  .qrow .sub{font-size:14px;color:var(--tx2);margin-top:5px;line-height:1.5;max-width:72ch;text-wrap:pretty}
-  .qrow .ev{font-family:var(--mono);font-size:12px;letter-spacing:.01em;color:var(--tx2);margin-top:9px;line-height:1.8}
-  .qrow .ev b{color:var(--tx);font-weight:600}
-  .qrow .amt{font-family:var(--mono);font-size:17px;font-weight:600;color:var(--tx);text-align:end;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .qrow .amt small{display:block;font-size:11px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-top:7px}
-  .band{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--tx2);margin-top:12px}
-  .band .mk{width:8px;height:8px;flex:none;background:var(--line2)}
-  .band.b-make .mk{background:var(--r-make)}
-  .band.b-slip .mk{background:var(--r-slip)}
-  .band.b-miss .mk{background:var(--r-miss)}
-  @media(max-width:700px){
-    .qrow{grid-template-columns:22px 1fr;padding-inline:12px}
-    .qrow .amt{grid-column:2;text-align:start;margin-top:10px}
-    .qrow .amt small{display:inline;margin-inline-start:6px}
-  }
-
-  /* stats: hairline typography instead of boxed cells */
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0 40px}
-  @media(max-width:620px){.grid{grid-template-columns:repeat(2,1fr);gap:0 24px}}
-  .cell{border-top:1px solid var(--line);padding:16px 0 22px}
-  .cell .k{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;line-height:1.5;min-height:2.6em}
-  .cell .v{font-family:var(--mono);font-weight:500;font-size:24px;letter-spacing:-.02em;line-height:1.1;color:var(--tx);font-variant-numeric:tabular-nums}
-  .cell .v small{font-size:11px;font-weight:400;letter-spacing:.1em;color:var(--tx3);margin-inline-start:6px}
-
-  .flag{border-inline-start:2px solid var(--grn2);padding:2px 0 2px 20px;margin-top:34px;font-size:15px;line-height:1.75;color:var(--tx2)}
-  .flag .t{font-family:var(--mono);font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--grn);margin-inline-end:16px;white-space:nowrap}
-  .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
-  @media(max-width:640px){.actions{flex-direction:column;align-items:stretch;width:100%}}
-
-  /* ---------- prose sections ---------- */
-  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:48px;margin-top:52px}
-  @media(max-width:820px){.three{grid-template-columns:1fr;gap:36px}}
-  .three .c{border-top:1px solid var(--line2);padding-top:22px}
-  .three .c .i{font-family:var(--mono);font-size:12px;color:var(--grn);margin-bottom:14px}
-  .three .c p{margin:0;font-size:15px;color:var(--tx2);text-wrap:pretty}
-
-  /* the numbers that make the argument, on an instrument readout of their own */
-  .strip{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:64px;
-    border:1px solid var(--line);background:var(--bg2)}
-  .strip > div{padding:38px 40px 34px}
-  .strip > div + div{border-inline-start:1px solid var(--line)}
-  @media(max-width:700px){
-    .strip{grid-template-columns:1fr}
-    .strip > div{padding:26px 24px 24px}
-    .strip > div + div{border-inline-start:0;border-top:1px solid var(--line)}
-  }
-  .strip .n{font-family:var(--mono);font-weight:500;font-size:clamp(34px,3.6vw,54px);letter-spacing:-.03em;line-height:1.05;color:var(--tx);font-variant-numeric:tabular-nums}
-  .strip .n .u{font-size:.42em;letter-spacing:.08em;color:var(--tx3);margin-inline-start:4px}
-  .strip .n.g{color:var(--grn)}
-  .strip .l{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-top:16px}
-
-  .steps{display:grid;grid-template-columns:repeat(2,1fr);gap:44px 48px;margin-top:52px}
-  @media(max-width:820px){.steps{grid-template-columns:1fr;gap:36px}}
-  .step{border-top:1px solid var(--line2);padding-top:22px}
-  .step .n{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--grn);margin-bottom:14px}
-  .step p{margin:0 0 10px;font-size:15px;color:var(--tx2);text-wrap:pretty}
-  .step p:last-child{margin-bottom:0}
-  .step b{color:var(--tx);font-weight:500}
-
-  .worked{border:1px solid var(--line);background:var(--bg2);padding:32px 34px;margin-top:56px;position:relative}
-  @media(max-width:700px){.worked{padding:24px 20px}}
-  .worked .t{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin-bottom:20px}
-  .chain{font-family:var(--mono);font-size:15px;line-height:2.2;color:var(--tx2b);overflow-x:auto}
-  .chain .a{color:var(--grn)}
-  .chain b{font-weight:600;color:var(--tx)}
-  .worked .out{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);font-size:16px;color:var(--tx2)}
-
-  /* ---------- table ---------- */
-  .tscroll{overflow-x:auto}
-  .tscroll:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
-  table{width:100%;border-collapse:collapse;font-size:15px;margin-top:44px}
-  th,td{text-align:start;padding:14px 16px 14px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--tx2)}
-  th{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);font-weight:400}
-  td.m{font-family:var(--mono);font-size:14px;white-space:nowrap;color:var(--tx);font-variant-numeric:tabular-nums}
-  td.name{font-weight:500;color:var(--tx);white-space:nowrap}
-  td.note{min-width:26ch}
-  td a{color:var(--tx2);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
-  td a:hover{color:var(--grn);text-decoration-color:var(--grn)}
-  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line2);padding:3px 8px;color:var(--tx3);white-space:nowrap}
-  .tag.l{border-color:rgba(63,224,160,.4);color:var(--grn)}
-
-  /* the model as a framed ledger */
-  .method-grid{display:grid;grid-template-columns:minmax(0,11fr) minmax(0,9fr);gap:24px 40px;align-items:stretch;margin-top:48px}
-  @media(max-width:980px){.method-grid{grid-template-columns:1fr;gap:24px}}
-  .model{position:relative;border:1px solid var(--line);background:var(--bg2);padding:26px 30px 12px;display:flex;flex-direction:column}
-  @media(max-width:700px){.model{padding:20px 18px 8px}}
-  .model-hd{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
-  .model-hd .g{color:var(--grn2)}
-  .frow{display:grid;grid-template-columns:minmax(130px,170px) 1fr;gap:4px 26px;padding:13px 0 14px;
-    border-bottom:1px solid var(--line);font-family:var(--mono);font-size:14px;line-height:1.75}
-  .frow:last-child{border-bottom:0}
-  @media(max-width:640px){.frow{grid-template-columns:1fr}}
-  .frow .ft{color:var(--grn);font-weight:500}
-  .frow .fx{color:var(--tx2b);overflow-wrap:break-word}
-  ul.plain{padding-inline-start:0;list-style:none;margin:40px 0 0;max-width:78ch}
-  .model ul.plain{margin:0;max-width:none;flex:1;display:flex;flex-direction:column}
-  .model ul.plain li{flex:1;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:12px 0;padding-inline-start:0;margin:0;border-bottom:1px solid var(--line);font-size:15px;line-height:1.7}
-  .model ul.plain li:last-child{border-bottom:0}
-  .model ul.plain li:before{content:none}
-  ul.plain li{position:relative;padding-inline-start:28px;margin-bottom:14px;font-size:16px;color:var(--tx2)}
-  ul.plain li:before{content:"\2014";position:absolute;left:0;font-family:var(--mono);color:var(--grn2)}
-  ul.plain li b{color:var(--tx);font-weight:500}
-
-  /* ---------- section index: outlined ghost numerals ---------- */
-  .sec-row{display:flex;align-items:center;gap:26px;margin-bottom:38px}
-  .sec-num{font-family:var(--mono);font-weight:600;font-size:clamp(44px,4.8vw,70px);line-height:.9;color:var(--line2);flex:none;font-variant-numeric:tabular-nums}
-  @supports (-webkit-text-stroke:1px black){.sec-num{color:transparent;-webkit-text-stroke:1px var(--line2)}}
-  .sec-rule{flex:1;height:1px;background:var(--line)}
-
-  /* scroll reveals: elements are visible by default; a script opts them in,
-     and only when motion is welcome */
-  .rv0{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
-  .rv0.rvIn{opacity:1;transform:none}
-
-  /* ---------- built by: the nameplate ---------- */
-  .plate{position:relative;border:1px solid var(--line);background:var(--bg2)}
-  .plate-main{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:40px 88px;padding:52px 52px 44px}
-  .p-name{font-weight:500;font-size:clamp(34px,3.8vw,58px);letter-spacing:-.035em;line-height:1.05;margin-top:16px;color:var(--tx)}
-  .p-bio{font-size:16px;color:var(--tx2);max-width:44ch;margin:18px 0 0;text-wrap:pretty}
-  .p-spec{margin:0;align-self:center}
-  .p-spec > div{display:grid;grid-template-columns:96px 1fr;gap:24px;padding:15px 0 16px;border-top:1px solid var(--line);align-items:baseline}
-  .p-spec > div:last-child{border-bottom:1px solid var(--line)}
-  .p-spec dt{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
-  .p-spec dd{margin:0;font-family:var(--mono);font-size:14px;color:var(--tx)}
-  .p-spec dd.on{color:var(--grn)}
-  .p-spec dd.on::before{content:"";display:inline-block;width:6px;height:6px;background:var(--grn);margin-right:10px;vertical-align:1px}
-  .plate-ft{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;border-top:1px solid var(--line);padding:20px 52px}
-  .lnk{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx2);white-space:nowrap;padding:14px 2px}
-  .lnk:hover{color:var(--grn)}
-  @media(max-width:860px){
-    .plate-main{grid-template-columns:1fr;gap:36px;padding:32px 24px 30px}
-    .plate-ft{padding:16px 24px;flex-direction:column;align-items:stretch}
-    .plate-ft .btn{justify-content:center}
-    .lnk{text-align:center}
-  }
-
-  footer{border-top:1px solid var(--line);padding:44px 0 72px;font-size:15px;color:var(--tx3)}
-  footer a{color:var(--tx2)}
-  footer a:hover{color:var(--grn)}
-  footer .lbl{margin-bottom:14px}
-
-  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--tx);color:var(--bg);font-family:var(--mono);font-weight:600;font-size:12px;letter-spacing:.13em;text-transform:uppercase;padding:13px 20px;opacity:0;pointer-events:none;z-index:60}
-  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
-
-  .print-url{display:none}
-
-  /* print: a one-page incident brief. Only the replay survives, on white. */
-  @media print{
-    @page{margin:11mm}
-    :root{--bg:#fff;--bg2:#fff;--line:#c7cdd5;--line2:#a8b1bc;--tx:#12161b;--tx2:#39424d;--tx2b:#39424d;--tx3:#66707c;--grn:#0b7f58;--grn2:#0b7f58;
-      --r-make:#0b7f58;--r-slip:#8a6d00;--r-miss:#a83232;--w-make:#fff;--w-slip:#fff;--w-miss:#fff}
-    body{background:#fff;font-size:14px}
-    header{position:static;background:#fff;backdrop-filter:none;box-shadow:none}
-    header nav{display:none}
-    section:not(#replay),footer,.toast{display:none}
-    #replay{display:block;padding:12px 0 0;border-top:0}
-    .actions,.skip,.caret,.sel-list,details.more,.config-note,.uswitch,.hud{display:none}
-    .config{font-size:15px;line-height:1.7;margin-top:4px}
-    .stage{background:none;padding:10px;margin-top:20px}
-    .headline-out,.grid,.flag,.qrow,.lrow{break-inside:avoid}
-    .print-url{display:block;margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--tx3);word-break:break-all}
-  }
-
-  /* large screens: use them */
-  @media(min-width:1680px){
-    .wrap{max-width:1520px}
-    .lede{font-size:18px}
-    .three .c p,.step p{font-size:16px}
-    .config{font-size:28px}
-  }
-  @media(min-width:2200px){.wrap{max-width:1720px}}
-
-  /* Replay workspace: suite fonts, signal colours, square panels and corner ticks. */
-  .hero{padding:36px 0 28px;display:grid;grid-template-columns:1fr 1fr;gap:10px 48px;align-items:end}
-  .hero>.lbl{grid-column:1/-1}
-  .hero h1{font-size:clamp(32px,3.7vw,54px);margin:8px 0 0;max-width:24ch}
-  .hero-body{margin:0}.hero .lede{font-size:16px}.hero-meta{margin-top:12px}
-  #replay{padding:24px 0 64px}.console-grid{gap:24px 44px}.config{font-size:21px}
-  #replay>.wrap>.sec-row{margin-bottom:24px}.headline-out{padding:20px 24px}
-  .headline-out .big{font-size:clamp(26px,3vw,38px)}
-  .incident-context{margin-top:16px;border-top:1px solid var(--line2);padding-top:12px}
-  .incident-context summary{cursor:pointer;color:var(--tx2);font-size:14px}
-  .stage{margin-top:28px;padding-top:46px;border-color:var(--line2)}
-  .player-toolbar{display:flex;justify-content:space-between;align-items:center;gap:24px;padding:0 0 24px}
-  .player-clock{font-family:var(--mono);font-size:clamp(32px,4vw,52px);font-variant-numeric:tabular-nums;line-height:1.2;letter-spacing:-.04em}
-  .player-clock small{font-size:14px;color:var(--tx2);letter-spacing:0;margin-left:10px}
-  .player-elapsed{font-family:var(--mono);font-size:13px;color:var(--tx2);margin-top:6px}
-  .player-controls{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
-  .player-controls .btn{font-size:14px;text-transform:none;letter-spacing:0;min-height:44px;padding:10px 16px}
-  .player-speed{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--tx2)}
-  .player-speed select{background:var(--bg);color:var(--tx);border:1px solid var(--line2);min-height:44px;padding:8px;font-family:var(--mono);font-size:14px}
-  .player-scrub{display:flex;gap:20px;align-items:center;margin:18px 0 0}
-  .player-scrub input{width:100%;min-width:0;accent-color:var(--grn);height:28px;cursor:ew-resize}
-  .player-scrub label{font-size:14px;color:var(--tx2);white-space:nowrap}
-  .moment-pair{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line2);margin-top:22px;background:var(--bg)}
-  .moment{padding:22px 24px;min-width:0}.moment+.moment{border-left:1px solid var(--line2)}
-  .moment-heading{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}
-  .moment-heading .lbl{color:var(--tx2);font-size:12px}.moment-state{font:13px var(--mono);color:var(--r-miss)}
-  .moment-state[data-state="ok"]{color:var(--r-make)}.moment-state[data-state="warn"]{color:var(--r-slip)}
-  .moment p{font-size:16px;line-height:1.65;margin:0;color:var(--tx)}
-  .moment small{font-size:13px;color:var(--tx2);display:block;margin-top:12px}
-  .replay-log-toggle{display:flex;align-items:center;gap:9px;font-size:14px;color:var(--tx2)}
-  .replay-log-toggle input{accent-color:var(--grn);width:18px;height:18px}
-  #log{margin-top:12px}.log-pending{font-size:14px;color:var(--tx2);padding:22px 0;border-bottom:1px solid var(--line)}
-  .stage .cap{text-transform:none;letter-spacing:0;color:var(--tx2);font-size:13px;line-height:1.6}
-  .player-controls button:disabled{opacity:.45;cursor:default}
-  @media(max-width:860px){.hero{grid-template-columns:1fr;gap:20px}.hero-body{margin:0}.hero{padding-top:28px}.console-grid{gap:20px}.player-toolbar{align-items:flex-start;flex-direction:column;gap:18px}}
-  @media(max-width:640px){.moment-pair{grid-template-columns:1fr}.moment+.moment{border-left:0;border-top:1px solid var(--line2)}.moment{padding:18px}.player-controls{gap:8px}.player-controls .btn{padding:9px 12px}.player-scrub{gap:12px}.player-scrub label{font-size:13px}.moment-heading{flex-wrap:wrap}.q-head:has(.replay-log-toggle){align-items:flex-start;gap:16px;flex-direction:column}}
-  @media print{.hero,.player-toolbar,.player-scrub,.replay-log-toggle,.moment-pair,.log-pending{display:none}.stage{padding-top:10px}}
+.event-row .event-public{font-size:13px;margin-top:9px;color:var(--tx2)}.event-public span{color:var(--text)}
 
 </style>
 </head>
 <body>
-
-<a class="skip" href="#main">Skip to content</a>
-
-<header>
-  <div class="wrap bar">
-    <div class="mark">
-      <a class="suite" href="/"><span class="sq" aria-hidden="true"></span>Infrabench</a>
-      <span class="sep">/</span>
-      <span class="tool">Outage replay</span>
-    </div>
-    <nav aria-label="Page sections">
-      <a href="#replay">Replay</a>
-      <a href="#how">How it works</a>
-      <a href="#incidents">Incidents</a>
-      <a href="#method">Method</a>
-    </nav>
-  </div>
-</header>
-
-<main id="main" tabindex="-1">
-
-<!-- ================= HERO ================= -->
-<div class="wrap">
-  <div class="hero">
-    <div class="lbl rise">Tool 04 &mdash; Incident communication</div>
-    <h1 class="rise d1"><span class="setup">The dashboard was green.</span> How long had it been wrong?</h1>
-    <div class="hero-body rise d2">
-      <p class="lede">Step through six real cloud incidents. Compare customer impact with public updates, then see when your own monitoring would have alerted you.</p>
-      <!-- counted off the incident data on this page, so it cannot drift from what the tool replays -->
-      <p class="hero-meta" id="heroMeta"></p>
-    </div>
-  </div>
-</div>
-
-<!-- ================= REPLAY ================= -->
-<section id="replay">
-  <div class="wrap">
-    <div class="sec-row"><span class="sec-num" aria-hidden="true">01</span><span class="sec-rule"></span><span class="lbl">The replay</span></div>
-
-    <!-- stable region, populated on every recalculation so the result is announced -->
-    <p class="sr" id="srStatus" role="status"></p>
-    <span class="sr" id="incLabel">Incident to replay</span>
-
-    <div class="console-grid">
-      <div>
-        <!-- divs, not <p>: the picker's listbox may not sit inside a paragraph -->
-        <div class="config">Replay
-          <span class="sel"><span class="sel-btn" id="inc" role="combobox" tabindex="0" aria-controls="incList" aria-expanded="false" aria-labelledby="incLabel"><span class="nm" id="incName"></span><svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span><ul class="sel-list" id="incList" role="listbox" aria-labelledby="incLabel" hidden></ul></span>.</div>
-        <div class="config">My own monitoring pages someone <span class="nb"><input class="iv-num" type="number" inputmode="numeric" id="thr" value="15" min="1" max="240" step="1" aria-label="Minutes before your own monitoring pages someone"> minutes</span> after users start failing.</div>
-
-        <details class="incident-context"><summary>What caused this incident?</summary><p class="config-note" id="incNote"></p></details>
-        <p class="config-meta" id="askMeta"></p>
-      </div>
-
-      <div class="headline-out">
-        <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
-        <div class="lbl">The detection gap</div>
-        <div class="big" id="bigLine"><span class="a" aria-hidden="true">&rarr;</span> <span id="bigText">&mdash;</span><span class="cursor" aria-hidden="true"></span></div>
-        <div class="note" id="outNote"></div>
-        <div class="bar-wrap"><div class="bandbar" id="bandbar" aria-hidden="true"></div><div class="bar-cap" id="barCap"></div></div>
-      </div>
-    </div>
-
-    <div class="stage">
-      <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
-      <span class="hud tl2" aria-hidden="true">Reality against the console &mdash; all times UTC</span>
-      <span class="hud tr2" id="stageTR" aria-hidden="true"></span>
-      <div class="player-toolbar">
-        <div><div class="lbl">Replay clock · <span id="playState">Paused</span></div><div class="player-clock"><span id="replayClock">17:51</span><small>UTC</small></div><div id="replayElapsed" class="player-elapsed"></div></div>
-        <div class="player-controls">
-          <button class="btn" id="playPause" type="button">Play replay</button>
-          <button class="btn ghost" id="replayReset" type="button">Restart</button>
-          <button class="btn ghost" id="replayNext" type="button">Next event →</button>
-          <label class="player-speed">Speed<select id="replaySpeed"><option value="1">1 min/s</option><option value="5" selected>5 min/s</option><option value="15">15 min/s</option></select></label>
-        </div>
-      </div>
-      <div class="tlwrap" tabindex="0" role="region" aria-label="Incident timeline, scrolls horizontally on small screens">
-        <svg id="tl" role="img" aria-labelledby="tlTitle tlDesc">
-          <title id="tlTitle">What was happening against what the status page showed</title>
-          <desc id="tlDesc"></desc>
-        </svg>
-      </div>
-      <div class="player-scrub"><label for="replayPosition">Explore the timeline</label><input id="replayPosition" type="range" min="0" value="0" step="1" aria-label="Replay position in minutes"></div>
-      <div class="moment-pair">
-        <article class="moment"><div class="moment-heading"><span class="lbl">Customer reality</span><span class="moment-state" id="realityState"></span></div><p id="realityNow"></p><small>Known from the retrospective</small></article>
-        <article class="moment"><div class="moment-heading"><span class="lbl">Public status page</span><span class="moment-state" id="publicState"></span></div><p id="publicNow"></p><small id="publicUpdated"></small></article>
-      </div>
-      <div class="cap" id="tlCap"></div>
-    </div>
-
-    <div class="q-head">
-      <div class="q-t">What the console said, minute by minute</div><label class="replay-log-toggle"><input id="showAllEvents" type="checkbox">Show all events</label>
-    </div>
-    <div class="lhead" aria-hidden="true">
-      <span>Time</span><span></span><span>The status page</span><span>What was true</span>
-    </div>
-    <div class="log" id="log"></div>
-
-    <div class="q-head">
-      <div class="q-t">All six, ranked by how long they stayed dark</div>
-      <div class="uswitch" role="group" aria-label="Ranking order">
-        <button id="sGap" aria-pressed="true">By gap</button>
-        <button id="sLen" aria-pressed="false">By length</button>
-        <button id="sDate" aria-pressed="false">By date</button>
-      </div>
-    </div>
-    <div class="queue" id="queue"></div>
-
-    <div class="grid" id="cells"></div>
-    <div class="flag"><span class="t">The decision</span><span id="flagText"></span></div>
-    <div class="actions">
-      <button class="btn" id="copyLink">Copy shareable link</button>
-      <button class="btn ghost" id="copySummary">Copy incident brief</button>
-    </div>
-    <div class="print-url" id="printUrl"></div>
-  </div>
+<a class="skip" href="#workspace">Skip to replay</a>
+<header class="topbar"><a class="brand" href="/" aria-label="InfraBench home"><span class="brandmark" aria-hidden="true"></span> INFRABENCH</a><span class="divider">/</span><span class="product-name">Outage Replay</span><div class="toplinks"><span class="archive-label">TOOLS FOR INFRASTRUCTURE</span><button class="text-button" id="method-button">How to read this <span>↗</span></button></div></header>
+<div class="app-shell">
+<aside class="archive"><div class="archive-heading"><span class="eyebrow">INCIDENT LIBRARY</span><span class="count">06</span></div><h1>Six incidents.<br>One blind spot.</h1><p class="archive-intro">Pick an incident. Follow the gap between what happened and what was reported.</p><div class="library-tools"><span>6 historical incidents</span><label class="sr-only" for="sort">Sort incidents</label><select id="sort"><option value="date">Latest first</option><option value="gap">Longest gap</option><option value="len">Longest outage</option></select></div><nav id="incident-list" aria-label="Choose an incident"></nav><div class="archive-note"><span class="note-icon">↳</span><p>Reconstructed from published incident reports.<br><button class="text-button" id="sources-button">Sources & methodology ↗</button></p></div><a class="back-link" href="/">← All InfraBench tools</a></aside>
+<main id="workspace">
+<div class="workspace-top"><div class="breadcrumb"><span class="eyebrow">OUTAGE REPLAY / 04</span><span class="small-dot"></span><span id="incident-date"></span></div><button id="share" class="quiet-button"><span aria-hidden="true">↗</span> Share replay</button></div>
+<section class="incident-heading"><div><div class="provider-line"><span id="provider-icon" class="provider-icon"></span><span id="provider-name"></span><span class="historical-tag">HISTORICAL</span></div><h2 id="incident-title"></h2><p id="incident-subtitle"></p></div><div class="gap-summary"><span class="eyebrow">THE STATUS-PAGE BLIND SPOT</span><div><strong id="gap-number"></strong><span>min</span></div><span class="gap-caption" id="gap-caption">Between first impact and acknowledgement.</span></div></section>
+<section class="replay-panel" aria-label="Incident replay">
+<div class="replay-top"><div class="time-display"><span class="eyebrow">REPLAY CLOCK <span id="clock-state">PAUSED</span></span><div><span id="clock"></span><span class="timezone">UTC</span></div><span id="elapsed" class="elapsed"></span></div><div class="playback"><button class="icon-button" id="restart" aria-label="Restart replay" title="Restart replay">↺</button><button class="play-button" id="play"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 2.5 13 8 5 13.5Z" fill="currentColor"/></svg><span>Play replay</span></button><label class="sr-only" for="speed">Playback speed</label><select id="speed" class="speed"><option value="1">1 min/s</option><option value="5" selected>5 min/s</option><option value="15">15 min/s</option></select></div></div>
+<div class="timeline"><div class="timeline-heading"><span class="eyebrow">TWO VERSIONS OF THE SAME MOMENT</span><div class="zoom-switch" role="group" aria-label="Timeline view"><button id="zoom-gap" aria-pressed="true">Detection window</button><button id="zoom-full" aria-pressed="false">Full incident</button></div></div><div class="timeline-legend"><span><i class="swatch impact"></i>Customer impact</span><span><i class="swatch status"></i>Public acknowledgement</span><span class="timeline-note" id="timeline-note">Historical overview · UTC</span></div><div class="timeline-grid"><span class="track-label"><b>Reality</b><small>Customer impact</small></span><div class="track impact-track" id="impact-track"><span class="track-text">Service disruption</span></div><span class="track-label"><b>Reported</b><small>Public status</small></span><div class="track public-track" id="public-track"><div class="dark-window" id="dark-window"><span>Operational</span></div><div class="ack-window" id="ack-window"><span>Investigating</span></div></div><div class="axis-spacer"></div><div id="axis" class="axis"></div><div class="playhead" id="playhead"><span></span><b id="cursor-label"></b></div><div class="alert-marker" id="alert-marker"><span>Your alert</span></div></div><label class="sr-only" for="scrubber">Replay position in minutes</label><input type="range" id="scrubber" min="0" step="1" value="0"><div class="scrub-caption"><span id="scrub-caption">Drag the playhead to explore</span><button class="text-button" id="next-event">Next event <span>→</span></button></div></div>
+<div class="moment-grid"><article class="moment-card customer-card"><div class="card-eyebrow"><span>01 / WHAT WAS HAPPENING</span><span id="customer-badge" class="status-pill"></span></div><h3 id="customer-title"></h3><p id="customer-copy"></p><span class="source-hint">Known from the retrospective</span></article><article class="moment-card public-card"><div class="card-eyebrow"><span>02 / WHAT YOU WERE TOLD</span><span id="public-badge" class="status-pill"></span></div><h3 id="public-title"></h3><p id="public-copy"></p><span id="public-time" class="source-hint"></span></article></div>
+<div class="alert-strip"><div><span class="alert-symbol" aria-hidden="true">⌁</span><div><label for="threshold">What if your monitoring alerted earlier?</label><span>Hypothetical delay from first customer impact</span></div></div><div class="threshold-control"><input id="threshold" type="number" min="1" max="240" value="15" aria-label="Alert delay in minutes"><span>min</span></div><p id="alert-result"></p></div>
 </section>
-
-<!-- ================= WHY THIS EXISTS ================= -->
-<section>
-  <div class="wrap">
-    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">02</span><span class="sec-rule"></span><span class="lbl">Why the tool exists</span></div>
-    <h2 class="rv">A status page is a press release with a clock on it.</h2>
-    <div class="three rv">
-      <div class="c">
-        <div class="i">01</div>
-        <h3>It is written, not measured</h3>
-        <p>Nothing on a status page is emitted by the failing system. A human decides that the blast radius is now large enough to admit to, writes a sentence, and gets it approved. That pipeline has a floor of several minutes on its very best day.</p>
-      </div>
-      <div class="c">
-        <div class="i">02</div>
-        <h3>It often shares fate with the outage</h3>
-        <p>In December 2021 AWS posted that the incident was "affecting some of our monitoring and incident response tooling, which is delaying our ability to provide updates." The instrument was downstream of the thing it was measuring. That is not rare.</p>
-      </div>
-      <div class="c">
-        <div class="i">03</div>
-        <h3>You are on the clock before it moves</h3>
-        <p>Your users started failing at the first timestamp, not the second. Every minute of that gap is a minute you spent deciding whether it was you, and the only instrument that could have told you sits inside your own account.</p>
-      </div>
-    </div>
-
-    <div class="strip rv" id="strip">
-      <div><div class="n g" id="stripMed">&mdash;</div><div class="l">Median gap before the page moved</div></div>
-      <div><div class="n" id="stripMax">&mdash;</div><div class="l">Longest documented gap</div></div>
-      <div><div class="n" id="stripDown">&mdash;</div><div class="l">Total impact replayed here</div></div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= HOW IT WORKS ================= -->
-<section id="how">
-  <div class="wrap">
-    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">03</span><span class="sec-rule"></span><span class="lbl">How it works</span></div>
-    <h2 class="rv">Two clocks, one subtraction.</h2>
-    <div class="steps rv">
-      <div class="step">
-        <div class="n">01 &middot; The first clock</div>
-        <p><b>When customers started failing.</b> Taken from the provider's own retrospective, which is written after the fact with access to internal telemetry and is consistently the earliest honest number anyone publishes. AWS puts its October 2025 start at 11:48 PM PDT. Cloudflare puts its November 2025 start at 11:20 UTC.</p>
-        <p>Nobody outside the provider could have known this time on the day. That is the point of using it.</p>
-      </div>
-      <div class="step">
-        <div class="n">02 &middot; The second clock</div>
-        <p><b>When the status page first said anything at all.</b> Not when it was accurate, not when it named a root cause, just the first public acknowledgement that something was wrong. It is the friendliest possible reading of the provider's behaviour, and the gap is still measured in tens of minutes.</p>
-      </div>
-      <div class="step">
-        <div class="n">03 &middot; The gap</div>
-        <p><b>Second clock minus first clock.</b> That is the window in which your dashboard was green, your users were not, and no external source would have backed you up. Everything else on the page is context around that one number.</p>
-      </div>
-      <div class="step">
-        <div class="n">04 &middot; Your threshold against it</div>
-        <p><b>Your own paging delay, subtracted from the gap.</b> A positive margin means you would have been first and the status page later confirmed what you already knew. A negative margin means you were still waiting when they told you, which is the only outcome where the status page was worth anything as an alerting tool.</p>
-      </div>
-    </div>
-
-    <div class="worked rv">
-      <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
-      <div class="t">Worked example &mdash; Google Cloud, 12 June 2025</div>
-      <div class="chain" id="chain" tabindex="0" role="region" aria-label="Worked example arithmetic, scrolls horizontally on small screens"></div>
-      <div class="out" id="chainOut"></div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= INCIDENTS ================= -->
-<section id="incidents">
-  <div class="wrap">
-    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">04</span><span class="sec-rule"></span><span class="lbl">The incidents</span></div>
-    <h2 class="rv">Six that are documented well enough to argue with.</h2>
-    <p class="lede rv">Chosen because each one has a published retrospective that states when impact began, which is the number nobody can reconstruct from outside. Incidents where that timestamp was never published are not in here, however famous they are.</p>
-    <div class="tscroll rv" tabindex="0" role="region" aria-label="Incident table, scrolls horizontally on small screens">
-      <table>
-        <caption class="sr">Every incident replayed by this tool, with its detection gap, total impact and source</caption>
-        <thead>
-          <tr><th scope="col">Incident</th><th scope="col">Impact began</th><th scope="col">Page moved</th><th scope="col">Gap</th><th scope="col">Total</th><th scope="col">What broke</th></tr>
-        </thead>
-        <tbody id="incTable"></tbody>
-      </table>
-    </div>
-  </div>
-</section>
-
-<!-- ================= METHOD ================= -->
-<section id="method">
-  <div class="wrap">
-    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">05</span><span class="sec-rule"></span><span class="lbl">Method</span></div>
-    <h2 class="rv">Every timestamp, and where it came from.</h2>
-    <div class="method-grid rv">
-      <div class="model">
-        <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
-        <div class="model-hd"><span class="lbl">The model</span><span class="lbl g">5 lines</span></div>
-        <div class="frow"><span class="ft">gap</span><span class="fx">first public status post &minus; first customer impact</span></div>
-        <div class="frow"><span class="ft">margin</span><span class="fx">gap &minus; your paging threshold</span></div>
-        <div class="frow"><span class="ft">dark</span><span class="fx">impact &rarr; first post. Console green, users failing</span></div>
-        <div class="frow"><span class="ft">open</span><span class="fx">first post &rarr; mitigation. Acknowledged, unresolved</span></div>
-        <div class="frow"><span class="ft">recovering</span><span class="fx">mitigation &rarr; all clear. Backlog draining</span></div>
-      </div>
-      <div class="model">
-        <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
-        <div class="model-hd"><span class="lbl">What this does not measure</span></div>
-        <ul class="plain">
-          <li><b>Whether the post was true.</b> The gap closes the moment anything is admitted, however vague. A page that says "investigating elevated error rates" during a total regional failure counts as having moved.</li>
-          <li><b>Your actual blast radius.</b> Two accounts in the same region had wildly different days. This measures information, not impact.</li>
-          <li><b>Malice.</b> Every gap here has a mundane explanation, and in at least two cases the tooling needed to update the page was inside the failure. Slow is not the same as dishonest.</li>
-        </ul>
-      </div>
-    </div>
-
-    <ul class="plain rv" style="margin-top:48px">
-      <li><b>All times are UTC</b>, converted where the source published local time. The provider's own wording is quoted verbatim in the log where it was published; where a post was paraphrased in secondary coverage it is marked as reported rather than quoted.</li>
-      <li><b>Impact start always comes from the retrospective</b>, never from a third-party detector. Downdetector spikes and traffic-graph dips appear in the log as context because they are what an outsider actually saw, but they never set the clock.</li>
-      <li><b>Two acknowledgement timestamps are weaker than the rest</b> and are labelled as such in the table: the AWS December 2021 first dashboard post, and the Azure Front Door first advisory. Both are taken from secondary reporting rather than a surviving status-page archive. If you have the primary record for either, the whole page is one edit away from being corrected.</li>
-      <li><b>Nothing here is scraped live.</b> These are historical incidents with closed retrospectives. The page ships the data it draws, so it renders identically offline and cannot drift when a vendor reorganises its status history.</li>
-    </ul>
-  </div>
-</section>
-
-<!-- ================= CTA ================= -->
-<section class="cta">
-  <div class="wrap">
-    <div class="plate rv">
-      <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
-      <div class="plate-main">
-        <div>
-          <div class="lbl">Built by</div>
-          <div class="p-name">Adrian Mucha</div>
-          <p class="p-bio">Product designer for the software most designers avoid: operator consoles where a wrong click costs real money.</p>
-        </div>
-        <dl class="p-spec">
-          <div><dt>Focus</dt><dd>Data centers &middot; AI tooling</dd></div>
-          <div><dt>Base</dt><dd>Los Angeles, CA</dd></div>
-          <div><dt>Status</dt><dd class="on">Open to new work</dd></div>
-        </dl>
-      </div>
-      <div class="plate-ft">
-        <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Get in touch</a>
-        <a class="lnk" href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">See the work &rarr;</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-</main>
-
-<footer>
-  <div class="wrap">
-    <div class="lbl">Sources and fine print</div>
-    Incident timings come from each provider's own published retrospective:
-    AWS <a href="https://aws.amazon.com/message/101925/" target="_blank" rel="noopener">DynamoDB service disruption, October 2025</a> and
-    <a href="https://aws.amazon.com/message/12721/" target="_blank" rel="noopener">US-EAST-1 service event, December 2021</a>,
-    Microsoft's <a href="https://azure.status.microsoft/en-us/status/history/" target="_blank" rel="noopener">Azure status history</a> post incident review for Azure Front Door,
-    Google Cloud's <a href="https://status.cloud.google.com/incidents/ow5i3PPK96RduMcb1SsW" target="_blank" rel="noopener">Service Control incident report</a>,
-    <a href="https://blog.cloudflare.com/18-november-2025-outage/" target="_blank" rel="noopener">Cloudflare's 18 November 2025 postmortem</a> and
-    <a href="https://www.fastly.com/blog/summary-of-june-8-outage" target="_blank" rel="noopener">Fastly's summary of the June 8 outage</a>.
-    Where a status-page post could not be recovered from a primary archive it is marked as reported in the incident table and taken from contemporaneous coverage.
-    All times are UTC. This is a communication timeline, not an availability measurement:
-    it says when you would have been told, not how much of your own traffic failed.
-    <br><br>
-    Outage replay is part of <a href="/">Infrabench</a>, a set of open tools for the people who build data centers.
-    Built by <a href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">Adrian Mucha</a> / FruitBat Design, Los Angeles.
-  </div>
-</footer>
-
-<div class="toast" id="toast" role="status">Copied</div>
+<div class="detail-nav" role="group" aria-label="Incident detail view"><button id="tab-events" aria-pressed="true">Event log <span>01</span></button><button id="tab-compare" aria-pressed="false">Compare incidents <span>06</span></button><button id="brief" class="brief-button">Copy incident brief ↗</button></div>
+<section id="comparison" hidden><div class="comparison-header"><h3>Who would have told you first?</h3><p id="comparison-summary"></p></div><div class="comparison-scroll" role="region" tabindex="0" aria-label="Incident comparisons"><table><thead><tr><th>Incident</th><th>Public update</th><th>Duration</th><th>Your alert</th></tr></thead><tbody id="comparison-rows"></tbody></table></div><p class="comparison-note">A positive margin means your hypothetical alert arrives first. Within five minutes is too close to call. Asterisks mark reported or proxy timestamps.</p></section>
+<section class="event-section" id="event-section"><div class="section-heading"><h3>The incident, moment by moment <span id="event-count"></span></h3><label class="reveal-toggle"><input type="checkbox" id="show-all"> Show all events</label></div><div id="event-list"></div></section>
+<section class="debrief"><div><span class="eyebrow">BEHIND THE INCIDENT</span><h3>What actually broke</h3><p id="root-cause"></p></div><div><span class="eyebrow">BLAST RADIUS</span><p id="blast"></p><a id="source-link" target="_blank" rel="noopener">Read the incident report ↗</a><p class="evidence-note" id="evidence-note"></p></div></section>
+<footer><span>Built by <a href="https://www.adrianmucha.us/">Adrian Mucha</a></span><span>Public incident reports. No account required.</span></footer>
+</main></div>
+<dialog id="method-dialog"><div class="dialog-top"><span class="eyebrow">SOURCES & METHODOLOGY</span><button id="close-method" class="icon-button" aria-label="Close methodology">×</button></div><h2>One incident. Two timelines.</h2><p>The customer timeline begins at the first impact recorded in the provider’s retrospective. The public timeline begins at the first acknowledgement recorded in the original InfraBench dataset.</p><h3>Reading the replay</h3><p>The clock reveals recorded events as they happen. The overview shows the full historical duration, so you can see where you are. Event text is a condensed reconstruction, not a live feed or a complete verbatim archive.</p><h3>Your hypothetical alert</h3><p>Alert time = first impact + your selected delay. The comparison assumes your monitoring detects this incident after that delay; it does not predict real monitoring performance.</p><h3>Evidence matters</h3><p>AWS December 2021 and Azure October 2025 use reported acknowledgement times. Azure’s time is a proxy and the first advisory may have been earlier. Other records are marked primary in the original dataset. Sources are linked per incident.</p><h3>Comparing the six</h3><p>Gap = first public acknowledgement − first customer impact. Your lead = gap − alert delay. A lead greater than five minutes is “You first”; within five minutes either way is “Too close”; below minus five minutes is “Provider first”. Total duration runs from first impact to the final all-clear.</p><p class="dialog-footnote">Historical records carried over from <a href="https://infrabench.dev/outage-replay/">InfraBench’s original Outage Replay</a>. No synthetic error-rate or traffic measurements are added.</p></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
 
 <script>
-(function(){
-  "use strict";
-
-  /* ============================================================================
-     THE DATA. Six incidents, each with the two timestamps the whole tool turns on:
-     t0, when customers started failing, taken from the provider's retrospective,
-     and ack, the first public post on the status page. Everything else on the page
-     is derived from this block, so correcting it is a single edit here.
-       t0     first customer impact, from the provider's own retrospective
-       ack    first public acknowledgement of any kind on the status page
-       mit    mitigation applied and recovery under way, where the source states it
-       end    all clear
-       conf   "primary" if ack came from the provider's own record, "reported" if it
-              came from contemporaneous secondary coverage. Shown in the table.
-       posts  the log. s is what the console showed at that moment:
-              ok = operational, warn = investigating or degraded, down = outage
-              said = the status page, verbatim where quoted. true = what was actually
-              happening, from the retrospective.
-     ========================================================================= */
-  var INCIDENTS = [
+  const INCIDENTS = [
     {
       id:"aws2025", name:"AWS us-east-1", prov:"Amazon Web Services", when:"20 October 2025",
       t0:"2025-10-20T06:48Z", ack:"2025-10-20T07:11Z", mit:"2025-10-20T08:15Z", end:"2025-10-20T21:20Z",
@@ -902,659 +176,153 @@
       ]
     }
   ];
-
-  var MIN = 60000;
-  var state = { inc:"gcp2025", thr:15, srt:"gap", at:0 };
-  var replay = { timer:null, speed:5, all:false, incident:null, printing:false };
-
-  function $(id){ return document.getElementById(id); }
-  function T(s){ return Date.parse(s); }
-  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-
-  /* ---------- formatting ---------- */
-  function mins(a, b){ return Math.round((T(b) - T(a)) / MIN); }
-  function dur(m){
-    if(m < 60) return m + " min";
-    var h = Math.floor(m/60), r = m % 60;
-    return r ? h + "h " + r + "m" : h + "h";
-  }
-  function plural(n, w){ return n + " " + w + (n === 1 ? "" : "s"); }
-  function durWords(m){
-    if(m < 60) return plural(m, "minute");
-    var h = Math.floor(m/60), r = m % 60;
-    return r ? plural(h, "hour") + " " + plural(r, "minute") : plural(h, "hour");
-  }
-  function hhmm(iso){
-    var d = new Date(T(iso));
-    return pad(d.getUTCHours()) + ":" + pad(d.getUTCMinutes());
-  }
-  function pad(n){ return n < 10 ? "0" + n : String(n); }
-  var MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  function dayOf(iso){
-    var d = new Date(T(iso));
-    return d.getUTCDate() + " " + MON[d.getUTCMonth()];
-  }
-
-  function byId(id){
-    for(var i=0;i<INCIDENTS.length;i++){ if(INCIDENTS[i].id===id) return INCIDENTS[i]; }
-    return INCIDENTS[0];
-  }
-
-  /* ---------- the model ---------- */
-  function measure(x){
-    var gap = mins(x.t0, x.ack);
-    var total = mins(x.t0, x.end);
-    var margin = gap - state.thr;                 /* positive: you are first */
-    var band = margin >= 15 ? "make" : (margin > 0 ? "slip" : "miss");
-    return {
-      x:x, gap:gap, total:total, margin:margin, band:band,
-      open: x.mit ? mins(x.ack, x.mit) : mins(x.ack, x.end),
-      rec:  x.mit ? mins(x.mit, x.end) : 0
-    };
-  }
-  function compute(){
-    var all = INCIDENTS.map(measure);
-    var cur = null;
-    for(var i=0;i<all.length;i++){ if(all[i].x.id===state.inc) cur = all[i]; }
-    var order = all.slice();
-    if(state.srt==="gap")  order.sort(function(a,b){ return b.gap - a.gap; });
-    if(state.srt==="len")  order.sort(function(a,b){ return b.total - a.total; });
-    if(state.srt==="date") order.sort(function(a,b){ return T(b.x.t0) - T(a.x.t0); });
-    return {
-      cur:cur, all:all, order:order,
-      first: all.filter(function(m){ return m.margin > 0; }).length,
-      last:  all.filter(function(m){ return m.margin <= 0; }).length
-    };
-  }
-
-  /* median of the six gaps, used in the hero, the strip and the decision line */
-  function medianGap(){
-    var g = INCIDENTS.map(function(x){ return mins(x.t0, x.ack); }).sort(function(a,b){ return a-b; });
-    var h = g.length/2;
-    return g.length % 2 ? g[Math.floor(h)] : Math.round((g[h-1] + g[h]) / 2);
-  }
-
-  /* ---------- render ---------- */
-  function render(){
-    var r = compute();
-    if(replay.incident && replay.incident !== state.inc){ stopReplay(); state.at = 0; }
-    replay.incident = state.inc;
-    state.at = Math.max(0, Math.min(replayBounds(r.cur.x).total, state.at));
-    renderAsk(r);
-    renderHeadline(r);
-    drawTimeline(r);
-    renderLog(r);
-    renderMoment(r);
-    renderQueue(r);
-    renderCells(r);
-    renderFlag(r);
-    announce(r);
-    writeUrl();
-  }
-
-  function renderAsk(r){
-    var x = r.cur.x;
-    $("incNote").textContent = x.cause;
-    $("askMeta").innerHTML =
-      esc(x.prov) + " &middot; " + esc(x.when) + " &middot; impact " + hhmm(x.t0) +
-      " to " + hhmm(x.end) + " UTC<br>Source: " + esc(x.srcName) +
-      (x.conf === "reported" ? " &middot; first post reported, not archived" : "");
-  }
-
-  function renderHeadline(r){
-    var m = r.cur, x = m.x;
-    $("bigText").innerHTML = '<span class="v">' + durWords(m.gap) + "</span> of green dashboard";
-
-    var youBy = Math.abs(m.margin);
-    var verdict = m.margin > 0
-      ? "Your " + state.thr + " minute threshold would have paged you <b>" + dur(youBy) + "</b> before the status page said a word."
-      : (m.margin === 0
-          ? "Your " + state.thr + " minute threshold lands on the same minute the status page moved. A coin flip, on the one day you want certainty."
-          : "Your " + state.thr + " minute threshold is slower than this gap. On this incident, the status page would have told you <b>" + dur(youBy) + "</b> before your own monitoring did.");
-
-    $("outNote").innerHTML =
-      esc(x.prov) + " puts first customer impact at <b>" + hhmm(x.t0) + " UTC</b>. The first public post went up at <b>" +
-      hhmm(x.ack) + "</b>. " + verdict;
-
-    var total = m.total || 1;
-    var seg = [
-      { k:"dark", v:m.gap },
-      { k:"open", v:m.open },
-      { k:"rec",  v:m.rec }
-    ].filter(function(s){ return s.v > 0; });
-    $("bandbar").innerHTML = seg.map(function(s){
-      return '<span class="b-' + s.k + '" style="flex:' + (s.v / total) + '"></span>';
-    }).join("");
-
-    $("barCap").innerHTML =
-      '<b class="cx">' + dur(m.gap) + " dark</b> &middot; " +
-      '<b class="cs">' + dur(m.open) + " acknowledged</b>" +
-      (m.rec > 0 ? ' &middot; <b class="cm">' + dur(m.rec) + " recovering</b>" : "") +
-      " &middot; " + dur(m.total) + " total";
-  }
-
-  /* ---------- the replay, two lanes ----------
-     Top lane is what was actually happening. Bottom lane is what the console showed.
-     The gap between where they disagree is the whole point of the drawing, so it gets
-     the hatch and the callout. Decorative: the log below carries the same content. */
-  function drawTimeline(r){
-    var m = r.cur, x = m.x;
-    var svg = $("tl");
-    var host = svg.parentNode;
-    var W = Math.max(680, Math.round(host.clientWidth || 900));
-    var H = 208;
-    var LAB = 128, PADR = 26, T0 = T(x.t0), T1 = T(x.end);
-    var span = T1 - T0, padT = span * 0.03;
-    var x0 = T0 - padT, x1 = T1 + padT;
-
-    function X(t){ return LAB + (t - x0) / (x1 - x0) * (W - LAB - PADR); }
-
-    var yReal = 54, yCons = 116, BH = 26;
-    var p = [];
-
-    /* the dark window, behind everything: where the two lanes disagree */
-    var dx0 = X(T0), dx1 = X(T(x.ack));
-    p.push('<rect x="' + dx0 + '" y="38" width="' + Math.max(1, dx1 - dx0) + '" height="118" fill="url(#dark)"/>');
-    p.push('<line x1="' + dx1 + '" y1="30" x2="' + dx1 + '" y2="164" stroke="#FF5B5B" stroke-width="1"/>');
-
-    /* lane labels */
-    p.push('<text x="0" y="' + (yReal + 17) + '" fill="#A8B0B8" font-family="Geist Mono, monospace" font-size="12">What was true</text>');
-    p.push('<text x="0" y="' + (yCons + 17) + '" fill="#A8B0B8" font-family="Geist Mono, monospace" font-size="12">The console</text>');
-
-    /* lane 1: reality. Red for the whole impact, one step lighter once mitigated. */
-    var mitX = x.mit ? X(T(x.mit)) : X(T1);
-    p.push('<rect x="' + X(T0) + '" y="' + yReal + '" width="' + Math.max(2, mitX - X(T0)) + '" height="' + BH + '" fill="#FF5B5B"/>');
-    if(x.mit){
-      p.push('<rect x="' + mitX + '" y="' + yReal + '" width="' + Math.max(2, X(T1) - mitX) + '" height="' + BH + '" fill="#8A3B3F"/>');
-    }
-
-    /* lane 2: the console. Green until the first post, amber until the all clear. */
-    p.push('<rect x="' + X(x0 + padT * 0) + '" y="' + yCons + '" width="' + Math.max(2, dx1 - X(x0)) + '" height="' + BH + '" fill="#2A6552"/>');
-    p.push('<rect x="' + dx1 + '" y="' + yCons + '" width="' + Math.max(2, X(T1) - dx1) + '" height="' + BH + '" fill="#FFEA6B"/>');
-    p.push('<rect x="' + X(T1) + '" y="' + yCons + '" width="' + Math.max(2, X(x1) - X(T1)) + '" height="' + BH + '" fill="#3FE0A0"/>');
-
-    /* the callout on the dark window */
-    var midD = (dx0 + dx1) / 2;
-    var lblY = 26;
-    p.push('<text x="' + midD + '" y="' + lblY + '" fill="#FF5B5B" font-family="Geist Mono, monospace" font-size="12" font-weight="600" text-anchor="' +
-           (dx1 - dx0 < 90 ? "start" : "middle") + '">' + dur(m.gap) + ' dark</text>');
-
-    /* your threshold pin */
-    var thrT = T0 + state.thr * MIN;
-    if(thrT < T1){
-      var tx = X(thrT);
-      p.push('<line x1="' + tx + '" y1="34" x2="' + tx + '" y2="168" stroke="#EEF1F3" stroke-width="1" stroke-dasharray="3 3"/>');
-      p.push('<text x="' + (tx + 6) + '" y="' + 178 + '" fill="#EEF1F3" font-family="Geist Mono, monospace" font-size="11">you, ' + state.thr + ' min</text>');
-    }
-
-    /* axis: ticks on a round interval, always including start and end */
-    var step = niceStep(m.total);
-    var ticks = [];
-    for(var t = T0; t <= T1 + 1; t += step * MIN) ticks.push(t);
-    if(ticks[ticks.length-1] < T1 - MIN) ticks.push(T1);
-    p.push('<line x1="' + LAB + '" y1="' + 156 + '" x2="' + (W - PADR) + '" y2="156" stroke="#1C2126" stroke-width="1"/>');
-    ticks.forEach(function(t){
-      var tx = X(t);
-      p.push('<line x1="' + tx + '" y1="156" x2="' + tx + '" y2="161" stroke="#2A3037" stroke-width="1"/>');
-      p.push('<text x="' + tx + '" y="' + 196 + '" fill="#7B838D" font-family="Geist Mono, monospace" font-size="11" text-anchor="middle">' + hhmm(new Date(t).toISOString()) + '</text>');
-    });
-
-    /* Current replay position: independent of the hypothetical monitoring pin. */
-    var replayTime = replayBounds(x).start + state.at * MIN;
-    var playX = X(Math.max(T0, Math.min(T1, replayTime)));
-    p.push('<line x1="'+playX+'" x2="'+playX+'" y1="34" y2="164" stroke="#3FE0A0" stroke-width="2"/>');
-    p.push('<path d="M '+(playX-5)+' 30 L '+(playX+5)+' 30 L '+playX+' 37 Z" fill="#3FE0A0"/>');
-    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
-    svg.setAttribute("width", W);
-    svg.setAttribute("height", H);
-    svg.innerHTML =
-      '<title id="tlTitle">What was happening against what the status page showed</title>' +
-      '<desc id="tlDesc">' + esc(x.prov + " on " + x.when + ". Impact ran from " + hhmm(x.t0) + " to " + hhmm(x.end) +
-        " UTC. The status page showed no incident for the first " + durWords(m.gap) + ".") + '</desc>' +
-      '<defs><pattern id="dark" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">' +
-      '<rect width="7" height="7" fill="rgba(255,91,91,.07)"/>' +
-      '<line x1="0" y1="0" x2="0" y2="7" stroke="rgba(255,91,91,.28)" stroke-width="1.4"/></pattern></defs>' +
-      p.join("");
-
-    $("stageTR").textContent = x.name + ", " + x.when;
-    $("tlCap").innerHTML =
-      "Red is impact, green and amber are the console. The hatched column is the " +
-      dur(m.gap) + " in which they disagreed. The solid green cursor is your replay position; the dashed white pin is your hypothetical alert. This overview shows the full historical incident.";
-  }
-
-  function niceStep(totalMin){
-    var opts = [15, 30, 60, 120, 180, 360, 720];
-    for(var i=0;i<opts.length;i++){ if(totalMin / opts[i] <= 8) return opts[i]; }
-    return 1440;
-  }
-
-  function renderLog(r){
-    var x = r.cur.x, t0 = x.t0;
-    var now = replayBounds(x).start + state.at * MIN;
-    var visible = replay.all || replay.printing ? x.posts : x.posts.filter(function(pt){ return T(pt.t) <= now; });
-    $("log").innerHTML = visible.map(function(pt){
-      var off = mins(t0, pt.t);
-      var rel = off === 0 ? "start" : (off < 0 ? dur(-off) + " before" : "+" + dur(off));
-      return '<div class="lrow s-' + pt.s + '">' +
-        '<div class="lt">' + hhmm(pt.t) + '<small>' + esc(rel) + '</small></div>' +
-        '<div class="ld" aria-hidden="true"></div>' +
-        '<div class="lcol"><div class="h">The status page</div><div class="q said">' + esc(pt.said) + '</div></div>' +
-        '<div class="lcol"><div class="h">What was true</div><div class="q">' + esc(pt.tru) + '</div></div>' +
-      '</div>';
-    }).join("");
-  }
-
-  /* Playback only changes what is revealed; source timestamps and risk math stay fixed. */
-  function replayBounds(x){
-    var start = Math.min(T(x.t0), T(x.posts[0].t));
-    return { start:start, total:Math.round((T(x.end)-start)/MIN) };
-  }
-  function stopReplay(){
-    clearInterval(replay.timer); replay.timer = null;
-    $("playPause").textContent = "Play replay";
-    $("playState").textContent = "Paused";
-  }
-  function renderMoment(r){
-    var x=r.cur.x, b=replayBounds(x), now=b.start+state.at*MIN;
-    var posts=x.posts.filter(function(pt){ return T(pt.t)<=now; });
-    var pt=posts[posts.length-1] || x.posts[0], ended=now>=T(x.end), before=now<T(x.t0);
-    var status=ended?"ok":pt.s;
-    $("replayClock").textContent=hhmm(new Date(now).toISOString());
-    var elapsed=Math.round((now-T(x.t0))/MIN);
-    $("replayElapsed").textContent=(elapsed<0?dur(-elapsed)+" before impact":dur(elapsed)+" since first impact")+" · "+posts.length+" / "+x.posts.length+" events";
-    $("replayPosition").max=b.total; $("replayPosition").value=state.at;
-    $("replayPosition").setAttribute("aria-valuetext", hhmm(new Date(now).toISOString())+" UTC, "+dur(state.at)+" into replay");
-    $("realityState").textContent=ended?"Restored":before?"Pre-impact":x.mit&&now>=T(x.mit)?"Recovering":"Disrupted";
-    $("realityState").setAttribute("data-state",ended||before?"ok":x.mit&&now>=T(x.mit)?"warn":"down");
-    $("realityNow").textContent=pt.tru;
-    $("publicState").textContent=ended?"Resolved":status==="ok"?"Operational":status==="warn"?"Investigating":"Outage";
-    $("publicState").setAttribute("data-state",status);
-    $("publicNow").textContent=pt.said;
-    $("publicUpdated").textContent=now<T(x.ack)?"No public acknowledgement yet":"Recorded update · "+hhmm(pt.t)+" UTC";
-    $("replayNext").disabled=!x.posts.some(function(p){return T(p.t)>now;});
-    if(!replay.all && !replay.printing && posts.length<x.posts.length){
-      $("log").insertAdjacentHTML("beforeend",'<div class="log-pending">'+(x.posts.length-posts.length)+' more events ahead. Play, scrub, or select Next event to reveal them.</div>');
-    }
-  }
-  function seekReplay(at){
-    var r=compute(); state.at=Math.max(0,Math.min(replayBounds(r.cur.x).total,at));
-    drawTimeline(r); renderLog(r); renderMoment(r); writeUrl();
-  }
-  function initReplay(){
-    $("playPause").addEventListener("click",function(){
-      if(replay.timer){ stopReplay(); return; }
-      if(state.at>=replayBounds(compute().cur.x).total)seekReplay(0);
-      $("playPause").textContent="Pause replay"; $("playState").textContent="Playing";
-      replay.timer=setInterval(function(){ seekReplay(state.at+replay.speed); if(state.at>=replayBounds(compute().cur.x).total)stopReplay(); },1000);
-    });
-    $("replayReset").addEventListener("click",function(){stopReplay();seekReplay(0);});
-    $("replayNext").addEventListener("click",function(){
-      stopReplay();var x=compute().cur.x,b=replayBounds(x),now=b.start+state.at*MIN;
-      var next=x.posts.find(function(p){return T(p.t)>now;});if(next)seekReplay(Math.round((T(next.t)-b.start)/MIN));
-    });
-    $("replayPosition").addEventListener("input",function(){stopReplay();seekReplay(Number(this.value));});
-    $("replaySpeed").addEventListener("change",function(){replay.speed=Number(this.value);});
-    $("showAllEvents").addEventListener("change",function(){replay.all=this.checked;seekReplay(state.at);});
-    document.addEventListener("visibilitychange",function(){if(document.hidden)stopReplay();});
-  }
-
-  var BANDNAME = { make:"You would know first", slip:"Too close to call", miss:"They would tell you first" };
-
-  function renderQueue(r){
-    $("queue").innerHTML = r.order.map(function(m, i){
-      var x = m.x, cur = x.id === state.inc;
-      var marg = m.margin > 0 ? "you are " + dur(m.margin) + " ahead"
-               : (m.margin === 0 ? "dead heat" : "they are " + dur(-m.margin) + " ahead");
-      return '<button type="button" class="qrow b-' + m.band + '" data-id="' + x.id + '"' +
-             (cur ? ' aria-current="true"' : "") + '>' +
-        '<span class="rk">' + pad(i+1) + '</span>' +
-        '<span>' +
-          '<span class="nm">' + esc(x.name) + '<small>' + esc(x.when) + '</small></span>' +
-          '<span class="sub">' + esc(x.cause) + '</span>' +
-          '<span class="ev">Impact ' + hhmm(x.t0) + ' &middot; first post ' + hhmm(x.ack) +
-            ' &middot; all clear ' + hhmm(x.end) + ' &middot; <b>' + esc(marg) + '</b></span>' +
-          '<span class="band b-' + m.band + '"><span class="mk" aria-hidden="true"></span>' + BANDNAME[m.band] + '</span>' +
-        '</span>' +
-        '<span class="amt">' + dur(m.gap) + '<small>dark</small></span>' +
-      '</button>';
-    }).join("");
-
-    var rows = $("queue").children;
-    for(var i=0;i<rows.length;i++){
-      rows[i].addEventListener("click", function(){
-        state.inc = this.getAttribute("data-id");
-        picker.set(state.inc);
-        render();
-      });
-    }
-  }
-
-  function renderCells(r){
-    var m = r.cur;
-    var med = medianGap();
-    $("cells").innerHTML = [
-      { k:"Dark window, this incident", v:dur(m.gap) },
-      { k:"Your margin at " + state.thr + " min", v:(m.margin > 0 ? "+" : "") + dur(Math.abs(m.margin)) },
-      { k:"Total impact, this incident", v:dur(m.total) },
-      { k:"Incidents you would catch first", v:r.first + '<small>OF ' + r.all.length + "</small>" },
-      { k:"Median gap across all six", v:dur(med) },
-      { k:"Threshold that beats all six", v:dur(Math.max(1, Math.min.apply(null, r.all.map(function(a){ return a.gap; })) - 1)) }
-    ].map(function(c){
-      return '<div class="cell"><div class="k">' + c.k + '</div><div class="v">' + c.v + "</div></div>";
-    }).join("");
-  }
-
-  function renderFlag(r){
-    var med = medianGap();
-    var minGap = Math.min.apply(null, r.all.map(function(a){ return a.gap; }));
-    var safe = dur(Math.max(1, minGap - 1));   /* the same figure the stat cell shows */
-    var txt;
-    if(r.last === 0){
-      txt = "At " + state.thr + " minutes you are first on all " + r.all.length +
-            " of these. That is the whole argument: the status page is a confirmation channel, not an alerting one. " +
-            "Wire your failover trigger to your own error rates and treat the coloured dot as something you read afterwards, to write the incident report.";
-    } else if(r.last === r.all.length){
-      txt = "At " + state.thr + " minutes the status page beats you on every one of these, which means you are currently outsourcing detection to a company " +
-            "whose median admission takes " + dur(med) + ". Anything at " + safe + " or under puts you back in front.";
-    } else {
-      txt = "At " + state.thr + " minutes you are first on " + r.first + " of " + r.all.length + " and second on " + r.last +
-            ". The median gap across all six is " + dur(med) + ", so a threshold of " + safe +
-            " or under puts you in front of every incident here. Your failover trigger belongs on your own error rates, not on their dashboard.";
-    }
-    $("flagText").textContent = txt;
-  }
-
-  function announce(r){
-    var m = r.cur;
-    $("srStatus").textContent =
-      m.x.name + ", " + m.x.when + ". The status page showed no incident for " + durWords(m.gap) +
-      " after customers began failing. At your threshold of " + state.thr + " minutes you would have known " +
-      (m.margin > 0 ? durWords(m.margin) + " before the status page." : durWords(-m.margin) + " after the status page.") +
-      " Across all six incidents you would be first on " + r.first + ".";
-  }
-
-  /* ---------- the static furniture: hero count, strip, table, worked example ---------- */
-  function buildStatics(){
-    var gaps = INCIDENTS.map(function(x){ return mins(x.t0, x.ack); });
-    var lo = Math.min.apply(null, gaps), hi = Math.max.apply(null, gaps);
-    var totalDown = INCIDENTS.reduce(function(a,x){ return a + mins(x.t0, x.end); }, 0);
-    var yrs = INCIDENTS.map(function(x){ return new Date(T(x.t0)).getUTCFullYear(); });
-
-    $("heroMeta").innerHTML =
-      INCIDENTS.length + " incidents &middot; " + Math.min.apply(null, yrs) + " to " + Math.max.apply(null, yrs) +
-      " &middot; gaps from " + dur(lo) + " to " + dur(hi) + "<br>" +
-      "Every impact time taken from the provider's own retrospective &middot; Hidden assumptions: 0";
-
-    $("stripMed").innerHTML = medianGap() + '<span class="u">MIN</span>';
-    $("stripMax").innerHTML = hi + '<span class="u">MIN</span>';
-    $("stripDown").innerHTML = Math.round(totalDown/60) + '<span class="u">HRS</span>';
-
-    $("incTable").innerHTML = INCIDENTS.map(function(x){
-      var g = mins(x.t0, x.ack);
-      return "<tr>" +
-        '<td class="name">' + esc(x.name) + "<br><span style=\"font-weight:400;color:var(--tx3)\">" + esc(x.when) + "</span></td>" +
-        '<td class="m">' + hhmm(x.t0) + "</td>" +
-        '<td class="m">' + hhmm(x.ack) + (x.conf === "reported" ? ' <span class="tag">reported</span>' : "") + "</td>" +
-        '<td class="m">' + dur(g) + "</td>" +
-        '<td class="m">' + dur(mins(x.t0, x.end)) + "</td>" +
-        '<td class="note">' + esc(x.blast) + ' <a href="' + x.src + '" target="_blank" rel="noopener">' + esc(x.srcName) + "</a></td>" +
-      "</tr>";
-    }).join("");
-
-    var g = byId("gcp2025"), gg = mins(g.t0, g.ack);
-    /* Flowing lines with inline markers, the same shape tool 03's worked example uses.
-       Runs of spaces collapse in HTML, so columns cannot be aligned this way. */
-    $("chain").innerHTML = [
-      'Service Control crash loops worldwide and IAM stops issuing tokens',
-      '<span class="a" aria-hidden="true">&rarr;</span> first customer impact, from Google\'s own report <span class="a">=</span> <b>17:51 UTC</b>',
-      '<span class="a" aria-hidden="true">&rarr;</span> first public post on the status dashboard <span class="a">=</span> <b>19:05 UTC</b>',
-      '<span class="a" aria-hidden="true">&rarr;</span> 19:05 &minus; 17:51 <span class="a">=</span> <b>' + gg + ' minutes dark</b>',
-      '<span class="a" aria-hidden="true">&rarr;</span> Downdetector spiked at 17:56, so the crowd had it <b>' + (gg - 5) + ' minutes</b> earlier',
-      '<span class="a" aria-hidden="true">&rarr;</span> a 15 minute paging threshold <span class="a">=</span> <b>' + (gg - 15) + ' minutes</b> ahead of the page'
-    ].join("<br>");
-    $("chainOut").innerHTML =
-      "IAM stopped issuing tokens at 17:51, which means every authenticated call in Google Cloud was failing. " +
-      "The console showed nothing wrong for another <b>" + durWords(gg) + "</b>. Anyone watching their own error rate " +
-      "knew inside a minute or two. Anyone watching the dashboard was still explaining to their manager that it was probably their own deploy.";
-  }
-
-  /* ---------- the incident picker: ARIA select-only combobox ---------- */
-  var picker = (function(){
-    var btn, list, wrap, opts, value = null, open = false, active = -1, onPick = null,
-        holding = false, down = null;
-
-    function idx(id){ for(var i=0;i<INCIDENTS.length;i++){ if(INCIDENTS[i].id===id) return i; } return 0; }
-    function row(ev){ return ev.target.closest ? ev.target.closest(".sel-opt") : null; }
-    function pos(li){ return Array.prototype.indexOf.call(opts, li); }
-    function here(){ return active>=0 ? active : idx(value); }
-
-    function set(id){
-      value = id;
-      $("incName").textContent = INCIDENTS[idx(id)].name + ", " + INCIDENTS[idx(id)].when;
-      for(var i=0;i<opts.length;i++) opts[i].setAttribute("aria-selected", INCIDENTS[i].id===id);
-    }
-    function mark(i){
-      if(i<0 || i>=opts.length) return;
-      if(active>=0) opts[active].classList.remove("act");
-      active = i;
-      opts[i].classList.add("act");
-      btn.setAttribute("aria-activedescendant", opts[i].id);
-    }
-    function show(i){
-      if(!open){ open = true; list.hidden = false; btn.setAttribute("aria-expanded","true"); }
-      mark(i);
-    }
-    function close(){
-      if(!open) return;
-      open = false; list.hidden = true;
-      btn.setAttribute("aria-expanded","false");
-      btn.removeAttribute("aria-activedescendant");
-      if(active>=0) opts[active].classList.remove("act");
-      active = -1;
-    }
-    function commit(i){
-      var pick = i>=0 && i<INCIDENTS.length ? INCIDENTS[i].id : value, changed = pick!==value;
-      close();
-      btn.focus({ preventScroll: true });
-      if(changed){ set(pick); onPick(pick); }
-    }
-    function key(ev){
-      var k = ev.key, cur = here(), last = INCIDENTS.length-1;
-      if(k==="Escape"){ if(open){ ev.preventDefault(); close(); } return; }
-      if(k==="Tab"){ if(open) commit(active); return; }
-      if(k==="Enter" || k===" "){ ev.preventDefault(); if(open) commit(active); else show(cur); return; }
-      if(k==="ArrowDown"){ ev.preventDefault(); show(ev.altKey && !open ? cur : Math.min(cur+1,last)); return; }
-      if(k==="ArrowUp"){ ev.preventDefault(); show(Math.max(cur-1,0)); return; }
-      if(k==="Home"){ ev.preventDefault(); show(0); return; }
-      if(k==="End"){ ev.preventDefault(); show(last); return; }
-    }
-
-    return {
-      init: function(cb){
-        btn = $("inc"); list = $("incList"); wrap = btn.parentNode; onPick = cb;
-        list.innerHTML = INCIDENTS.map(function(o,i){
-          return '<li class="sel-opt" id="incOpt'+i+'" role="option" aria-selected="false">'+
-                 '<span class="mk" aria-hidden="true"></span><span class="nm">'+esc(o.name)+'</span>'+
-                 '<span class="gp">'+esc(o.when)+'</span></li>';
-        }).join("");
-        opts = list.children;
-        btn.addEventListener("keydown", key);
-        btn.addEventListener("click", function(){ if(open) close(); else show(here()); });
-        btn.addEventListener("blur", function(){ if(!holding) close(); });
-        list.addEventListener("pointerdown", function(ev){ holding = true; down = row(ev); });
-        list.addEventListener("pointerup", function(ev){
-          var li = row(ev);
-          if(li && (li===down || ev.pointerType==="mouse")) commit(pos(li));
-        });
-        list.addEventListener("pointercancel", function(){ down = null; });
-        list.addEventListener("mouseover", function(ev){ var li = row(ev); if(li) mark(pos(li)); });
-        document.addEventListener("pointerup", function(){
-          holding = false; down = null;
-          if(open && document.activeElement!==btn) btn.focus({ preventScroll: true });
-        });
-        document.addEventListener("pointerdown", function(ev){ if(open && !wrap.contains(ev.target)) close(); });
-      },
-      set: set
-    };
-  })();
-
-  /* ---------- URL state ---------- */
-  function writeUrl(){
-    var q = new URLSearchParams();
-    q.set("i", state.inc);
-    q.set("t", state.thr);
-    if(state.at) q.set("at", state.at);
-    if(state.srt!=="gap") q.set("srt", state.srt);
-    try{ history.replaceState(null,"","#"+q.toString()); }
-    catch(e){ try{ location.hash = q.toString(); }catch(e2){} }
-  }
-  function readUrl(){
-    if(!location.hash || location.hash.length<2) return false;
-    var h = location.hash.slice(1);
-    if(h.indexOf("=")===-1) return false;
-    var q = new URLSearchParams(h);
-    var i = q.get("i");
-    if(i){ for(var k=0;k<INCIDENTS.length;k++){ if(INCIDENTS[k].id===i) state.inc = i; } }
-    if(q.get("t")) state.thr = Math.max(1, Math.min(240, parseInt(q.get("t"),10)||15));
-    var at=Number(q.get("at"));
-    state.at=Number.isFinite(at)?Math.max(0,Math.round(at)):0;
-    if(q.get("srt")==="len" || q.get("srt")==="date") state.srt = q.get("srt");
-    return true;
-  }
-  function syncInputs(){
-    $("thr").value = state.thr;
-    picker.set(state.inc);
-    sizeNum($("thr"));
-    setSort(state.srt);
-  }
-  function setSort(s){
-    state.srt = s;
-    $("sGap").setAttribute("aria-pressed", s==="gap");
-    $("sLen").setAttribute("aria-pressed", s==="len");
-    $("sDate").setAttribute("aria-pressed", s==="date");
-  }
-
-  /* inline inputs grow with their value, so the sentence never gapes */
-  function sizeNum(el){ el.style.width = (String(el.value).length + 1.4)+"ch"; }
-
-  function bindNum(id, key, min, max){
-    var el = $(id);
-    el.addEventListener("input", function(){
-      sizeNum(el);
-      var v = parseFloat(el.value);
-      if(isNaN(v)) return;
-      state[key] = Math.round(Math.max(min, Math.min(max, v)));
-      render();
-    });
-    el.addEventListener("blur", function(){ el.value = state[key]; sizeNum(el); });
-    sizeNum(el);
-  }
-
-  /* ---------- copy actions ---------- */
-  function toast(msg){
-    var t = $("toast"); t.textContent = msg; t.classList.add("on");
-    setTimeout(function(){ t.classList.remove("on"); }, 1600);
-  }
-  function copy(text, msg){
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, function(){ fallback(text,msg); });
-    } else { fallback(text,msg); }
-  }
-  function fallback(text,msg){
-    var ta = document.createElement("textarea");
-    ta.value = text; ta.style.position="fixed"; ta.style.opacity="0";
-    document.body.appendChild(ta); ta.select();
-    try{ document.execCommand("copy"); toast(msg); }catch(e){ toast("Copy failed"); }
-    document.body.removeChild(ta);
-  }
-  function summary(){
-    var r = compute(), m = r.cur, x = m.x, L = [];
-    L.push(x.name + ", " + x.when + " (" + x.prov + ")");
-    L.push("");
-    L.push("Replay position   " + hhmm(new Date(replayBounds(x).start+state.at*MIN).toISOString()) + " UTC");
-    L.push("Impact began      " + hhmm(x.t0) + " UTC");
-    L.push("First status post " + hhmm(x.ack) + " UTC");
-    L.push("All clear         " + hhmm(x.end) + " UTC");
-    L.push("Detection gap     " + dur(m.gap) + " of green dashboard");
-    L.push("Total impact      " + dur(m.total));
-    L.push("");
-    L.push("At a " + state.thr + " minute paging threshold you are " +
-      (m.margin > 0 ? dur(m.margin) + " ahead of the status page." : dur(-m.margin) + " behind it."));
-    L.push("");
-    L.push("All " + r.all.length + " incidents by dark window:");
-    r.all.slice().sort(function(a,b){ return b.gap - a.gap; }).forEach(function(a, i){
-      L.push((i+1) + ". " + a.x.name + " (" + a.x.when + "): " + dur(a.gap) + " dark, " + dur(a.total) + " total");
-    });
-    L.push("");
-    L.push("Median gap across all six: " + dur(medianGap()) + ".");
-    L.push("Your failover trigger belongs on your own error rates, not on their dashboard.");
-    L.push("");
-    L.push("Run your own: " + location.href);
-    return L.join("\n");
-  }
-
-  document.addEventListener("DOMContentLoaded", function(){
-    var shared = readUrl();
-    buildStatics();
-    initReplay();
-    picker.init(function(id){ state.inc = id; render(); });
-    syncInputs();
-
-    bindNum("thr","thr",1,240);
-
-    $("sGap").addEventListener("click", function(){ setSort("gap"); render(); });
-    $("sLen").addEventListener("click", function(){ setSort("len"); render(); });
-    $("sDate").addEventListener("click", function(){ setSort("date"); render(); });
-
-    $("copyLink").addEventListener("click", function(){ copy(location.href, "Link copied"); });
-    $("copySummary").addEventListener("click", function(){ copy(summary(), "Brief copied"); });
-
-    window.addEventListener("afterprint",function(){replay.printing=false;renderLog(compute());renderMoment(compute());});
-    window.addEventListener("beforeprint", function(){
-      stopReplay(); replay.printing=true; renderLog(compute());
-      $("printUrl").textContent = "Reproduce this screen: " + location.href;
-    });
-
-    // the timeline is drawn at the container's width, so a resize redraws it
-    var rsTimer;
-    window.addEventListener("resize", function(){
-      clearTimeout(rsTimer);
-      rsTimer = setTimeout(function(){ drawTimeline(compute()); }, 150);
-    });
-
-    render();
-
-    // a shared link should land on the replay, not on the sales pitch
-    if(shared){
-      var html = document.documentElement;
-      html.style.scrollBehavior = "auto";
-      var top = $("replay").getBoundingClientRect().top + window.pageYOffset - 60;
-      window.scrollTo(0, top);
-      setTimeout(function(){ html.style.scrollBehavior = ""; }, 60);
-    }
-  });
-})();
-</script>
-<script>
-/* Scroll reveals. Content is visible by default; motion is opted into only when
-   the browser is happy to move things. */
 (function(){
-  "use strict";
-  if(!("IntersectionObserver" in window)) return;
-  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  var els = document.querySelectorAll(".rv");
-  var io = new IntersectionObserver(function(es){
-    es.forEach(function(en){
-      if(en.isIntersecting){ en.target.classList.add("rvIn"); io.unobserve(en.target); }
-    });
-  }, { rootMargin: "0px 0px -70px 0px" });
-  els.forEach(function(e){
-    var r = e.getBoundingClientRect();
-    if(r.top < window.innerHeight && r.bottom > 0) return;
-    e.classList.add("rv0");
-    io.observe(e);
-  });
+'use strict';
+const $ = id => document.getElementById(id);
+const minutes=(a,b)=>Math.round((Date.parse(b)-Date.parse(a))/60000);
+const clock=t=>new Date(t).toISOString().slice(11,16);
+const duration=n=>n>=60?`${Math.floor(n/60)}h ${n%60}m`:`${n}m`;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const details={
+ gcp2025:{title:'The cloud is down. The dashboard is green.',sub:'Service Control disruption · Global',icon:'GC'},
+ aws2025:{title:'One empty record. A regional cascade.',sub:'DynamoDB DNS failure · US East',icon:'AW'},
+ aws2021:{title:'The monitors went down with the network.',sub:'Internal network congestion · US East',icon:'AW'},
+ azure2025:{title:'The failure arrives before the warning.',sub:'Azure Front Door disruption · Global',icon:'AZ'},
+ cf2025:{title:'One feature file. A worldwide outage.',sub:'Bot Management disruption · Global',icon:'CF'},
+ fastly2021:{title:'The edge fails in a single moment.',sub:'CDN disruption · Global',icon:'FA'}
+};
+let state={id:'gcp2025',position:0,threshold:15,speed:5,playing:false,all:false,sort:'gap',zoom:'gap',tab:'events'};
+let timer,toastTimer,eventSignature='',printing=false;
+function current(){return INCIDENTS.find(i=>i.id===state.id)}
+function bounds(i=current()){
+ const start=Math.min(Date.parse(i.t0),...i.posts.map(p=>Date.parse(p.t)));
+ return{start,end:Date.parse(i.end),total:(Date.parse(i.end)-start)/60000,impact:(Date.parse(i.t0)-start)/60000};
+}
+function windowMinutes(){const b=bounds();return state.zoom==='full'?b.total:Math.min(b.total,minutes(new Date(b.start).toISOString(),current().ack)+15)}
+function readHash(){
+ const p=new URLSearchParams(location.hash.slice(1));
+ if(INCIDENTS.some(i=>i.id===p.get('i')))state.id=p.get('i');
+ const threshold=Number(p.get('t'));if(p.has('t')&&Number.isFinite(threshold))state.threshold=Math.max(1,Math.min(240,Math.round(threshold)));
+ const at=Number(p.get('at'));state.position=p.has('at')&&Number.isFinite(at)?Math.max(0,Math.min(bounds().total,Math.round(at))):0;
+ if(['gap','date','len'].includes(p.get('srt')))state.sort=p.get('srt');
+ state.zoom=p.get('z')==='full'?'full':'gap';if(state.position>windowMinutes())state.zoom='full';
+}
+function remember(){const p=new URLSearchParams({i:state.id,t:state.threshold});if(state.position)p.set('at',Math.round(state.position));if(state.sort!=='gap')p.set('srt',state.sort);if(state.zoom==='full')p.set('z','full');try{history.replaceState(null,'','#'+p.toString())}catch(e){/* Replay remains usable when URL writes are unavailable. */}}
+function sortedIncidents(){return [...INCIDENTS].sort(state.sort==='gap'?(a,b)=>minutes(b.t0,b.ack)-minutes(a.t0,a.ack):state.sort==='len'?(a,b)=>minutes(b.t0,b.end)-minutes(a.t0,a.end):(a,b)=>Date.parse(b.t0)-Date.parse(a.t0))}
+function pause(){state.playing=false;clearInterval(timer);renderPlayback()}
+function renderPlayback(){
+ $('clock-state').textContent=state.playing?'PLAYING':'PAUSED';
+ $('play').setAttribute('aria-label',state.playing?'Pause replay':'Play replay');
+ $('play').innerHTML=state.playing?'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 3h3v10H4zm5 0h3v10H9z" fill="currentColor"/></svg><span>Pause replay</span>':'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 2.5 13 8 5 13.5Z" fill="currentColor"/></svg><span>Play replay</span>';
+}
+function renderLibrary(){
+ const maxGap=Math.max(...INCIDENTS.map(i=>minutes(i.t0,i.ack)));
+ $('sort').value=state.sort;
+ $('incident-list').innerHTML=sortedIncidents().map(i=>`<button class="incident-option ${i.id===state.id?'selected':''}" data-incident="${i.id}" aria-pressed="${i.id===state.id}"><span class="row"><span class="provider-icon" aria-hidden="true">${details[i.id].icon}</span>${i.name}</span><span class="meta"><span>${new Date(i.t0).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})}</span><span class="gap">${minutes(i.t0,i.ack)}m gap${i.conf==='reported'?'*':''}</span></span><span class="mini-gap" aria-hidden="true"><i style="width:${minutes(i.t0,i.ack)/maxGap*100}%"></i></span></button>`).join('');
+}
+function renderIncident(){
+ const i=current(),d=details[i.id];eventSignature='';
+ $('incident-date').textContent=i.when;$('provider-icon').textContent=d.icon;$('provider-name').textContent=i.prov;
+ $('incident-title').textContent=d.title;$('incident-subtitle').textContent=d.sub;
+ $('gap-number').textContent=minutes(i.t0,i.ack)+(i.conf==='reported'?'*':'');
+ $('gap-caption').textContent=i.conf==='reported'?'Reported / proxy timestamp. See source notes.':'Between first impact and acknowledgement.';
+ $('root-cause').textContent=i.cause;$('blast').textContent=i.blast;$('source-link').href=i.src;
+ $('evidence-note').textContent=i.id==='azure2025'?'* The 17:26 timestamp is a proxy from the published timeline. The first advisory may have been earlier.':i.conf==='reported'?'* Acknowledgement time is reported, not a verified archived first post.':'Primary-source timing in the InfraBench dataset. Event text is a condensed reconstruction.';
+ $('threshold').value=state.threshold;renderLibrary();renderTimeline();renderMoment();renderComparison();
+}
+function renderTimeline(){
+ const i=current(),b=bounds(),span=windowMinutes();
+ $('zoom-gap').setAttribute('aria-pressed',state.zoom==='gap');$('zoom-full').setAttribute('aria-pressed',state.zoom==='full');
+ $('timeline-note').textContent=state.zoom==='gap'?'Zoomed historical overview · UTC':'Full historical overview · UTC';
+ $('scrub-caption').textContent=state.zoom==='gap'?'Focused on the first public update':'Drag to explore the full incident';
+ const ack=Math.min(100,Math.max(0,(Date.parse(i.ack)-b.start)/60000/span*100));
+ $('dark-window').style.width=ack+'%';
+ const impact=Math.max(0,b.impact/span*100),mit=i.mit?Math.min(100,(Date.parse(i.mit)-b.start)/60000/span*100):100;
+ $('impact-track').innerHTML=`<div class="impact-fill" style="left:${impact}%;width:${Math.max(0,mit-impact)}%"></div>${i.mit?`<div class="impact-fill recovery" style="left:${mit}%;width:${100-mit}%"></div>`:''}<span class="track-text">Service disruption</span>`;
+ $('axis').innerHTML=Array.from({length:5},(_,n)=>`<span>${clock(b.start+span*60000*n/4)}</span>`).join('');
+ $('scrubber').max=span;
+ const chart=document.querySelector('.timeline-grid');chart.setAttribute('role','img');chart.setAttribute('aria-label',`Historical overview: customer impact begins at ${clock(Date.parse(i.t0))} UTC; first recorded public acknowledgement at ${clock(Date.parse(i.ack))} UTC. ${minutes(i.t0,i.ack)} minutes between them. The solid cursor is replay time; the dotted marker is the hypothetical alert.`);
+ renderCursor();
+}
+function renderCursor(){
+ const b=bounds(),span=windowMinutes();
+ const grid=document.querySelector('.timeline-grid'),track=$('impact-track');
+ const labelWidth=Math.max(0,track.getBoundingClientRect().left-grid.getBoundingClientRect().left);
+ const ratio=Math.min(1,state.position/span);
+ $('playhead').style.left=`calc(${labelWidth}px + (100% - ${labelWidth}px) * ${ratio})`;
+ $('cursor-label').textContent=clock(b.start+state.position*60000);
+ $('cursor-label').style.transform=ratio<.1?'translateX(0)':ratio>.9?'translateX(-100%)':'translateX(-50%)';
+ const alertPos=(b.impact+state.threshold)/span;
+ $('alert-marker').hidden=alertPos>1;
+ $('alert-marker').style.left=`calc(${labelWidth}px + (100% - ${labelWidth}px) * ${Math.min(1,alertPos)})`;
+}
+function renderMoment(){
+ const i=current(),b=bounds(),now=b.start+state.position*60000;
+ const seen=i.posts.filter(p=>Date.parse(p.t)<=now),latest=seen.at(-1)||i.posts[0];
+ const ack=now>=Date.parse(i.ack),ended=now>=b.end,started=now>=Date.parse(i.t0),recovery=i.mit&&now>=Date.parse(i.mit);
+ $('clock').textContent=clock(now);
+ $('elapsed').textContent=started?`${duration(Math.round((now-Date.parse(i.t0))/60000))} since impact · ${duration(b.total-b.impact)} total`:`${Math.round((Date.parse(i.t0)-now)/60000)}m before first impact`;
+ $('scrubber').value=state.position;$('scrubber').setAttribute('aria-valuetext',`${clock(now)} UTC, ${Math.round(state.position)} minutes into replay`);renderCursor();
+ const customerState=ended||!started?'ok':recovery?'warn':'down';
+ $('customer-badge').textContent=ended?'RESOLVED':!started?'PRE-IMPACT':recovery?'RECOVERING':'DISRUPTED';
+ $('customer-badge').className='status-pill '+customerState;
+ $('customer-badge').closest('article').dataset.state=customerState;
+ $('customer-title').textContent=ended?'Services restored.':!started?'Nothing looks wrong.':recovery?'The recovery begins.':'Requests are failing.';
+ $('customer-copy').textContent=latest.tru;
+ const publicState=ended||!ack?'ok':latest.s==='down'?'down':'warn';
+ $('public-badge').textContent=ended?'RESOLVED':!ack?'OPERATIONAL':latest.s==='down'?'OUTAGE':'INVESTIGATING';
+ $('public-badge').className='status-pill '+publicState;$('public-badge').closest('article').dataset.state=publicState;
+ $('public-title').textContent=ended?'The all-clear is public.':!ack?'All systems operational.':latest.s==='down'?'An outage is confirmed.':'We are investigating.';
+ $('public-copy').textContent=latest.said;$('public-time').textContent=!ack?'No public acknowledgement yet':`Latest recorded update · ${clock(Date.parse(latest.t))} UTC`;
+ const lead=minutes(i.t0,i.ack)-state.threshold;
+ $('alert-result').textContent=lead>0?`You would know ${duration(lead)} earlier${i.conf==='reported'?'*':''}.`:lead===0?'Your alert matches the public update.':`The provider is ${duration(-lead)} earlier${i.conf==='reported'?'*':''}.`;
+ $('next-event').disabled=!i.posts.some(p=>Date.parse(p.t)>now);renderEvents(seen,now);
+}
+function eventTitle(p,i){if(Date.parse(p.t)<Date.parse(i.t0))return'Configuration change deployed';if(p.t===i.t0)return'Customer impact begins';if(p.t===i.ack)return'First recorded public acknowledgement';if(p.t===i.end)return'All-clear published';if(p.t===i.mit)return'Mitigation applied';return p.s==='ok'?'Impact is visible. The status page stays green.':p.s==='down'?'Scope and cause become clearer':'Investigation update'}
+function renderEvents(seen,now){
+ const i=current(),events=state.all||printing?i.posts:seen;
+ $('event-count').textContent=`${seen.length} / ${i.posts.length} revealed`;
+ const key=[i.id,seen.length,state.all,printing].join('|');if(key===eventSignature)return;eventSignature=key;
+ $('event-list').innerHTML=events.map(p=>`<article class="event-row"><time datetime="${p.t}">${clock(Date.parse(p.t))}</time><span class="event-dot" style="color:${p.t===i.end?'var(--mint)':p.s==='ok'?'var(--red)':'var(--amber)'}" aria-hidden="true"></span><div><h4>${eventTitle(p,i)}${Date.parse(p.t)>now&&!printing?' <span class="future-tag">UPCOMING</span>':''}</h4><p>${esc(p.tru)}</p><p class="event-public"><span>Public status:</span> ${esc(p.said)}</p></div><button class="event-jump" data-event="${p.t}" aria-label="Jump to ${clock(Date.parse(p.t))} UTC">Jump ↗</button></article>`).join('')+(!state.all&&!printing&&seen.length<i.posts.length?`<div class="locked-events">${i.posts.length-seen.length} events ahead. Continue the replay to reveal them.</div>`:'');
+}
+function renderComparison(){
+ const first=INCIDENTS.filter(i=>minutes(i.t0,i.ack)-state.threshold>5).length;
+ $('comparison-summary').textContent=`At ${state.threshold} minutes, your alert leads by more than five minutes in ${first} of ${INCIDENTS.length} incidents.`;
+ $('comparison-rows').innerHTML=sortedIncidents().map(i=>{const lead=minutes(i.t0,i.ack)-state.threshold,cls=lead>5?'ahead':lead< -5?'behind':'close';return `<tr class="${i.id===state.id?'selected':''}"><td><button data-incident="${i.id}">${i.name} ↗</button><small>${i.when}</small></td><td>${minutes(i.t0,i.ack)} min${i.conf==='reported'?'*':''}</td><td>${duration(minutes(i.t0,i.end))}</td><td class="${cls}">${lead===0?'Same time':duration(Math.abs(lead))+(lead>0?' earlier':' later')}<small>${lead>5?'You first':lead< -5?'Provider first':'Too close to call'}</small></td></tr>`}).join('');
+}
+function selectIncident(id){if(!INCIDENTS.some(i=>i.id===id))return;pause();state.id=id;state.position=0;state.zoom='gap';state.all=false;$('show-all').checked=false;renderIncident();remember()}
+function seek(position){state.position=Math.max(0,Math.min(bounds().total,position));if(state.position>windowMinutes()){state.zoom='full';renderTimeline()}renderMoment();remember()}
+function selectDetail(tab){state.tab=tab;$('comparison').hidden=tab!=='compare';$('event-section').hidden=tab!=='events';$('tab-events').setAttribute('aria-pressed',tab==='events');$('tab-compare').setAttribute('aria-pressed',tab==='compare')}
+$('incident-list').addEventListener('click',e=>{const b=e.target.closest('[data-incident]');if(b)selectIncident(b.dataset.incident)});
+$('comparison-rows').addEventListener('click',e=>{const b=e.target.closest('[data-incident]');if(b){selectIncident(b.dataset.incident);selectDetail('events');$('clock').scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth'})}});
+$('play').addEventListener('click',()=>{if(state.playing){pause();remember();return}if(state.position>=bounds().total)seek(0);state.playing=true;renderPlayback();timer=setInterval(()=>{seek(state.position+state.speed);if(state.position>=bounds().total){pause();remember()}},1000)});
+$('speed').addEventListener('change',e=>state.speed=Number(e.target.value));
+$('scrubber').addEventListener('input',e=>{pause();seek(Number(e.target.value))});
+$('restart').addEventListener('click',()=>{pause();state.zoom='gap';state.position=0;renderTimeline();seek(0)});
+$('next-event').addEventListener('click',()=>{pause();const b=bounds(),next=current().posts.find(p=>Date.parse(p.t)>b.start+state.position*60000);if(next)seek((Date.parse(next.t)-b.start)/60000)});
+$('threshold').addEventListener('input',e=>{if(e.target.value==='')return;const n=Number(e.target.value);if(Number.isFinite(n)){state.threshold=Math.max(1,Math.min(240,Math.round(n)));renderMoment();renderComparison();remember()}});
+$('threshold').addEventListener('change',()=>$('threshold').value=state.threshold);
+$('show-all').addEventListener('change',e=>{state.all=e.target.checked;renderMoment()});
+$('sort').addEventListener('change',e=>{state.sort=e.target.value;renderLibrary();renderComparison();remember()});
+$('zoom-gap').addEventListener('click',()=>{pause();state.zoom='gap';state.position=Math.min(state.position,windowMinutes());renderTimeline();renderMoment();remember()});
+$('zoom-full').addEventListener('click',()=>{state.zoom='full';renderTimeline();renderMoment();remember()});
+$('tab-events').addEventListener('click',()=>selectDetail('events'));$('tab-compare').addEventListener('click',()=>selectDetail('compare'));
+$('event-list').addEventListener('click',e=>{const b=e.target.closest('[data-event]');if(b){pause();seek((Date.parse(b.dataset.event)-bounds().start)/60000);$('clock').scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth'})}});
+function toast(message){$('toast').textContent=message;$('toast').classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('visible'),3500)}
+async function copy(text,message){try{await navigator.clipboard.writeText(text);toast(message)}catch{prompt('Copy this text',text)}}
+$('share').addEventListener('click',()=>{remember();copy(location.href,'Replay link copied, including your clock and alert delay.')});
+$('brief').addEventListener('click',()=>{const i=current(),b=bounds();remember();copy([i.name+' · '+i.when,'First customer impact: '+clock(Date.parse(i.t0))+' UTC','First recorded public update: '+clock(Date.parse(i.ack))+' UTC'+(i.conf==='reported'?' (reported / proxy)':''),'All clear: '+clock(b.end)+' UTC','Replay position: '+clock(b.start+state.position*60000)+' UTC','Hypothetical alert delay: '+state.threshold+' minutes',$('alert-result').textContent,'','Cause: '+i.cause,'Affected: '+i.blast,'','Source: '+i.src,'','All incidents at this threshold:',...sortedIncidents().map(x=>x.name+' ('+x.when+'): '+minutes(x.t0,x.ack)+' min gap'+(x.conf==='reported'?'*':'')+', '+duration(minutes(x.t0,x.end))+' total'),'','* Reported / proxy acknowledgement time.','Replay: '+location.href].join('\n'),'Incident brief copied.')});
+for(const id of ['method-button','sources-button'])$(id).addEventListener('click',()=>{pause();$('method-dialog').showModal()});
+$('close-method').addEventListener('click',()=>$('method-dialog').close());
+$('method-dialog').addEventListener('click',e=>{if(e.target===$('method-dialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close()}});
+window.addEventListener('hashchange',()=>{pause();readHash();renderIncident()});window.addEventListener('resize',renderCursor);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
+window.addEventListener('beforeprint',()=>{pause();printing=true;eventSignature='';renderMoment()});
+window.addEventListener('afterprint',()=>{printing=false;eventSignature='';renderMoment()});
+readHash();renderIncident();renderPlayback();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(renderCursor);
 })();
+
 </script>
 </body>
 </html>
