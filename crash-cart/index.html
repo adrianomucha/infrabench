@@ -111,6 +111,7 @@
   .tbar h1 span{color:var(--tx2)}
   .tbar .src{font-size:var(--fs-caption);color:var(--tx3);margin:6px 0 0}
   .tbar .acts{display:flex;gap:10px}
+  .tbar .acts .btn{padding-inline-start:14px}   /* the icon side, optically even with the text side */
 
   .btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;background:var(--action-bg);color:var(--action-fg);
     font:inherit;font-size:var(--fs-small);font-weight:500;line-height:1.3;text-decoration:none;border:1px solid var(--action-bg);cursor:pointer;white-space:nowrap}
@@ -251,8 +252,10 @@
   .box{position:relative}
   #wall{display:block;width:100%;touch-action:pan-y;cursor:pointer}
   #plan{display:block;width:100%;overflow:visible;touch-action:pan-y;cursor:crosshair}
-  .tip{position:absolute;z-index:5;pointer-events:none;min-width:190px;max-width:280px;padding:9px 12px;background:var(--bg3);border:1px solid var(--line2);
-    font-size:var(--fs-caption);line-height:1.45;color:var(--tx2);box-shadow:0 8px 24px rgba(0,0,0,.45)}
+  /* floating readouts lift with a ring and a shadow rather than a solid border, so they sit
+     cleanly over whatever colour is underneath */
+  .tip{position:absolute;z-index:5;pointer-events:none;min-width:190px;max-width:280px;padding:9px 12px;background:var(--bg3);
+    font-size:var(--fs-caption);line-height:1.45;color:var(--tx2);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 8px 24px rgba(0,0,0,.45)}
   .tip b{display:block;color:var(--tx);font-weight:500;font-size:var(--fs-small)}
   .tip .k{display:flex;align-items:center;gap:7px;margin-top:5px;color:var(--tx)}
   .tip .row{display:flex;justify-content:space-between;gap:16px;margin-top:3px}
@@ -260,6 +263,14 @@
 
   .player{grid-column:1 / -1;display:flex;align-items:center;gap:10px 16px;padding:10px var(--pad);border-top:1px solid var(--line)}
   .player .btn{padding:7px 14px 7px 12px;min-width:92px;justify-content:center}
+  /* play and pause both live in the button and cross-fade, so the swap reads as one control changing state */
+  .pi{display:inline-grid;flex:none;width:14px;height:14px}
+  .pi svg{grid-area:1 / 1}
+  .pi .ia,#play.playing .pi .ip{opacity:0;scale:.25;filter:blur(4px)}
+  #play.playing .pi .ia{opacity:1;scale:1;filter:blur(0)}
+  @media (prefers-reduced-motion: no-preference){
+    .pi svg{transition:opacity .3s cubic-bezier(.2,0,0,1),scale .3s cubic-bezier(.2,0,0,1),filter .3s cubic-bezier(.2,0,0,1)}
+  }
   .player > *{flex:none}
   .player input[type=range]{flex:1 1 0;width:auto;min-width:100px}
   .player output{font-size:var(--fs-small);font-weight:500;white-space:nowrap;font-variant-numeric:tabular-nums;min-width:8.5em}
@@ -375,7 +386,7 @@
   .curve-hd{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 24px;margin-bottom:12px}
   .curve-hd p{margin:0;color:var(--tx2);font-size:var(--fs-small);max-width:54ch;text-wrap:pretty}
   #curve{display:block;width:100%;height:auto;overflow:visible}
-  .ctip{position:absolute;z-index:5;pointer-events:none;padding:8px 10px;background:var(--bg3);border:1px solid var(--line2);font-size:var(--fs-small);line-height:1.4;color:var(--tx2);white-space:nowrap}
+  .ctip{position:absolute;z-index:5;pointer-events:none;padding:8px 10px;background:var(--bg3);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 8px 24px rgba(0,0,0,.45);font-size:var(--fs-small);line-height:1.4;color:var(--tx2);white-space:nowrap}
   .ctip b{display:block;color:var(--tx);font-weight:500}
 
   .tscroll{overflow-x:auto}
@@ -425,7 +436,7 @@
 
   /* phone: when the figures scroll away under the inputs, a one-line copy rides along */
   .mini{position:fixed;inset-inline:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:15;display:none;align-items:center;justify-content:space-between;gap:12px;
-    padding:12px 16px;background:var(--bg3);border:1px solid var(--line2);box-shadow:0 10px 30px rgba(0,0,0,.5);font-size:var(--fs-small);color:var(--tx2)}
+    padding:12px 16px;background:var(--bg3);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.5);font-size:var(--fs-small);color:var(--tx2)}
   .mini b{color:var(--tx);font-weight:500;font-size:var(--fs-ui)}
   .mini.on{display:flex}
   @media(min-width:901px){.mini.on{display:none}}
@@ -435,7 +446,12 @@
   .toast.on{opacity:1;transform:translate(-50%,0)}
   @media (prefers-reduced-motion: no-preference){
     html{scroll-behavior:smooth}
-    .toast{transition:opacity .2s ease,transform .2s ease}
+    /* the toast leaves faster and softer than it arrived */
+    .toast{transition:opacity .15s ease-out,transform .15s ease-out}
+    .toast.on{transition-duration:.2s}
+    /* a press gives way a little; joined segments, tabs and text links stay still */
+    .btn,.whatif button,.chip span{transition:scale .15s ease-out}
+    .btn:active:not(:disabled),.whatif button:active:not(:disabled),.chip input:active + span{scale:.96}
   }
   @media (prefers-reduced-motion: reduce){ .kpi.hit{animation:none} }
 
@@ -454,7 +470,7 @@
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="g-infrabench" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="9" width="14" height="10" fill="currentColor"/></symbol>
-  <symbol id="i-play" viewBox="0 0 14 14"><path d="M3 1.8v10.4L12 7z" fill="currentColor"/></symbol>
+  <symbol id="i-play" viewBox="0 0 14 14"><path d="M4 1.8v10.4L13 7z" fill="currentColor"/></symbol>
   <symbol id="i-pause" viewBox="0 0 14 14"><path d="M3 2h3v10H3zM8 2h3v10H8z" fill="currentColor"/></symbol>
   <symbol id="i-link" viewBox="0 0 14 14"><path d="M6 8a2.5 2.5 0 0 0 3.5 0l2-2A2.5 2.5 0 0 0 8 2.5l-.8.8M8 6a2.5 2.5 0 0 0-3.5 0l-2 2A2.5 2.5 0 0 0 6 11.5l.8-.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
 </svg>
@@ -587,7 +603,7 @@
         </div>
       </figure>
       <div class="player">
-        <button class="btn" type="button" id="play"><svg aria-hidden="true"><use href="#i-play"/></svg><span>Play</span></button>
+        <button class="btn" type="button" id="play"><span class="pi" aria-hidden="true"><svg class="ip"><use href="#i-play"/></svg><svg class="ia"><use href="#i-pause"/></svg></span><span class="pl">Play</span></button>
         <label class="sr-only" for="wk">Week to show</label>
         <input type="range" id="wk" min="1" max="1" step="1" value="1">
         <output id="wkOut" for="wk"></output>
@@ -1055,7 +1071,7 @@
   function flash(el){ if(reduce.matches) return; el.classList.remove("hit"); void el.offsetWidth; el.classList.add("hit"); }
 
   /* ---------- the five figures, each saying how it moved ---------- */
-  var kpiBase = null, prevR = null, lastR = null, dragging = false, lastShown = null;
+  var kpiBase = null, prevR = null, lastR = null, dragging = false, lastShown = null, dragShown = null;
   function vals(r){ return [r.thisWeek, r.queueDrives, lastWeek(r), r.totalTb, r.pLossYear]; }
   function fmt0(n){ return fmt(Math.round(n)); }
   function oddsPos(p){ return p > 0 ? clamp((Math.log(p) / Math.LN10 + 12) / 12, 0, 1) : 0; }
@@ -1114,7 +1130,8 @@
 
     // a figure that lands on a new value lights up for a moment
     var shown = [fmt(v[0]), fmt(v[1]), !r.queueDrives ? "none" : isFinite(v[2]) ? (yrs ? inYears(v[2]) : fmt(v[2])) : "never", fmtSmall(v[3]), odds(v[4])];
-    if(lastShown){
+    // while a slider is dragged the figures only count; they light up once when it ends
+    if(lastShown && !dragging){
       var tiles = document.querySelectorAll(".kpi");
       for(var i = 0; i < 5; i++) if(lastShown[i] !== shown[i]) flash(tiles[i]);
     }
@@ -1216,7 +1233,8 @@
       if(from){
         col = mix(from, to, e);
         // a square that changed what it needs glints as it settles, so the eye finds it
-        if(from[0] !== to[0] || from[1] !== to[1] || from[2] !== to[2]) col = mix(col, white, (1 - e) * 0.5);
+        // (not mid-drag, when it would sparkle on every tick)
+        if(wall.glint && (from[0] !== to[0] || from[1] !== to[1] || from[2] !== to[2])) col = mix(col, white, (1 - e) * 0.5);
       }
       if((hr >= 0 && wall.cells[c].row !== hr) || (hc && wall.cats[c] !== hc)) col = mix(col, P.bg, 0.72);
       ctx.fillStyle = "rgb(" + (col[0]|0) + "," + (col[1]|0) + "," + (col[2]|0) + ")";
@@ -1234,6 +1252,7 @@
     wall.cats = wall.cells.map(function(c){ return catOf(c, v); });
     var to = wall.cats.map(function(k){ return P[k]; });
     wall.from = dur && !reduce.matches && wall.to && wall.to.length === to.length ? currentColors() : null;
+    wall.glint = !dragging;
     wall.to = to;
     cancelAnimationFrame(wall.raf);
     if(wall.from){
@@ -1483,8 +1502,8 @@
   }
   function setPlayBtn(){
     var b = $("play"), atEnd = view.v >= view.max && view.max > 1;
-    b.querySelector("use").setAttribute("href", playing ? "#i-pause" : "#i-play");
-    b.querySelector("span").textContent = playing ? "Pause" : atEnd ? "Replay" : "Play";
+    b.classList.toggle("playing", playing);
+    b.querySelector(".pl").textContent = playing ? "Pause" : atEnd ? "Replay" : "Play";
     b.setAttribute("aria-label", playing ? "Pause the plan" : "Play the plan week by week");
   }
   function stepMs(){ return clamp(3600 / view.max, 70, 420); }
@@ -1755,9 +1774,19 @@
   /* A user change. The figures then say how they moved from before it, the plan keeps its
      old line, and a slider drag counts as one change from where it started. */
   function change(fn, drag){
-    if(!(drag && dragging)){ kpiBase = lastR ? vals(lastR) : null; prevR = lastR; }
+    if(!(drag && dragging)){
+      kpiBase = lastR ? vals(lastR) : null; prevR = lastR;
+      if(drag) dragShown = lastShown ? lastShown.slice() : null;
+    }
     dragging = !!drag;
     fn(); render(true);
+  }
+  /* the end of a drag: light up the figures that landed somewhere new since it began */
+  function endDrag(){
+    if(!dragging) return;
+    dragging = false;
+    if(dragShown && lastShown){ var tiles = document.querySelectorAll(".kpi"); for(var i = 0; i < 5; i++) if(dragShown[i] !== lastShown[i]) flash(tiles[i]); }
+    dragShown = null;
   }
 
   function renderTry(){
@@ -1902,7 +1931,7 @@
     $("schemeChips").addEventListener("change", function(e){ change(function(){ state.scheme = e.target.value; }); });
     function slider(id, set){
       $(id).addEventListener("input", function(){ var el = this; change(function(){ set(+el.value); }, true); });
-      $(id).addEventListener("change", function(){ dragging = false; });
+      $(id).addEventListener("change", endDrag);
     }
     slider("drives", function(v){ state.drives = sizeFromPos(v); });
     slider("pulls", function(v){ state.pulls = v; });

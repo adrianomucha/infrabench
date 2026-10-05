@@ -103,6 +103,7 @@
   .tbar h1 span{color:var(--tx2)}
   .tbar .src{font-size:var(--fs-caption);color:var(--tx3);margin:6px 0 0}
   .tbar .acts{display:flex;gap:10px}
+  .tbar .acts .btn{padding-inline-start:14px}   /* the icon side, optically even with the text side */
 
   .btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;background:var(--action-bg);color:var(--action-fg);
     font:inherit;font-size:var(--fs-small);font-weight:500;line-height:1.3;text-decoration:none;border:1px solid var(--action-bg);cursor:pointer;white-space:nowrap}
@@ -253,7 +254,10 @@
   .tile.lit .tn{color:var(--tx)}
   .tile.hit{animation:tflash .8s ease-out}
   @keyframes tflash{from{box-shadow:0 0 0 2px var(--tx)}to{box-shadow:0 0 0 2px transparent}}
-  @media (prefers-reduced-motion: no-preference){ .tile{transition:background-color .35s ease,border-color .35s ease} }
+  @media (prefers-reduced-motion: no-preference){
+    .tile{transition:background-color .35s ease,border-color .35s ease,scale .15s ease-out}
+    .tile:active{scale:.96}
+  }
   @media (prefers-reduced-motion: reduce){ .tile.hit,.kpi.hit{animation:none} }
   /* on a phone the tiles are too narrow for names and full years, so they shorten */
   .tile .s{display:none}
@@ -274,8 +278,10 @@
 
   .box{position:relative}
   #tl{display:block;width:100%;overflow:visible;touch-action:pan-y;cursor:ew-resize}
-  .tip{position:absolute;z-index:5;pointer-events:none;min-width:210px;max-width:290px;padding:9px 12px;background:var(--bg3);border:1px solid var(--line2);
-    font-size:var(--fs-caption);line-height:1.45;color:var(--tx2);box-shadow:0 8px 24px rgba(0,0,0,.45)}
+  /* floating readouts lift with a ring and a shadow rather than a solid border, so they sit
+     cleanly over whatever colour is underneath */
+  .tip{position:absolute;z-index:5;pointer-events:none;min-width:210px;max-width:290px;padding:9px 12px;background:var(--bg3);
+    font-size:var(--fs-caption);line-height:1.45;color:var(--tx2);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 8px 24px rgba(0,0,0,.45)}
   .tip b{display:block;color:var(--tx);font-weight:500;font-size:var(--fs-small)}
   .tip .k{display:flex;align-items:center;gap:7px;margin-top:5px;color:var(--tx)}
   .tip .row{display:flex;justify-content:space-between;gap:16px;margin-top:3px}
@@ -418,7 +424,7 @@
   footer a:hover{color:var(--tx);text-decoration-color:currentColor}
 
   .mini{position:fixed;inset-inline:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:15;display:none;align-items:center;justify-content:space-between;gap:12px;
-    padding:12px 16px;background:var(--bg3);border:1px solid var(--line2);box-shadow:0 10px 30px rgba(0,0,0,.5);font-size:var(--fs-small);color:var(--tx2)}
+    padding:12px 16px;background:var(--bg3);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.5);font-size:var(--fs-small);color:var(--tx2)}
   .mini b{color:var(--tx);font-weight:500;font-size:var(--fs-ui)}
   .mini.on{display:flex}
   @media(min-width:901px){.mini.on{display:none}}
@@ -428,7 +434,12 @@
   .toast.on{opacity:1;transform:translate(-50%,0)}
   @media (prefers-reduced-motion: no-preference){
     html{scroll-behavior:smooth}
-    .toast{transition:opacity .2s ease,transform .2s ease}
+    /* the toast leaves faster and softer than it arrived */
+    .toast{transition:opacity .15s ease-out,transform .15s ease-out}
+    .toast.on{transition-duration:.2s}
+    /* a press gives way a little; joined segments, tabs and text links stay still */
+    .btn,.whatif button,.chip span{transition:scale .15s ease-out}
+    .btn:active:not(:disabled),.whatif button:active:not(:disabled),.chip input:active + span{scale:.96}
   }
 
   @media print{
@@ -883,7 +894,7 @@
   }
 
   /* ---------- the five figures, each saying how it moved ---------- */
-  var kpiBase = null, prevR = null, lastR = null, dragging = false, lastShown = null;
+  var kpiBase = null, prevR = null, lastR = null, dragging = false, lastShown = null, dragShown = null, dragBands = null;
   function cleanest(r){ return r.makes.length ? r.makes.slice().sort(function(a,b){ return (a.g.co2 - b.g.co2) || (a.mid - b.mid); })[0] : null; }
   function cheapest(r){ return r.makes.length ? r.makes.slice().sort(function(a,b){ return (a.g.price - b.g.price) || (a.mid - b.mid); })[0] : null; }
   function vals(r){
@@ -929,7 +940,9 @@
 
     // a figure that lands on a new value lights up for a moment
     var shown = [String(v.top), String(v.count), v.size.toFixed(1), String(v.co2), String(v.price)];
-    if(lastShown){ for(var i = 0; i < 5; i++) if(lastShown[i] !== shown[i]) flash($("k" + i)); }
+    // while a slider or the deadline is being dragged the figures only count; they light up
+    // once, when the drag ends (endDrag), so the strip does not flicker on every tick
+    if(lastShown && !dragging){ for(var i = 0; i < 5; i++) if(lastShown[i] !== shown[i]) flash($("k" + i)); }
     lastShown = shown;
   }
 
@@ -970,7 +983,7 @@
       q(t, ".dot").className = "dot " + x.band;
       q(t, ".vw").innerHTML = '<span class="l">' + VWORD[x.band] + (x.bridged ? ", bridged" : "") + '</span><span class="s">' + VSHORT[x.band] + '</span>';
       t.setAttribute("aria-label", x.g.name + ", " + x.g.area + ": " + verdictText(x, yr).toLowerCase() + ", window " + windowText(x) + (x.bridged ? ", bridged" : "") + ". Show details.");
-      if(prev && prev !== x.band) flash(t);
+      if(prev && prev !== x.band && !dragging) flash(t);
       t.setAttribute("data-band", x.band);
     });
   }
@@ -1255,9 +1268,23 @@
   /* A user change. The figures then say how they moved from before it, the timeline keeps
      the old windows as outlines, and a drag counts as one change from where it started. */
   function change(fn, drag){
-    if(!(drag && dragging)){ kpiBase = lastR ? vals(lastR) : null; prevR = lastR; }
+    if(!(drag && dragging)){
+      kpiBase = lastR ? vals(lastR) : null; prevR = lastR;
+      if(drag){
+        dragShown = lastShown ? lastShown.slice() : null; dragBands = {};
+        document.querySelectorAll("#map .tile").forEach(function(t){ dragBands[t.getAttribute("data-id")] = t.getAttribute("data-band"); });
+      }
+    }
     dragging = !!drag;
     fn(); render(true);
+  }
+  /* the end of a drag: light up whatever landed somewhere new since it began */
+  function endDrag(){
+    if(!dragging) return;
+    dragging = false;
+    if(dragShown && lastShown) for(var i = 0; i < 5; i++) if(dragShown[i] !== lastShown[i]) flash($("k" + i));
+    if(dragBands) document.querySelectorAll("#map .tile").forEach(function(t){ if(dragBands[t.getAttribute("data-id")] !== t.getAttribute("data-band")) flash(t); });
+    dragShown = dragBands = null;
   }
 
   function renderMini(r){
@@ -1385,7 +1412,7 @@
 
     function slider(id, set){
       $(id).addEventListener("input", function(){ var el = this; change(function(){ set(+el.value); }, true); });
-      $(id).addEventListener("change", function(){ dragging = false; });
+      $(id).addEventListener("change", endDrag);
     }
     slider("mw", function(v){ state.mw = mwFromPos(v); });
     slider("yr", function(v){ state.yr = v; });
@@ -1420,7 +1447,7 @@
       var yr = yearFromPoint(p);
       change(function(){ state.yr = yr; }, true);
     });
-    function up(e){ if(!tl.down) return; tl.down = false; dragging = false; try{ svg.releasePointerCapture(e.pointerId); }catch(x){} }
+    function up(e){ if(!tl.down) return; tl.down = false; endDrag(); try{ svg.releasePointerCapture(e.pointerId); }catch(x){} }
     svg.addEventListener("pointerup", up);
     svg.addEventListener("pointercancel", up);
 
