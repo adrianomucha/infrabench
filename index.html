@@ -42,29 +42,45 @@
     --tx2:#A8B0B8;         /* secondary text */
     --tx3:#7B838D;         /* fine print */
     --grn:#3FE0A0;         /* signal green: the brand glyph and the answer */
+    /* One role-based scale. Larger screens step it up by redefining these, not by
+       resizing selectors one at a time. */
+    --fs-caption:13px;               /* sources, figure captions, the wordmark */
+    --fs-small:14px;                 /* ledger rows, the legend, the footer */
+    --fs-ui:15px;                    /* nav, links, buttons, the hall's label */
+    --fs-body:16px;                  /* descriptions, about copy, a ledger's answer */
+    --fs-lead:18px;                  /* the intro paragraph */
+    --fs-sub:20px;                   /* each tool's question */
+    --fs-heading:22px;               /* about headings */
+    --fs-title:28px;                 /* tool names, the hall's counter */
+    --fs-display:clamp(38px,4.2vw,60px);
     --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
     --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
+  /* on the narrowest phones the headline drops a little so it keeps its two-line break */
+  @media(max-width:700px){:root{--fs-lead:17px;--fs-display:clamp(34px,9.7vw,38px)}}
+  @media(min-width:1680px){:root{--fs-caption:14px;--fs-small:15px;--fs-ui:16px;--fs-body:17px;--fs-lead:20px;
+    --fs-sub:23px;--fs-heading:26px;--fs-title:34px;--fs-display:72px}}
+  @media(min-width:2200px){:root{--fs-small:16px;--fs-body:18px;--fs-lead:21px;--fs-sub:24px;--fs-title:36px;--fs-display:80px}}
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
-  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:16px;line-height:1.6;
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:var(--fs-body);line-height:1.6;
     -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
   .wrap{max-width:1260px;margin:0 auto;padding:0 32px}
   @media(max-width:640px){.wrap{padding:0 20px}}
   a{color:inherit}
   :focus-visible{outline:2px solid var(--grn);outline-offset:3px}
   .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-  .skip{position:absolute;left:-9999px;top:0;z-index:10;padding:12px 18px;background:var(--tx);color:var(--bg);font-weight:600;font-size:15px}
+  .skip{position:absolute;left:-9999px;top:0;z-index:10;padding:12px 18px;background:var(--tx);color:var(--bg);font-weight:600;font-size:var(--fs-ui)}
   .skip:focus{left:0}
   .glyph{color:var(--grn);flex:none;display:block}
 
   /* ---------- header ---------- */
   .top{display:flex;align-items:center;justify-content:space-between;gap:24px;height:76px}
   .brand{display:inline-flex;align-items:center;gap:11px;text-decoration:none;
-    font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+    font-family:var(--mono);font-size:var(--fs-caption);font-weight:600;letter-spacing:.12em;text-transform:uppercase}
   .brand .glyph{width:20px;height:20px}
   .top nav{display:flex;gap:28px}
-  .top nav a{font-size:15px;color:var(--tx2);text-decoration:none;padding:12px 0}
+  .top nav a{font-size:var(--fs-ui);color:var(--tx2);text-decoration:none;padding:12px 0}
   .top nav a:hover{color:var(--tx)}
 
   /* ---------- intro: the statement, and the hall that proves it ----------
@@ -81,9 +97,10 @@
     .intro .hall{display:block}
   }
   @media(max-width:700px){.intro{padding-block:40px 64px;row-gap:36px}}
-  h1{font-size:clamp(38px,4.2vw,60px);font-weight:500;line-height:1.02;letter-spacing:-.04em;margin:0;max-width:14ch;text-wrap:balance}
-  .lede{font-size:18px;color:var(--tx2);max-width:56ch;margin:28px 0 0;text-wrap:pretty}
-  @media(max-width:700px){.lede{font-size:17px;margin-top:22px}}
+  h1{font-size:var(--fs-display);font-weight:500;line-height:1.02;letter-spacing:-.04em;margin:0;max-width:14ch;text-wrap:balance}
+  /* ch is Archivo's 0, about a quarter wider than its average letter: 50ch is ~66 characters */
+  .lede{font-size:var(--fs-lead);color:var(--tx2);max-width:50ch;margin:28px 0 0;text-wrap:pretty}
+  @media(max-width:700px){.lede{margin-top:22px}}
 
   /* The hall. 30 MW at 120 kW a rack is 250 racks on paper. PUE 1.2 takes 42 of them
      (25 MW of IT is 208 racks) and a 15 percent margin holds back 31 more, leaving 177.
@@ -111,11 +128,16 @@
   .hall svg.snap .rk > g{transition:none}
   @media (prefers-reduced-motion: reduce){.hall .rk > g{transition:none}}
   .hall figcaption{margin-top:18px}
-  .tally{display:flex;align-items:center;gap:14px}
-  .read{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px;margin:0}
-  .read .n{font-family:var(--mono);font-size:28px;font-weight:500;line-height:1.1;color:var(--grn);font-variant-numeric:tabular-nums}
-  .read .what{font-size:15px;color:var(--tx);transition:opacity .3s ease}
-  .read .what.out{opacity:0}
+  /* top-aligned, so the button stays level with the counter when the label reserves two lines */
+  .tally{display:flex;align-items:flex-start;gap:14px}
+  .read{display:flex;align-items:baseline;gap:12px;margin:0}
+  .read .n{font-family:var(--mono);font-size:var(--fs-title);font-weight:500;line-height:1.1;color:var(--grn);font-variant-numeric:tabular-nums}
+  /* The three step labels share one grid cell, so the cell is always as tall as the
+     longest, which wraps on a small phone, and nothing below it moves as they change.
+     The idle ones are hidden from screen readers too; visibility waits out the fade. */
+  .read .what{display:grid;min-width:0;font-size:var(--fs-ui);line-height:1.45;color:var(--tx)}
+  .read .what > span{grid-area:1 / 1;visibility:hidden;opacity:0;transition:opacity .35s ease,visibility 0s linear .35s}
+  .read .what > .on{visibility:visible;opacity:1;transition:opacity .45s ease .25s,visibility 0s}
   /* play and pause, in front of the counter like a player's transport */
   .pp{flex:none;display:grid;place-items:center;width:32px;height:32px;padding:0;background:none;
     border:1px solid var(--line2);color:var(--tx2);cursor:pointer}
@@ -123,7 +145,7 @@
   .pp svg{width:11px;height:11px;display:block}
   .pp .i-play,.pp.is-paused .i-pause{display:none}
   .pp.is-paused .i-play{display:block}
-  .keys{display:flex;flex-wrap:wrap;gap:6px 22px;margin:10px 0 0;padding:0;list-style:none;font-size:14px;color:var(--tx2)}
+  .keys{display:flex;flex-wrap:wrap;gap:6px 22px;margin:10px 0 0;padding:0;list-style:none;font-size:var(--fs-small);color:var(--tx2)}
   .key{display:inline-flex;align-items:center;gap:9px;white-space:nowrap}
   .sw{width:11px;height:11px;flex:none}
   .sw.fit{background:linear-gradient(#63EEB4,#41D294)}
@@ -144,32 +166,32 @@
   /* stacked: the link follows the example instead of splitting the tool from it */
   @media(max-width:900px){.tool{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"text" "ex" "go";padding:40px 0 36px}
     .tool .ex{margin-top:28px}}
-  .t-name{display:flex;align-items:center;gap:14px;margin:0;font-size:28px;font-weight:500;letter-spacing:-.025em;line-height:1.1}
+  .t-name{display:flex;align-items:center;gap:14px;margin:0;font-size:var(--fs-title);font-weight:500;letter-spacing:-.025em;line-height:1.1}
   .t-name .glyph{width:26px;height:26px}
-  .t-q{font-size:20px;line-height:1.35;letter-spacing:-.015em;color:var(--tx);margin:22px 0 0}
+  .t-q{font-size:var(--fs-sub);line-height:1.35;letter-spacing:-.015em;color:var(--tx);margin:22px 0 0}
   .t-q span{display:block;color:var(--tx2)}
-  .t-d{font-size:15px;color:var(--tx2);margin:10px 0 0;max-width:46ch;text-wrap:pretty}
-  .t-src{font-size:13px;line-height:1.5;color:var(--tx3);margin:18px 0 0;max-width:46ch;text-wrap:pretty}
+  .t-d{font-size:var(--fs-body);color:var(--tx2);margin:10px 0 0;max-width:46ch;text-wrap:pretty}
+  .t-src{font-size:var(--fs-caption);line-height:1.5;color:var(--tx3);margin:18px 0 0;max-width:46ch;text-wrap:pretty}
   .go{grid-area:go;align-self:end;justify-self:start;display:inline-flex;align-items:baseline;gap:6px;padding-top:28px;
-    font-size:15px;font-weight:500;color:var(--tx);text-decoration:none}
+    font-size:var(--fs-ui);font-weight:500;color:var(--tx);text-decoration:none}
   .go .arr{color:var(--grn)}
   /* stretch the link over the row, and draw its focus ring around the row */
   .go::after{content:"";position:absolute;inset:0}
   .go:focus-visible{outline:none}
   .go:focus-visible::after{outline:2px solid var(--grn);outline-offset:8px}
-  .tool:hover .go{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+  .tool:hover .go{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
 
   /* the worked example: inputs, a rule, then what comes out. The answer is green. */
   .ex{grid-area:ex;align-self:start;margin:0;background:var(--bg2);border:1px solid var(--line);padding:22px 26px 20px}
   @media(max-width:640px){.ex{padding:18px 18px 16px}}
-  .ex figcaption{font-size:13px;color:var(--tx3);margin:0 0 10px}
+  .ex figcaption{font-size:var(--fs-caption);color:var(--tx3);margin:0 0 10px}
   .ex dl{margin:0}
   .ex dl div{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 24px;padding:6px 0}
-  .ex dt{font-size:14px;color:var(--tx2)}
-  .ex dd{margin:0 0 0 auto;font-family:var(--mono);font-size:14px;color:var(--tx);text-align:right;font-variant-numeric:tabular-nums}
+  .ex dt{font-size:var(--fs-small);color:var(--tx2)}
+  .ex dd{margin:0 0 0 auto;font-family:var(--mono);font-size:var(--fs-small);color:var(--tx);text-align:right;font-variant-numeric:tabular-nums}
   .ex .out{border-top:1px solid var(--line2);margin-top:10px;padding-top:16px}
   .ex .ans dt{color:var(--tx)}
-  .ex .ans dd{color:var(--grn);font-size:16px;font-weight:500}
+  .ex .ans dd{color:var(--grn);font-size:var(--fs-body);font-weight:500}
   .tool:hover .ex{border-color:var(--line2)}
 
   @media (prefers-reduced-motion: no-preference){
@@ -182,24 +204,25 @@
   /* ---------- about ---------- */
   .about{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:56px 96px;padding-block:112px 120px;scroll-margin-top:24px}
   @media(max-width:900px){.about{grid-template-columns:minmax(0,1fr);padding-block:72px 80px}}
-  .about h2{font-size:22px;font-weight:500;letter-spacing:-.02em;line-height:1.2;margin:0 0 20px}
-  .about p{font-size:16px;color:var(--tx2);margin:0 0 16px;max-width:60ch;text-wrap:pretty}
+  .about h2{font-size:var(--fs-heading);font-weight:500;letter-spacing:-.02em;line-height:1.2;margin:0 0 20px}
+  .about p{font-size:var(--fs-body);color:var(--tx2);margin:0 0 16px;max-width:54ch;text-wrap:pretty}
   .about p b{color:var(--tx);font-weight:500}
   .acts{display:flex;flex-wrap:wrap;align-items:center;gap:12px 28px;margin-top:28px}
   .btn{display:inline-flex;align-items:center;padding:13px 22px;background:var(--tx);color:var(--bg);
-    font-size:15px;font-weight:500;text-decoration:none;border:1px solid var(--tx)}
+    font-size:var(--fs-ui);font-weight:500;text-decoration:none;border:1px solid var(--tx)}
   .btn:hover{background:#fff;border-color:#fff}
-  .lnk{font-size:15px;font-weight:500;color:var(--tx);text-decoration:none;padding:12px 0}
-  .lnk:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+  .lnk{font-size:var(--fs-ui);font-weight:500;color:var(--tx);text-decoration:none;padding:12px 0}
+  .lnk:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
   .lnk .arr{color:var(--tx3)}
 
   /* ---------- footer ---------- */
-  footer{border-top:1px solid var(--line);padding:36px 0 56px;font-size:14px;color:var(--tx3)}
-  footer p{margin:0;max-width:72ch;text-wrap:pretty}
+  footer{border-top:1px solid var(--line);padding:36px 0 56px;font-size:var(--fs-small);color:var(--tx3)}
+  footer p{margin:0;max-width:58ch;text-wrap:pretty}
   footer .meta{margin-top:14px;max-width:none}
-  footer .meta span{white-space:nowrap}
+  /* the credit wraps where it must; the short items after it never split */
+  footer .meta span + span{white-space:nowrap}
   footer a{color:var(--tx2);text-decoration:none;white-space:nowrap}
-  footer a:hover{color:var(--tx);text-decoration:underline;text-underline-offset:4px}
+  footer a:hover{color:var(--tx);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
 
   /* ---------- large screens ----------
      The container steps match the tool pages (1260, 1520, 1720) so the wordmark holds
@@ -208,45 +231,32 @@
   @media(min-width:1680px){
     .wrap{max-width:1520px}
     .top{height:84px}
-    .brand{font-size:14px;gap:12px}
+    .brand{gap:12px}
     .brand .glyph{width:22px;height:22px}
-    .top nav a{font-size:16px}
     .intro{column-gap:112px;padding-block:88px 120px}
-    h1{font-size:72px}
     .hall figcaption{margin-top:22px}
-    .read .n{font-size:32px}
-    .read .what,.keys{font-size:16px}
     .pp{width:36px;height:36px}
     .pp svg{width:12px;height:12px}
-    .lede{font-size:20px;margin-top:32px}
+    .lede{margin-top:32px}
     .tool{column-gap:112px;padding:64px 0}
-    .t-name{font-size:34px;gap:16px}
+    .t-name{gap:16px}
     .t-name .glyph{width:30px;height:30px}
-    .t-q{font-size:23px;margin-top:26px}
-    .t-d{font-size:17px;margin-top:12px}
-    .t-src{font-size:14px;margin-top:20px}
-    .go{font-size:16px;padding-top:32px}
+    .t-q{margin-top:26px}
+    .t-d{margin-top:12px}
+    .t-src{margin-top:20px}
+    .go{padding-top:32px}
     .ex{padding:28px 32px 26px}
-    .ex figcaption{font-size:14px;margin-bottom:12px}
+    .ex figcaption{margin-bottom:12px}
     .ex dl div{padding:8px 0}
-    .ex dt,.ex dd{font-size:16px}
-    .ex .ans dd{font-size:19px}
     .about{column-gap:128px;padding-block:136px 144px}
-    .about h2{font-size:26px;margin-bottom:24px}
-    .about p{font-size:18px}
-    .btn,.lnk{font-size:16px}
+    .about h2{margin-bottom:24px}
     .btn{padding:15px 26px}
-    footer{font-size:15px;padding:44px 0 72px}
+    footer{padding:44px 0 72px}
   }
   @media(min-width:2200px){
     .wrap{max-width:1720px}
     .intro{column-gap:136px}
-    h1{font-size:80px}
-    .lede{font-size:21px}
     .tool{column-gap:136px}
-    .t-name{font-size:36px}
-    .t-q{font-size:24px}
-    .t-d{font-size:18px}
   }
 </style>
 </head>
@@ -289,7 +299,7 @@
           <svg class="i-pause" viewBox="0 0 10 10" aria-hidden="true"><rect x="1.5" y="1" width="2.5" height="8" fill="currentColor"/><rect x="6" y="1" width="2.5" height="8" fill="currentColor"/></svg>
           <svg class="i-play" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.6 1L9.6 5L2.6 9Z" fill="currentColor"/></svg>
         </button>
-        <p class="read"><span class="n" id="hallN">177</span> <span class="what" id="hallWhat">racks fit, of 250 on paper</span></p>
+        <p class="read"><span class="n" id="hallN">177</span> <span class="what" id="hallWhat"><span>racks on paper, 30&nbsp;MW at 120&nbsp;kW</span><span>racks after PUE&nbsp;1.2</span><span class="on">racks fit, of 250 on paper</span></span></p>
       </div>
       <ul class="keys">
         <li class="key"><span class="sw fit" aria-hidden="true"></span>Fits</li>
@@ -315,12 +325,12 @@
       <figure class="ex">
         <figcaption>Worked example</figcaption>
         <dl>
-          <div><dt>Power at the fence</dt><dd>30 MW</dd></div>
-          <div><dt>Overhead</dt><dd>PUE 1.2, 15% margin</dd></div>
-          <div><dt>Rack</dt><dd>GB200 NVL72, 120 kW</dd></div>
+          <div><dt>Power at the fence</dt><dd>30&nbsp;MW</dd></div>
+          <div><dt>Overhead</dt><dd>PUE&nbsp;1.2, 15% margin</dd></div>
+          <div><dt>Rack</dt><dd>GB200 NVL72, 120&nbsp;kW</dd></div>
           <div class="out ans"><dt>Racks that fit</dt><dd>177</dd></div>
-          <div><dt>Heat to reject</dt><dd>6,039 tons</dd></div>
-          <div><dt>White space</dt><dd>7,080 sq ft</dd></div>
+          <div><dt>Heat to reject</dt><dd>6,039&nbsp;tons</dd></div>
+          <div><dt>White space</dt><dd>7,080&nbsp;sq&nbsp;ft</dd></div>
         </dl>
       </figure>
       <a class="go" href="/rack-budget/">Open tool<span class="sr-only">: Rack Budget</span><span class="arr" aria-hidden="true">&rarr;</span></a>
@@ -336,12 +346,12 @@
       <figure class="ex">
         <figcaption>Worked example</figcaption>
         <dl>
-          <div><dt>Fleet</dt><dd>3,000 drives, 4 to 22 TB</dd></div>
+          <div><dt>Fleet</dt><dd>3,000 drives, 4 to 22&nbsp;TB</dd></div>
           <div><dt>Redundancy</dt><dd>Erasure-coded 17+3</dd></div>
           <div><dt>Crew capacity</dt><dd>12 pulls a week</dd></div>
-          <div class="out ans"><dt>Pull this week</dt><dd>12 &times; Seagate 12 TB</dd></div>
-          <div><dt>Still in the queue</dt><dd>344 drives</dd></div>
-          <div><dt>Queue clears in</dt><dd>34 weeks</dd></div>
+          <div class="out ans"><dt>Pull this week</dt><dd>12&nbsp;&times; Seagate 12&nbsp;TB</dd></div>
+          <div><dt>Still in the queue</dt><dd>344&nbsp;drives</dd></div>
+          <div><dt>Queue clears in</dt><dd>34&nbsp;weeks</dd></div>
         </dl>
       </figure>
       <a class="go" href="/crash-cart/">Open tool<span class="sr-only">: Crash Cart</span><span class="arr" aria-hidden="true">&rarr;</span></a>
@@ -357,7 +367,7 @@
       <figure class="ex">
         <figcaption>Worked example</figcaption>
         <dl>
-          <div><dt>New load</dt><dd>300 MW</dd></div>
+          <div><dt>New load</dt><dd>300&nbsp;MW</dd></div>
           <div><dt>Needed by</dt><dd>2030</dd></div>
           <div><dt>Power source</dt><dd>Grid only</dd></div>
           <div class="out ans"><dt>Earliest window</dt><dd>ERCOT, 2028&ndash;2030</dd></div>
@@ -378,12 +388,12 @@
       <figure class="ex">
         <figcaption>Worked example</figcaption>
         <dl>
-          <div><dt>Incident</dt><dd>Google Cloud, 12 June 2025</dd></div>
-          <div><dt>First customer impact</dt><dd>17:51 UTC</dd></div>
-          <div><dt>First status post</dt><dd>19:05 UTC</dd></div>
-          <div class="out ans"><dt>Status page stayed green</dt><dd>74 min</dd></div>
-          <div><dt>A 15-minute alert beats it by</dt><dd>59 min</dd></div>
-          <div><dt>Median gap, all six</dt><dd>48 min</dd></div>
+          <div><dt>Incident</dt><dd>Google Cloud, 12&nbsp;June 2025</dd></div>
+          <div><dt>First customer impact</dt><dd>17:51&nbsp;UTC</dd></div>
+          <div><dt>First status post</dt><dd>19:05&nbsp;UTC</dd></div>
+          <div class="out ans"><dt>Status page stayed green</dt><dd>74&nbsp;min</dd></div>
+          <div><dt>A 15-minute alert beats it by</dt><dd>59&nbsp;min</dd></div>
+          <div><dt>Median gap, all six</dt><dd>48&nbsp;min</dd></div>
         </dl>
       </figure>
       <a class="go" href="/outage-replay/">Open tool<span class="sr-only">: Outage replay</span><span class="arr" aria-hidden="true">&rarr;</span></a>
@@ -517,18 +527,15 @@
   if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   var fig = svg.parentNode, num = document.getElementById("hallN"), what = document.getElementById("hallWhat");
   var btn = document.getElementById("hallPlay");
-  var STEPS = [
-    [PLAN,      "racks on paper, 30 MW at 120 kW"],
-    [AFTER_PUE, "racks after PUE 1.2"],
-    [FIT,       "racks fit, of 250 on paper"]
-  ];
+  // the count at each step; its label is the matching span in #hallWhat
+  var STEPS = [PLAN, AFTER_PUE, FIT], LABELS = what.children;
   // Time from the start of each step to the start of the next. Each includes its wave,
   // about 2.5 s to settle, so the spec rests about a second, the overhead about one and a
   // half, and the answer close to four. The first spec, with nothing to rewind, rests 1.8 s.
   var HOLD = [3600, 4000, 6400], FIRST = 1800;
   // the counter runs as long as the wave it describes
   var COUNT = [2500, 2300, 2200];
-  var cur = 0, timer = 0, raf = 0, lt = 0, paused = false, onScreen = false, started = false;
+  var cur = 0, timer = 0, raf = 0, paused = false, onScreen = false, started = false;
 
   function count(from, to, ms){
     cancelAnimationFrame(raf);
@@ -540,17 +547,15 @@
       if(k < 1) raf = requestAnimationFrame(tick);
     })(t0);
   }
-  function label(t){
-    clearTimeout(lt);
-    what.classList.add("out");
-    lt = setTimeout(function(){ what.textContent = t; what.classList.remove("out"); }, 300);
+  function label(k){
+    for(var i = 0; i < LABELS.length; i++) LABELS[i].classList.toggle("on", i === k);
   }
   function show(k){
-    var from = STEPS[cur][0];
+    var from = STEPS[cur];
     svg.setAttribute("class", (k === 0 ? "rewind " : "") + "s" + k);
     fig.setAttribute("data-step", k);
-    label(STEPS[k][1]);
-    count(from, STEPS[k][0], COUNT[k]);
+    label(k);
+    count(from, STEPS[k], COUNT[k]);
     cur = k;
   }
   // runs only while the hall is on screen, the tab is showing, and nobody pressed pause
@@ -565,7 +570,7 @@
   svg.getBoundingClientRect();
   svg.setAttribute("class", "s0");
   fig.setAttribute("data-step", 0);
-  num.textContent = PLAN; what.textContent = STEPS[0][1];
+  num.textContent = PLAN; label(0);
 
   btn.hidden = false;
   btn.addEventListener("click", function(){
