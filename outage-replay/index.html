@@ -209,7 +209,7 @@
   .vbar{display:flex;gap:2px;height:6px;margin:2px 0 7px}
   .vbar span{flex:1;background:var(--line2)}
   .vbar .make{background:var(--v-make)} .vbar .slip{background:var(--v-slip)} .vbar .miss{background:var(--v-miss)}
-  @media (prefers-reduced-motion: no-preference){ .vbar span{transition:background-color .3s ease} }
+  @media (prefers-reduced-motion: no-preference){ .vbar span{transition:background-color .15s ease-out} }
   .alert{display:flex;align-items:center;gap:10px;margin:0;padding:10px var(--pad);background:var(--bg2);border:1px solid var(--line);border-top:0;font-size:var(--fs-small);line-height:1.45;color:var(--tx);text-wrap:pretty}
   .alert .ic{width:10px;height:10px;flex:none}
   .alert.warn .ic{background:var(--v-slip)} .alert.bad .ic{background:var(--v-miss)} .alert.ok .ic{background:var(--grn)}
@@ -379,7 +379,7 @@
   .inc:hover{border-color:var(--control-border-hover)}
   .inc.on{border-color:var(--tx);background:var(--bg3)}
   .inc:has(input:focus-visible){outline:2px solid var(--grn);outline-offset:2px}
-  @media (prefers-reduced-motion: no-preference){ .inc{transition:scale .15s ease-out} .inc:active{scale:.98} }
+  @media (prefers-reduced-motion: no-preference){ .inc{transition:scale .15s ease-out} .inc:active{scale:.96} }
 
   /* ---------- the replay ---------- */
   .viz-hd{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 20px;padding:14px var(--pad) 4px}
@@ -440,7 +440,7 @@
   .lr.now{background:#12161A}
   .lr.now .lt b{color:var(--grn)}
   .lr.future .said,.lr.future .tru,.lr.future .lt b{opacity:.32}
-  @media (prefers-reduced-motion: no-preference){ .lr .said,.lr .tru,.lr .lt b{transition:opacity .25s ease-out} .lr{transition:background-color .2s ease-out} }
+  @media (prefers-reduced-motion: no-preference){ .lr .said,.lr .tru,.lr .lt b{transition:opacity .15s ease-out} .lr{transition:background-color .15s ease-out} }
   @container log (max-width:680px){
     .log-hd{display:none}
     .lr{grid-template-columns:minmax(0,1fr)}
@@ -939,7 +939,8 @@
   var tw = {};
   function tweenText(id, to, f){
     var el = $(id), st = tw[id];
-    if(!st || reduce.matches || !isFinite(to) || !isFinite(st.shown)){
+    // during a drag the figure follows the hand; it only counts on a discrete change
+    if(!st || reduce.matches || dragging || !isFinite(to) || !isFinite(st.shown)){
       if(st) cancelAnimationFrame(st.raf);
       tw[id] = { shown:to, to:to, raf:0 }; el.textContent = f(to); return;
     }
@@ -1104,12 +1105,13 @@
       o.push('<line x1="' + tx.toFixed(1) + '" y1="' + G.ax + '" x2="' + tx.toFixed(1) + '" y2="' + (G.ax + 4) + '" stroke="' + K.rule2 + '"/>');
       o.push(txt(tx, G.ax + 18, hhmm(new Date(tt).toISOString()), "middle", K.tx3));
     }
-    // the playhead dims what has not happened yet
+    // the playhead dims what has not happened yet. It stops under the window's label so the
+    // label never splits, and its knob rides the time axis.
     if(t < d1 - 1){
       var xp = X(t);
-      o.push('<rect x="' + xp.toFixed(1) + '" y="' + (y1 - 22) + '" width="' + (G.W - G.R - xp + 2).toFixed(1) + '" height="' + (y2 + lh + 30 - y1) + '" fill="' + K.surf + '" fill-opacity=".84"/>');
-      o.push('<line x1="' + xp.toFixed(1) + '" y1="' + (y1 - 22) + '" x2="' + xp.toFixed(1) + '" y2="' + (G.ax + 4) + '" stroke="' + K.tx + '" stroke-width="1.5"/>');
-      o.push('<circle cx="' + xp.toFixed(1) + '" cy="' + (y1 - 22) + '" r="3.5" fill="' + K.tx + '"/>');
+      o.push('<rect x="' + xp.toFixed(1) + '" y="' + (y1 - 12) + '" width="' + (G.W - G.R - xp + 2).toFixed(1) + '" height="' + (y2 + lh + 20 - y1) + '" fill="' + K.surf + '" fill-opacity=".84"/>');
+      o.push('<line x1="' + xp.toFixed(1) + '" y1="' + (y1 - 12) + '" x2="' + xp.toFixed(1) + '" y2="' + G.ax + '" stroke="' + K.tx + '" stroke-width="1.5"/>');
+      o.push('<circle cx="' + xp.toFixed(1) + '" cy="' + G.ax + '" r="4" fill="' + K.tx + '" stroke="' + K.surf + '" stroke-width="2"/>');
     }
     // you: the threshold, with a handle to drag
     var ty = T0 + state.thr * MIN, beyond = ty > d1, xt = beyond ? G.W - G.R : X(ty);
@@ -1502,11 +1504,16 @@
       if(e.button !== 0 || !tl.g) return;
       var p = tlPoint(e);
       tl.down = true; tl.mode = nearPin(p) ? "thr" : "scrub";
+      if(tl.mode === "thr") svg.style.cursor = "grabbing";
       try{ svg.setPointerCapture(e.pointerId); }catch(x){}
       $("tlTip").hidden = true;
       if(tl.mode === "scrub"){ stopPlay(); if(p.x >= tl.g.L - 4) setView(clamp(p.t, tl.d[0], tl.d[1])); }
     });
-    function up(e){ if(!tl.down) return; tl.down = false; if(tl.mode === "thr") endDrag(); tl.mode = null; try{ svg.releasePointerCapture(e.pointerId); }catch(x){} }
+    function up(e){
+      if(!tl.down) return; tl.down = false; if(tl.mode === "thr") endDrag(); tl.mode = null;
+      try{ svg.releasePointerCapture(e.pointerId); }catch(x){}
+      svg.style.cursor = nearPin(tlPoint(e)) ? "grab" : "ew-resize";
+    }
     svg.addEventListener("pointerup", up);
     svg.addEventListener("pointercancel", up);
     $("clock").addEventListener("input", function(){ stopPlay(); setView(domain(lastR.cur.x)[0] + (+this.value) * MIN); });
