@@ -78,17 +78,36 @@
   .lede{font-size:18px;color:var(--tx2);max-width:56ch;margin:28px 0 0;text-wrap:pretty}
   @media(max-width:700px){.lede{font-size:17px;margin-top:22px}}
 
-  /* The hall: 30 MW at 120 kW a rack is 250 racks on paper, and 177 fit. All 250 positions
-     are drawn, the real ones solid and the rest as wireframes: the brand mark's grammar,
-     the spec drawn over the solid, at the scale of a room. */
+  /* The hall. 30 MW at 120 kW a rack is 250 racks on paper. PUE 1.2 takes 42 of them
+     (25 MW of IT is 208 racks) and a 15 percent margin holds back 31 more, leaving 177.
+     All 250 positions are drawn: solid where a rack fits, dashed where the overhead took
+     it, glass where the margin holds it back. The brand mark's grammar, the spec drawn
+     over the solid, at the scale of a room. On load the hall starts as the spec and the
+     two corrections play out once; the class on the svg is the step, and the markup
+     ships the last one, so without the script or without motion it is simply the answer. */
   .hall{margin:0}
   .hall svg{display:block;width:100%;height:auto}
-  .hall figcaption{display:flex;flex-wrap:wrap;align-items:center;gap:6px 24px;margin-top:18px;font-size:14px;color:var(--tx2)}
+  .hall .rk > g{transition:opacity .45s ease var(--d,0ms)}
+  .hall .rk .w,
+  .hall svg.s1 .oh .s,.hall svg.s2 .oh .s,.hall svg.s2 .mg .s{opacity:0}
+  .hall svg.s1 .oh .w,.hall svg.s2 .oh .w,.hall svg.s2 .mg .w{opacity:1}
+  .hall svg.snap .rk > g{transition:none}
+  @media (prefers-reduced-motion: reduce){.hall .rk > g{transition:none}}
+  .hall figcaption{margin-top:18px}
+  .tally{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+  .tally .n{font-family:var(--mono);font-size:28px;font-weight:500;line-height:1.1;color:var(--grn);font-variant-numeric:tabular-nums}
+  .tally .what{font-size:15px;color:var(--tx)}
+  .replay{margin-left:auto;padding:8px 0;background:none;border:0;font:inherit;font-size:14px;color:var(--tx3);cursor:pointer}
+  .replay:hover{color:var(--tx)}
+  .keys{display:flex;flex-wrap:wrap;gap:6px 22px;margin:10px 0 0;padding:0;list-style:none;font-size:14px;color:var(--tx2)}
   .key{display:inline-flex;align-items:center;gap:9px;white-space:nowrap}
   .sw{width:11px;height:11px;flex:none}
-  .sw.real{background:linear-gradient(#63EEB4,#41D294)}
-  .sw.paper{border:1px solid rgba(63,224,160,.6);background:rgba(63,224,160,.08)}
-  .hall .note{flex-basis:100%;margin:2px 0 0;font-size:13px;color:var(--tx3);text-wrap:pretty}
+  .sw.fit{background:linear-gradient(#63EEB4,#41D294)}
+  .sw.oh{border:1px dashed rgba(63,224,160,.55)}
+  .sw.mg{border:1px solid rgba(63,224,160,.8);background:rgba(63,224,160,.16)}
+  /* while it plays, each key lights when its correction lands */
+  .keys .key{transition:opacity .3s ease}
+  .hall[data-step="0"] .key.oh,.hall[data-step="0"] .key.mg,.hall[data-step="1"] .key.mg{opacity:.35}
 
   /* ---------- the tools ----------
      One row per tool. The left column says what it is; the right shows what it gives
@@ -170,8 +189,9 @@
     .top nav a{font-size:16px}
     .intro{column-gap:112px;padding-block:88px 120px}
     h1{font-size:72px}
-    .hall figcaption{font-size:15px;margin-top:22px}
-    .hall .note{font-size:14px}
+    .hall figcaption{margin-top:22px}
+    .tally .n{font-size:32px}
+    .tally .what,.keys,.replay{font-size:16px}
     .lede{font-size:20px;margin-top:32px}
     .tool{column-gap:112px;padding:64px 0}
     .t-name{font-size:34px;gap:16px}
@@ -236,11 +256,18 @@
   <figure class="hall">
     <!-- drawn by the script at the end of the page; the viewBox is set here so the
          space is reserved before it runs -->
-    <svg id="hall" viewBox="-168.8 -11.2 308.5 188.7" aria-hidden="true"></svg>
+    <svg id="hall" class="s2" viewBox="-168.8 -11.2 308.5 188.7" aria-hidden="true"></svg>
     <figcaption>
-      <span class="key"><span class="sw real" aria-hidden="true"></span>177 racks that fit</span>
-      <span class="key"><span class="sw paper" aria-hidden="true"></span>73 more on paper only</span>
-      <p class="note">30&nbsp;MW at 120&nbsp;kW a rack is 250 racks on paper. After PUE&nbsp;1.2 and a 15% margin, 177 fit.</p>
+      <div class="tally">
+        <span class="n" id="hallN">177</span>
+        <span class="what" id="hallWhat">racks fit, of 250 on paper</span>
+        <button class="replay" id="hallReplay" type="button" aria-label="Replay the correction" hidden>Replay</button>
+      </div>
+      <ul class="keys">
+        <li class="key"><span class="sw fit" aria-hidden="true"></span>Fits</li>
+        <li class="key oh"><span class="sw oh" aria-hidden="true"></span>42 lost to overhead at PUE&nbsp;1.2</li>
+        <li class="key mg"><span class="sw mg" aria-hidden="true"></span>31 held back by a 15% margin</li>
+      </ul>
     </figcaption>
   </figure>
 </div>
@@ -364,25 +391,25 @@
 </footer>
 
 <script>
-/* The hero hall. 30 MW / 120 kW = 250 racks on paper; 30 / 1.2 x 0.85 / 0.120 = 177 fit,
-   which is Rack Budget's opening state. Rows fill from the front, so the 73 that do not
-   fit are the back of the hall. Projection and paint are Rack Budget's own. */
+/* The hero hall. 30 MW / 120 kW = 250 racks on paper. 30 / 1.2 = 25 MW of IT, 208 racks;
+   x 0.85 = 21.25 MW, 177 racks, which is Rack Budget's opening state. Racks fill from the
+   front row, so what the corrections take is the back of the hall: the overhead from the
+   very back, the margin in front of it. Projection and paint are Rack Budget's own. */
 (function(){
   "use strict";
   var svg = document.getElementById("hall");
   if(!svg) return;
-  var PLAN = 250, REAL = 177;
+  var PLAN = 250, AFTER_PUE = 208, FIT = 177;
   var COS = 0.866, SIN = 0.5, S = 9;
   var RW = 0.6, RD = 1.2, RH = 2.0, AISLE = 1.35;
   var rows = 10, perRow = PLAN / rows;
-
-  var real = [], left = REAL;
-  for(var r = rows - 1; r >= 0; r--){ real[r] = Math.min(perRow, left); left -= real[r]; }
 
   var bankW = perRow * RW, bankD = rows * RD + Math.floor(rows/2) * AISLE;
   var hallW = bankW + 2.4, hallD = bankD + 2.4;
   var ox = (hallW - bankW)/2, oy = (hallD - bankD)/2;
   function rowY(r){ return oy + r*RD + Math.floor(r/2)*AISLE + (r%2)*0.12; }
+  // fill order: front row first, along the row
+  function order(r, c){ return (rows - 1 - r) * perRow + c; }
 
   var pts = [], out = [];
   function iso(x,y,z){ return [(x-y)*COS*S, (x+y)*SIN*S - z*S]; }
@@ -408,34 +435,42 @@
     var ay = rowY(pr) + RD;
     out.push(poly([iso(ox,ay,0),iso(ox+bankW,ay,0),iso(ox+bankW,ay+AISLE,0),iso(ox,ay+AISLE,0)], 'fill="#132831" stroke="#1E3A44" stroke-width="0.5"'));
   }
-  // shadows under the racks that exist
+  // shadows under the racks that fit
   for(var sr = 0; sr < rows; sr++){
-    if(!real[sr]) continue;
-    var sy = rowY(sr), sw = real[sr]*RW, d = 0.42;
+    var n = Math.max(0, Math.min(perRow, FIT - order(sr, 0)));
+    if(!n) continue;
+    var sy = rowY(sr), sw = n*RW, d = 0.42;
     out.push(poly([iso(ox+d,sy+d,0),iso(ox+sw+d+0.25,sy+d,0),iso(ox+sw+d+0.25,sy+RD+d,0),iso(ox+d,sy+RD+d,0)], 'fill="#05070A" opacity="0.55"'));
   }
 
   // every position, back to front, so nearer racks paint over farther ones
   var cells = [];
-  for(var r2 = 0; r2 < rows; r2++)
-    for(var c2 = 0; c2 < perRow; c2++) cells.push([ox + c2*RW, rowY(r2), c2 < real[r2]]);
+  for(var r = 0; r < rows; r++)
+    for(var c = 0; c < perRow; c++) cells.push([ox + c*RW, rowY(r), order(r, c)]);
   cells.sort(function(a,b){ return (a[0]+a[1]) - (b[0]+b[1]); });
 
   var WIRE = 'stroke="#3FE0A0" stroke-width="0.55" stroke-linejoin="round"';
-  cells.forEach(function(c){
-    var x = c[0], y = c[1];
+  var WIRES = {
+    // the overhead: gone, so only a dashed trace of where the rack would be
+    oh: ['fill="none" stroke-opacity="0.4" stroke-dasharray="1.3 1.1" ', 'fill="none" stroke-opacity="0.22" stroke-dasharray="1.3 1.1" ', 'fill="none" stroke-opacity="0.22" stroke-dasharray="1.3 1.1" '],
+    // the margin: capacity you have and choose not to use, so glass
+    mg: ['fill="#3FE0A0" fill-opacity="0.1" stroke-opacity="0.75" ', 'fill="#3FE0A0" fill-opacity="0.04" stroke-opacity="0.45" ', 'fill="#3FE0A0" fill-opacity="0.025" stroke-opacity="0.45" ']
+  };
+  cells.forEach(function(cell){
+    var x = cell[0], y = cell[1], i = cell[2];
     var top   = [iso(x,y,RH),iso(x+RW,y,RH),iso(x+RW,y+RD,RH),iso(x,y+RD,RH)];
     var front = [iso(x,y+RD,RH),iso(x+RW,y+RD,RH),iso(x+RW,y+RD,0),iso(x,y+RD,0)];
     var side  = [iso(x+RW,y,RH),iso(x+RW,y+RD,RH),iso(x+RW,y+RD,0),iso(x+RW,y,0)];
-    if(c[2]){
-      out.push(poly(top,   'fill="url(#hTop)" stroke="#0A0C0E" stroke-width="0.7"'));
-      out.push(poly(front, 'fill="url(#hFront)" stroke="#0A0C0E" stroke-width="0.7"'));
-      out.push(poly(side,  'fill="url(#hSide)" stroke="#0A0C0E" stroke-width="0.7"'));
-    } else {
-      out.push(poly(top,   'fill="#3FE0A0" fill-opacity="0.06" stroke-opacity="0.55" ' + WIRE));
-      out.push(poly(front, 'fill="#3FE0A0" fill-opacity="0.025" stroke-opacity="0.3" ' + WIRE));
-      out.push(poly(side,  'fill="#3FE0A0" fill-opacity="0.015" stroke-opacity="0.3" ' + WIRE));
-    }
+    var solid = poly(top,   'fill="url(#hTop)" stroke="#0A0C0E" stroke-width="0.7"') +
+                poly(front, 'fill="url(#hFront)" stroke="#0A0C0E" stroke-width="0.7"') +
+                poly(side,  'fill="url(#hSide)" stroke="#0A0C0E" stroke-width="0.7"');
+    if(i < FIT){ out.push(solid); return; }
+    // each correction sweeps from the back of the hall forward
+    var kind = i < AFTER_PUE ? "mg" : "oh";
+    var delay = kind === "oh" ? (PLAN - 1 - i) * 9 : (AFTER_PUE - 1 - i) * 11;
+    var w = WIRES[kind];
+    out.push('<g class="rk ' + kind + '" style="--d:' + delay + 'ms"><g class="s">' + solid + '</g><g class="w">' +
+      poly(top, w[0] + WIRE) + poly(front, w[1] + WIRE) + poly(side, w[2] + WIRE) + '</g></g>');
   });
 
   var xs = pts.map(function(q){ return q[0]; }), ys = pts.map(function(q){ return q[1]; });
@@ -443,6 +478,56 @@
   var miny = Math.min.apply(null,ys), maxy = Math.max.apply(null,ys), pad = 4;
   svg.setAttribute("viewBox", (minx-pad).toFixed(1)+" "+(miny-pad).toFixed(1)+" "+(maxx-minx+2*pad).toFixed(1)+" "+(maxy-miny+2*pad).toFixed(1));
   svg.innerHTML = out.join("");
+
+  // ---- the correction, played once ----
+  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var fig = svg.parentNode, num = document.getElementById("hallN"), what = document.getElementById("hallWhat");
+  var replay = document.getElementById("hallReplay");
+  var STEPS = [
+    [PLAN,      "racks on paper, 30 MW at 120 kW"],
+    [AFTER_PUE, "racks after PUE 1.2"],
+    [FIT,       "racks fit, of 250 on paper"]
+  ];
+  var timers = [], raf = 0;
+  function count(from, to, ms){
+    cancelAnimationFrame(raf);
+    var t0 = performance.now();
+    (function tick(now){
+      var k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+      num.textContent = Math.round(from + (to - from) * e);
+      if(k < 1) raf = requestAnimationFrame(tick);
+    })(t0);
+  }
+  function step(k){
+    svg.setAttribute("class", "s" + k);
+    fig.setAttribute("data-step", k);
+    what.textContent = STEPS[k][1];
+    if(k) count(STEPS[k-1][0], STEPS[k][0], 650);
+  }
+  // back to the spec without animating the way there
+  function reset(){
+    timers.forEach(clearTimeout); cancelAnimationFrame(raf);
+    svg.setAttribute("class", "snap s0");
+    svg.getBoundingClientRect();
+    svg.setAttribute("class", "s0");
+    fig.setAttribute("data-step", 0);
+    num.textContent = PLAN; what.textContent = STEPS[0][1];
+  }
+  function play(){
+    reset();
+    timers = [setTimeout(function(){ step(1); }, 900), setTimeout(function(){ step(2); }, 2100)];
+  }
+  // start from the spec before the first paint, so the answer never flashes ahead of it
+  reset();
+  replay.hidden = false;
+  replay.addEventListener("click", play);
+  // play the first time at least half the hall is on screen
+  if("IntersectionObserver" in window){
+    var io = new IntersectionObserver(function(es){
+      if(es[0].isIntersecting){ io.disconnect(); play(); }
+    }, { threshold: 0.5 });
+    io.observe(svg);
+  } else play();
 })();
 </script>
 </body>
