@@ -68,11 +68,18 @@
   .top nav a:hover{color:var(--tx)}
 
   /* ---------- intro: the statement, and the hall that proves it ----------
-     Same column split as the tool rows, so the hall lines up with the worked examples. */
-  .intro{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);column-gap:80px;align-items:center;padding-block:72px 96px}
+     Same column split as the tool rows, so the hall lines up with the worked examples.
+     The figure spans two rows through a subgrid, the drawing in the first and its caption
+     in the second, so the text centers on the hall itself rather than on hall plus caption. */
+  .intro{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);grid-template-rows:auto auto;column-gap:80px;padding-block:72px 96px}
+  .intro-text{grid-column:1;grid-row:1;align-self:center}
   /* side by side, the column is the measure; stacked, 14ch keeps the two-line break */
   @media(min-width:901px){.intro h1{max-width:none}}
-  @media(max-width:900px){.intro{grid-template-columns:minmax(0,1fr);row-gap:44px}}
+  @media(max-width:900px){
+    .intro{grid-template-columns:minmax(0,1fr);grid-template-rows:none;row-gap:44px}
+    .intro-text,.intro .hall{grid-column:auto;grid-row:auto}
+    .intro .hall{display:block}
+  }
   @media(max-width:700px){.intro{padding-block:40px 64px;row-gap:36px}}
   h1{font-size:clamp(38px,4.2vw,60px);font-weight:500;line-height:1.02;letter-spacing:-.04em;margin:0;max-width:14ch;text-wrap:balance}
   .lede{font-size:18px;color:var(--tx2);max-width:56ch;margin:28px 0 0;text-wrap:pretty}
@@ -82,23 +89,32 @@
      (25 MW of IT is 208 racks) and a 15 percent margin holds back 31 more, leaving 177.
      All 250 positions are drawn: solid where a rack fits, dashed where the overhead took
      it, glass where the margin holds it back. The brand mark's grammar, the spec drawn
-     over the solid, at the scale of a room. On load the hall starts as the spec and the
-     two corrections play out once; the class on the svg is the step, and the markup
-     ships the last one, so without the script or without motion it is simply the answer. */
-  .hall{margin:0}
+     over the solid, at the scale of a room. The hall loops through it: the spec, the
+     overhead, the margin, a long hold on the answer, then back. The class on the svg is
+     the step, and the markup ships the last one, so without the script or without motion
+     it is simply the answer, and the play control never appears. */
+  .hall{grid-column:2;grid-row:1 / span 2;display:grid;grid-template-rows:subgrid;margin:0}
   .hall svg{display:block;width:100%;height:auto}
   .hall .rk > g{transition:opacity .45s ease var(--d,0ms)}
   .hall .rk .w,
   .hall svg.s1 .oh .s,.hall svg.s2 .oh .s,.hall svg.s2 .mg .s{opacity:0}
   .hall svg.s1 .oh .w,.hall svg.s2 .oh .w,.hall svg.s2 .mg .w{opacity:1}
   .hall svg.snap .rk > g{transition:none}
+  /* rewinding to the spec: every rack fades back at once rather than sweeping */
+  .hall svg.rewind .rk > g{transition-duration:.7s;transition-delay:0ms}
   @media (prefers-reduced-motion: reduce){.hall .rk > g{transition:none}}
   .hall figcaption{margin-top:18px}
-  .tally{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
-  .tally .n{font-family:var(--mono);font-size:28px;font-weight:500;line-height:1.1;color:var(--grn);font-variant-numeric:tabular-nums}
-  .tally .what{font-size:15px;color:var(--tx)}
-  .replay{margin-left:auto;padding:8px 0;background:none;border:0;font:inherit;font-size:14px;color:var(--tx3);cursor:pointer}
-  .replay:hover{color:var(--tx)}
+  .tally{display:flex;align-items:center;gap:14px}
+  .read{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px;margin:0}
+  .read .n{font-family:var(--mono);font-size:28px;font-weight:500;line-height:1.1;color:var(--grn);font-variant-numeric:tabular-nums}
+  .read .what{font-size:15px;color:var(--tx)}
+  /* play and pause, in front of the counter like a player's transport */
+  .pp{flex:none;display:grid;place-items:center;width:32px;height:32px;padding:0;background:none;
+    border:1px solid var(--line2);color:var(--tx2);cursor:pointer}
+  .pp:hover{color:var(--tx);border-color:var(--tx3)}
+  .pp svg{width:11px;height:11px;display:block}
+  .pp .i-play,.pp.is-paused .i-pause{display:none}
+  .pp.is-paused .i-play{display:block}
   .keys{display:flex;flex-wrap:wrap;gap:6px 22px;margin:10px 0 0;padding:0;list-style:none;font-size:14px;color:var(--tx2)}
   .key{display:inline-flex;align-items:center;gap:9px;white-space:nowrap}
   .sw{width:11px;height:11px;flex:none}
@@ -190,8 +206,10 @@
     .intro{column-gap:112px;padding-block:88px 120px}
     h1{font-size:72px}
     .hall figcaption{margin-top:22px}
-    .tally .n{font-size:32px}
-    .tally .what,.keys,.replay{font-size:16px}
+    .read .n{font-size:32px}
+    .read .what,.keys{font-size:16px}
+    .pp{width:36px;height:36px}
+    .pp svg{width:12px;height:12px}
     .lede{font-size:20px;margin-top:32px}
     .tool{column-gap:112px;padding:64px 0}
     .t-name{font-size:34px;gap:16px}
@@ -249,7 +267,7 @@
 <main id="main" tabindex="-1">
 
 <div class="wrap intro">
-  <div>
+  <div class="intro-text">
     <h1>Published specs, corrected for reality.</h1>
     <p class="lede">A rack is rated for 600&nbsp;kW, a drive for five years, an interconnection queue in gigawatts. None of it survives contact with a real site. Infrabench is a set of free tools that correct those numbers against public data, with every constant on the page.</p>
   </div>
@@ -259,9 +277,11 @@
     <svg id="hall" class="s2" viewBox="-168.8 -11.2 308.5 188.7" aria-hidden="true"></svg>
     <figcaption>
       <div class="tally">
-        <span class="n" id="hallN">177</span>
-        <span class="what" id="hallWhat">racks fit, of 250 on paper</span>
-        <button class="replay" id="hallReplay" type="button" aria-label="Replay the correction" hidden>Replay</button>
+        <button class="pp" id="hallPlay" type="button" aria-label="Pause the animation" title="Pause the animation" hidden>
+          <svg class="i-pause" viewBox="0 0 10 10" aria-hidden="true"><rect x="1.5" y="1" width="2.5" height="8" fill="currentColor"/><rect x="6" y="1" width="2.5" height="8" fill="currentColor"/></svg>
+          <svg class="i-play" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.6 1L9.6 5L2.6 9Z" fill="currentColor"/></svg>
+        </button>
+        <p class="read"><span class="n" id="hallN">177</span> <span class="what" id="hallWhat">racks fit, of 250 on paper</span></p>
       </div>
       <ul class="keys">
         <li class="key"><span class="sw fit" aria-hidden="true"></span>Fits</li>
@@ -479,16 +499,19 @@
   svg.setAttribute("viewBox", (minx-pad).toFixed(1)+" "+(miny-pad).toFixed(1)+" "+(maxx-minx+2*pad).toFixed(1)+" "+(maxy-miny+2*pad).toFixed(1));
   svg.innerHTML = out.join("");
 
-  // ---- the correction, played once ----
+  // ---- the correction, on a loop ----
   if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   var fig = svg.parentNode, num = document.getElementById("hallN"), what = document.getElementById("hallWhat");
-  var replay = document.getElementById("hallReplay");
+  var btn = document.getElementById("hallPlay");
   var STEPS = [
     [PLAN,      "racks on paper, 30 MW at 120 kW"],
     [AFTER_PUE, "racks after PUE 1.2"],
     [FIT,       "racks fit, of 250 on paper"]
   ];
-  var timers = [], raf = 0;
+  // how long each step holds before the next; the answer holds longest
+  var HOLD = [1800, 2400, 4600];
+  var cur = 0, timer = 0, raf = 0, paused = false, onScreen = false;
+
   function count(from, to, ms){
     cancelAnimationFrame(raf);
     var t0 = performance.now();
@@ -498,36 +521,42 @@
       if(k < 1) raf = requestAnimationFrame(tick);
     })(t0);
   }
-  function step(k){
-    svg.setAttribute("class", "s" + k);
+  function show(k){
+    var from = STEPS[cur][0];
+    svg.setAttribute("class", (k === 0 ? "rewind " : "") + "s" + k);
     fig.setAttribute("data-step", k);
     what.textContent = STEPS[k][1];
-    if(k) count(STEPS[k-1][0], STEPS[k][0], 650);
+    count(from, STEPS[k][0], k === 0 ? 700 : 650);
+    cur = k;
   }
-  // back to the spec without animating the way there
-  function reset(){
-    timers.forEach(clearTimeout); cancelAnimationFrame(raf);
-    svg.setAttribute("class", "snap s0");
-    svg.getBoundingClientRect();
-    svg.setAttribute("class", "s0");
-    fig.setAttribute("data-step", 0);
-    num.textContent = PLAN; what.textContent = STEPS[0][1];
+  // runs only while the hall is on screen, the tab is showing, and nobody pressed pause
+  function schedule(){
+    clearTimeout(timer);
+    if(paused || !onScreen || document.hidden) return;
+    timer = setTimeout(function(){ show((cur + 1) % STEPS.length); schedule(); }, HOLD[cur]);
   }
-  function play(){
-    reset();
-    timers = [setTimeout(function(){ step(1); }, 900), setTimeout(function(){ step(2); }, 2100)];
-  }
+
   // start from the spec before the first paint, so the answer never flashes ahead of it
-  reset();
-  replay.hidden = false;
-  replay.addEventListener("click", play);
-  // play the first time at least half the hall is on screen
+  svg.setAttribute("class", "snap s0");
+  svg.getBoundingClientRect();
+  svg.setAttribute("class", "s0");
+  fig.setAttribute("data-step", 0);
+  num.textContent = PLAN; what.textContent = STEPS[0][1];
+
+  btn.hidden = false;
+  btn.addEventListener("click", function(){
+    paused = !paused;
+    var label = paused ? "Play the animation" : "Pause the animation";
+    btn.classList.toggle("is-paused", paused);
+    btn.setAttribute("aria-label", label); btn.title = label;
+    schedule();
+  });
+  document.addEventListener("visibilitychange", schedule);
   if("IntersectionObserver" in window){
-    var io = new IntersectionObserver(function(es){
-      if(es[0].isIntersecting){ io.disconnect(); play(); }
-    }, { threshold: 0.5 });
-    io.observe(svg);
-  } else play();
+    new IntersectionObserver(function(es){
+      onScreen = es[0].isIntersecting; schedule();
+    }, { threshold: 0.4 }).observe(svg);
+  } else { onScreen = true; schedule(); }
 })();
 </script>
 </body>
