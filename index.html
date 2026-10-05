@@ -176,7 +176,7 @@
   .t-q{font-size:var(--fs-sub);line-height:1.35;letter-spacing:-.015em;color:var(--tx);margin:22px 0 0}
   .t-q span{display:block;color:var(--tx2)}
   .t-d{font-size:var(--fs-body);color:var(--tx2);margin:10px 0 0;max-width:46ch;text-wrap:pretty}
-  .t-src{font-size:var(--fs-caption);line-height:1.5;color:var(--tx3);margin:18px 0 0;max-width:46ch;text-wrap:pretty}
+  .t-src{font-size:var(--fs-caption);line-height:1.5;color:var(--tx3);margin:24px 0 0;max-width:46ch;text-wrap:pretty}
   .go{grid-area:go;align-self:end;justify-self:start;display:inline-flex;align-items:baseline;gap:6px;padding-top:28px;
     font-size:var(--fs-ui);font-weight:500;color:var(--tx);text-decoration:none}
   .go .arr{color:var(--grn)}
@@ -200,7 +200,9 @@
   .ex dd{margin:0;margin-inline-start:auto;font-family:var(--mono);font-size:var(--fs-small);color:var(--tx);text-align:end;font-variant-numeric:tabular-nums}
   .ex .out{border-top:1px solid var(--line2);margin-top:10px;padding-top:16px}
   @container (min-width:460px){
-    .ex dl{display:grid;grid-template-columns:max-content minmax(0,1fr);align-items:baseline}
+    /* one label track for all four panels (the longest label is 12.4em), so every value
+       column starts on the same edge; a longer label would widen it rather than wrap */
+    .ex dl{display:grid;grid-template-columns:minmax(max-content,13em) minmax(0,1fr);align-items:baseline}
     .ex dl div{display:contents}
     .ex dt,.ex dd{padding-block:6px}
     .ex dd{margin:0;padding-inline-start:32px;text-align:start}
@@ -264,7 +266,7 @@
     .t-name .glyph{width:30px;height:30px}
     .t-q{margin-top:26px}
     .t-d{margin-top:12px}
-    .t-src{margin-top:20px}
+    .t-src{margin-top:28px}
     .go{padding-top:32px}
     .ex{padding:28px 32px 26px}
     .ex figcaption{margin-bottom:12px}
@@ -277,6 +279,16 @@
     footer .wrap::before{margin-bottom:44px}
   }
   @media(min-width:2200px){.wrap{max-width:1720px}}
+
+  /* Short desktop screens. A 13-inch laptop under browser chrome is about 780 px tall and a
+     1366 x 768 one about 640, where the hero filled the whole screen and the page looked
+     finished at the fold. Here the intro tightens and the hall caps its height at the
+     viewport less 400 px (by width, so it scales and keeps its edge; 1.635 is its aspect),
+     which leaves the first tool's name and question showing below it. */
+  @media(min-width:901px) and (max-height:860px){
+    .intro{padding-block:40px 56px}
+    .hall svg{width:min(100%,max(320px,calc((100vh - 400px) * 1.635)))}
+  }
 </style>
 </head>
 <body>
