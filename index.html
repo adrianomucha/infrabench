@@ -53,14 +53,18 @@
     --fs-heading:22px;               /* about headings */
     --fs-title:28px;                 /* tool names, the hall's counter */
     --fs-display:clamp(38px,4.2vw,60px);
+    /* The page's two columns. The intro, every tool row and the about section share them,
+       so the hall, the worked examples and the credit all start on the same edge. */
+    --cols:minmax(0,5fr) minmax(0,6fr);
+    --col-gap:80px;
     --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
     --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
   /* on the narrowest phones the headline drops a little so it keeps its two-line break */
   @media(max-width:700px){:root{--fs-lead:17px;--fs-display:clamp(34px,9.7vw,38px)}}
   @media(min-width:1680px){:root{--fs-caption:14px;--fs-small:15px;--fs-ui:16px;--fs-body:17px;--fs-lead:20px;
-    --fs-sub:23px;--fs-heading:26px;--fs-title:34px;--fs-display:72px}}
-  @media(min-width:2200px){:root{--fs-small:16px;--fs-body:18px;--fs-lead:21px;--fs-sub:24px;--fs-title:36px;--fs-display:80px}}
+    --fs-sub:23px;--fs-heading:26px;--fs-title:34px;--fs-display:72px;--col-gap:112px}}
+  @media(min-width:2200px){:root{--fs-small:16px;--fs-body:18px;--fs-lead:21px;--fs-sub:24px;--fs-title:36px;--fs-display:80px;--col-gap:136px}}
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:var(--fs-body);line-height:1.6;
@@ -70,12 +74,12 @@
   a{color:inherit}
   :focus-visible{outline:2px solid var(--grn);outline-offset:3px}
   .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-  .skip{position:absolute;left:-9999px;top:0;z-index:10;padding:12px 18px;background:var(--tx);color:var(--bg);font-weight:600;font-size:var(--fs-ui)}
-  .skip:focus{left:0}
+  .skip{position:absolute;inset-inline-start:-9999px;top:0;z-index:10;padding:12px 18px;background:var(--tx);color:var(--bg);font-weight:600;font-size:var(--fs-ui)}
+  .skip:focus{inset-inline-start:0}
   .glyph{color:var(--grn);flex:none;display:block}
 
   /* ---------- header ---------- */
-  .top{display:flex;align-items:center;justify-content:space-between;gap:24px;height:76px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:76px}
   .brand{display:inline-flex;align-items:center;gap:11px;text-decoration:none;
     font-family:var(--mono);font-size:var(--fs-caption);font-weight:600;letter-spacing:.12em;text-transform:uppercase}
   .brand .glyph{width:20px;height:20px}
@@ -87,7 +91,7 @@
      Same column split as the tool rows, so the hall lines up with the worked examples.
      The figure spans two rows through a subgrid, the drawing in the first and its caption
      in the second, so the text centers on the hall itself rather than on hall plus caption. */
-  .intro{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);grid-template-rows:auto auto;column-gap:80px;padding-block:72px 96px}
+  .intro{display:grid;grid-template-columns:var(--cols);grid-template-rows:auto auto;column-gap:var(--col-gap);padding-block:72px 96px}
   .intro-text{grid-column:1;grid-row:1;align-self:center}
   /* side by side, the column is the measure; stacked, 14ch keeps the two-line break */
   @media(min-width:901px){.intro h1{max-width:none}}
@@ -146,8 +150,9 @@
   .pp .i-play,.pp.is-paused .i-pause{display:none}
   .pp.is-paused .i-play{display:block}
   .keys{display:flex;flex-wrap:wrap;gap:6px 22px;margin:10px 0 0;padding:0;list-style:none;font-size:var(--fs-small);color:var(--tx2)}
-  .key{display:inline-flex;align-items:center;gap:9px;white-space:nowrap}
-  .sw{width:11px;height:11px;flex:none}
+  /* a long legend item wraps rather than running off a narrow screen; its swatch stays on the first line */
+  .key{display:inline-flex;align-items:flex-start;gap:9px}
+  .sw{width:11px;height:11px;flex:none;margin-top:calc((1lh - 11px) / 2)}
   .sw.fit{background:linear-gradient(#63EEB4,#41D294)}
   .sw.oh{border:1px dashed rgba(63,224,160,.55)}
   .sw.mg{border:1px solid rgba(63,224,160,.8);background:rgba(63,224,160,.16)}
@@ -160,8 +165,8 @@
      back, using the inputs the tool opens with, so the numbers here match the page you
      land on. The whole row is the link; the visible "Open tool" is its label. */
   .tools{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
-  .tool{position:relative;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);grid-template-rows:auto 1fr;
-    grid-template-areas:"text ex" "go ex";column-gap:80px;padding:52px 0;border-bottom:1px solid var(--line)}
+  .tool{position:relative;display:grid;grid-template-columns:var(--cols);grid-template-rows:auto 1fr;
+    grid-template-areas:"text ex" "go ex";column-gap:var(--col-gap);padding:52px 0;border-bottom:1px solid var(--line)}
   .t-text{grid-area:text}
   /* stacked: the link follows the example instead of splitting the tool from it */
   @media(max-width:900px){.tool{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"text" "ex" "go";padding:40px 0 36px}
@@ -185,11 +190,23 @@
   .ex{grid-area:ex;align-self:start;margin:0;background:var(--bg2);border:1px solid var(--line);padding:22px 26px 20px}
   @media(max-width:640px){.ex{padding:18px 18px 16px}}
   .ex figcaption{font-size:var(--fs-caption);color:var(--tx3);margin:0 0 10px}
+  /* Narrow panel: label at the start, value at the end of the same row. Wide panel: the
+     labels form a column and each value sits beside its own, since a value 450 px from
+     its label groups with the label below it instead. The panel decides, not the viewport. */
+  .ex{container-type:inline-size}
   .ex dl{margin:0}
   .ex dl div{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 24px;padding:6px 0}
   .ex dt{font-size:var(--fs-small);color:var(--tx2)}
-  .ex dd{margin:0 0 0 auto;font-family:var(--mono);font-size:var(--fs-small);color:var(--tx);text-align:right;font-variant-numeric:tabular-nums}
+  .ex dd{margin:0;margin-inline-start:auto;font-family:var(--mono);font-size:var(--fs-small);color:var(--tx);text-align:end;font-variant-numeric:tabular-nums}
   .ex .out{border-top:1px solid var(--line2);margin-top:10px;padding-top:16px}
+  @container (min-width:460px){
+    .ex dl{display:grid;grid-template-columns:max-content minmax(0,1fr);align-items:baseline}
+    .ex dl div{display:contents}
+    .ex dt,.ex dd{padding-block:6px}
+    .ex dd{margin:0;padding-inline-start:32px;text-align:start}
+    /* the rule runs across both cells, so the gap between them is padding, not column-gap */
+    .ex .out dt,.ex .out dd{border-top:1px solid var(--line2);margin-top:10px;padding-top:16px}
+  }
   .ex .ans dt{color:var(--tx)}
   .ex .ans dd{color:var(--grn);font-size:var(--fs-body);font-weight:500}
   .tool:hover .ex{border-color:var(--line2)}
@@ -202,7 +219,7 @@
   }
 
   /* ---------- about ---------- */
-  .about{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:56px 96px;padding-block:112px 120px;scroll-margin-top:24px}
+  .about{display:grid;grid-template-columns:var(--cols);gap:56px var(--col-gap);padding-block:112px 120px;scroll-margin-top:24px}
   @media(max-width:900px){.about{grid-template-columns:minmax(0,1fr);padding-block:72px 80px}}
   .about h2{font-size:var(--fs-heading);font-weight:500;letter-spacing:-.02em;line-height:1.2;margin:0 0 20px}
   .about p{font-size:var(--fs-body);color:var(--tx2);margin:0 0 16px;max-width:54ch;text-wrap:pretty}
@@ -216,13 +233,17 @@
   .lnk .arr{color:var(--tx3)}
 
   /* ---------- footer ---------- */
-  footer{border-top:1px solid var(--line);padding:36px 0 56px;font-size:var(--fs-small);color:var(--tx3)}
+  footer{padding:0 0 56px;font-size:var(--fs-small);color:var(--tx3)}
+  /* the rule sits inside the content edge, like the rules between the tool rows */
+  footer .wrap::before{content:"";display:block;border-top:1px solid var(--line);margin-bottom:36px}
   footer p{margin:0;max-width:58ch;text-wrap:pretty}
   footer .meta{margin-top:14px;max-width:none}
   /* the credit wraps where it must; the short items after it never split */
   footer .meta span + span{white-space:nowrap}
-  footer a{color:var(--tx2);text-decoration:none;white-space:nowrap}
-  footer a:hover{color:var(--tx);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
+  /* color alone sets these 1.75:1 from the fine print around them; the underline makes them links */
+  footer a{color:var(--tx2);white-space:nowrap;text-decoration:underline;text-decoration-thickness:1px;
+    text-underline-offset:.3em;text-decoration-color:rgba(168,176,184,.45)}
+  footer a:hover{color:var(--tx);text-decoration-color:currentColor}
 
   /* ---------- large screens ----------
      The container steps match the tool pages (1260, 1520, 1720) so the wordmark holds
@@ -230,15 +251,15 @@
      laptop sizes inside reads as a small page with big margins. */
   @media(min-width:1680px){
     .wrap{max-width:1520px}
-    .top{height:84px}
+    .top{min-height:84px}
     .brand{gap:12px}
     .brand .glyph{width:22px;height:22px}
-    .intro{column-gap:112px;padding-block:88px 120px}
+    .intro{padding-block:88px 120px}
     .hall figcaption{margin-top:22px}
     .pp{width:36px;height:36px}
     .pp svg{width:12px;height:12px}
     .lede{margin-top:32px}
-    .tool{column-gap:112px;padding:64px 0}
+    .tool{padding:64px 0}
     .t-name{gap:16px}
     .t-name .glyph{width:30px;height:30px}
     .t-q{margin-top:26px}
@@ -247,17 +268,15 @@
     .go{padding-top:32px}
     .ex{padding:28px 32px 26px}
     .ex figcaption{margin-bottom:12px}
-    .ex dl div{padding:8px 0}
-    .about{column-gap:128px;padding-block:136px 144px}
+    .ex dl div,.ex dt,.ex dd{padding-block:8px}
+    .ex .out dt,.ex .out dd{padding-top:18px}
+    .about{padding-block:136px 144px}
     .about h2{margin-bottom:24px}
     .btn{padding:15px 26px}
-    footer{padding:44px 0 72px}
+    footer{padding:0 0 72px}
+    footer .wrap::before{margin-bottom:44px}
   }
-  @media(min-width:2200px){
-    .wrap{max-width:1720px}
-    .intro{column-gap:136px}
-    .tool{column-gap:136px}
-  }
+  @media(min-width:2200px){.wrap{max-width:1720px}}
 </style>
 </head>
 <body>
