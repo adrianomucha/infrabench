@@ -31,7 +31,8 @@
   /* The index is a table of contents, not a landing page: a statement, the four tools
      with the answer each one gives, and who made them. Decoration is out; the brand
      glyphs and the worked examples carry the page. Mono is for the wordmark and for
-     numbers, never for labels. Green marks the answer and the brand, nothing else. */
+     numbers, never for labels. Green marks the brand and the answer; its one other use is
+     the focus ring. */
   :root{
     color-scheme:dark;
     --bg:#0A0C0E;          /* page surface */
@@ -39,9 +40,12 @@
     --line:#1C2126;        /* hairline */
     --line2:#2A3037;       /* stronger rule */
     --tx:#EEF1F3;          /* primary text */
-    --tx2:#A8B0B8;         /* secondary text */
-    --tx3:#7B838D;         /* fine print */
-    --grn:#3FE0A0;         /* signal green: the brand glyph and the answer */
+    /* The greys are set for APCA, not only WCAG 2: secondary text carries body copy, so it
+       clears Lc 75 on both surfaces; fine print is 13-14 px labels, so it clears Lc 60.
+       Each was lifted in OKLCH lightness alone, keeping its chroma and hue. */
+    --tx2:#C4CDD5;         /* secondary text   oklch(0.843 0.015 248), Lc 75 */
+    --tx3:#AAB3BD;         /* fine print       oklch(0.763 0.018 254), Lc 60 */
+    --grn:#3FE0A0;         /* signal green: the brand glyph, the answer, and focus */
     /* Role tokens for controls. Same values as some text and surface tokens today, but
        their own roles, so a change to text colour never repaints a button by accident. */
     --action-bg:#EEF1F3;         /* the one filled action */
@@ -166,7 +170,8 @@
   .sw.mg{border:1px solid rgba(63,224,160,.8);background:rgba(63,224,160,.16)}
   /* while it plays, each key lights when its correction lands */
   .keys .key{transition:opacity .9s ease}
-  .hall[data-step="0"] .key.oh,.hall[data-step="0"] .key.mg,.hall[data-step="1"] .key.mg{opacity:.35}
+  /* still legible while it waits (Lc 34, above APCA's floor of 30 for inactive text) */
+  .hall[data-step="0"] .key.oh,.hall[data-step="0"] .key.mg,.hall[data-step="1"] .key.mg{opacity:.6}
 
   /* ---------- the tools ----------
      One row per tool. The left column says what it is; the right shows what it gives
@@ -187,7 +192,7 @@
   .t-src{font-size:var(--fs-caption);line-height:1.5;color:var(--tx3);margin:24px 0 0;max-width:46ch;text-wrap:pretty}
   .go{grid-area:go;align-self:end;justify-self:start;display:inline-flex;align-items:baseline;gap:6px;padding-top:28px;
     font-size:var(--fs-ui);font-weight:500;color:var(--tx);text-decoration:none}
-  .go .arr{color:var(--grn)}
+  /* the arrow is part of the link, so it takes the link's colour; green is not for actions */
   /* stretch the link over the row, and draw its focus ring around the row */
   .go::after{content:"";position:absolute;inset:0}
   .go:focus-visible{outline:none}
@@ -214,8 +219,10 @@
     .ex dl div{display:contents}
     .ex dt,.ex dd{padding-block:6px}
     .ex dd{margin:0;padding-inline-start:32px;text-align:start}
-    /* the rule runs across both cells, so the gap between them is padding, not column-gap */
-    .ex .out dt,.ex .out dd{border-top:1px solid var(--line2);margin-top:10px;padding-top:16px}
+    /* the gap between the cells is padding, not column-gap, and the rule above the answers
+       is drawn once as its own full-width row: on the cells, baseline alignment stepped it */
+    .ex .out::before{content:"";grid-column:1 / -1;border-top:1px solid var(--line2);margin-top:10px}
+    .ex .out dt,.ex .out dd{padding-top:16px}
   }
   .ex .ans dt{color:var(--tx)}
   .ex .ans dd{color:var(--grn);font-size:var(--fs-body);font-weight:500}
@@ -240,13 +247,15 @@
   .btn:hover{background:var(--action-bg-hover);border-color:var(--action-bg-hover)}
   .lnk{font-size:var(--fs-ui);font-weight:500;color:var(--tx);text-decoration:none;padding:12px 0}
   .lnk:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
-  .lnk .arr{color:var(--tx3)}
 
   /* ---------- footer ---------- */
   footer{padding:0 0 56px;font-size:var(--fs-small);color:var(--tx3)}
   /* the rule sits inside the content edge, like the rules between the tool rows */
   footer .wrap::before{content:"";display:block;border-top:1px solid var(--line);margin-bottom:36px}
   footer p{margin:0;max-width:58ch;text-wrap:pretty}
+  /* the disclaimer is three lines of reading, so it takes the body grey (Lc 75); the
+     one-line credit under it stays on the caption grey (Lc 60) */
+  footer .fine{color:var(--tx2)}
   footer .meta{margin-top:14px;max-width:none}
   /* the credit wraps where it must; the short items after it never split */
   footer .meta span + span{white-space:nowrap}
@@ -462,7 +471,7 @@
 
 <footer>
   <div class="wrap">
-    <p>Figures are public as of 2026 and change fast. These are planning heuristics for the first conversation, not engineering submittals, so check them with your own engineer before spending money.</p>
+    <p class="fine">Figures are public as of 2026 and change fast. These are planning heuristics for the first conversation, not engineering submittals, so check them with your own engineer before spending money.</p>
     <p class="meta"><span>Infrabench by <a href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">Adrian Mucha</a> / FruitBat Design, Los Angeles</span> <span>&middot; MIT licensed</span> <span>&middot; <a href="https://github.com/adrianomucha/infrabench" target="_blank" rel="noopener">Source on GitHub</a></span></p>
   </div>
 </footer>
