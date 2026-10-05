@@ -876,7 +876,8 @@
   var tw = {};
   function tweenText(id, to, f){
     var el = $(id), st = tw[id];
-    if(!st || reduce.matches || !isFinite(to) || !isFinite(st.shown)){
+    // during a drag the figure follows the hand; it only counts on a discrete change
+    if(!st || reduce.matches || dragging || !isFinite(to) || !isFinite(st.shown)){
       if(st) cancelAnimationFrame(st.raf);
       tw[id] = { shown:to, to:to, raf:0 }; el.textContent = f(to); return;
     }
