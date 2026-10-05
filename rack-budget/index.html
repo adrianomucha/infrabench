@@ -393,8 +393,6 @@
     .viz > figure + figure{border-inline-start:0;border-top:1px solid var(--line)}
   }
   #hall{display:block;width:100%;height:clamp(200px,24vw,300px)}
-  .fleet{display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:3px;height:clamp(200px,24vw,300px);overflow:hidden}
-  .fleet i{width:6px;height:9px;background:var(--grn)}
   .hall-cap{margin:10px 0 0;font-size:var(--fs-caption);color:var(--tx2);text-wrap:pretty}
   .none-fit{display:grid;place-items:center;height:clamp(200px,24vw,300px);margin:0;padding:0 24px;text-align:center;font-size:var(--fs-small);color:var(--tx2);
     border:1px dashed var(--line2);text-wrap:balance}
@@ -572,7 +570,6 @@
           </span>
         </figcaption>
         <svg id="hall" role="img"></svg>
-        <div class="fleet" id="fleet" role="img" hidden></div>
         <p class="none-fit" id="noneFit" hidden></p>
         <p class="hall-cap" id="hallCap"></p>
       </figure>
@@ -807,7 +804,7 @@
 
   var DEFAULTS = { mode:"A", mw:30, racks:64, preset:"gb200", kw:120, pue:1.2, margin:15 };
   var REAL = PRESETS.filter(function(p){ return p.id !== "custom"; });
-  var ISO_MAX = 600, COS = 0.866, SIN = 0.5;   // past this many racks the hall becomes marks; the iso projection
+  var ISO_MAX = 600, COS = 0.866, SIN = 0.5;   // past this many racks one hall becomes a campus; the iso projection
 
   /* compute() plus the split every panel shares */
   function run(){
@@ -1069,32 +1066,97 @@
     return { rows: rows, perRow: perRow, capped: capped };
   }
 
+  /* Past one hall the fleet becomes a campus, in the same projection and light: halls of up
+     to 600 racks, each drawn as its rows of cabinets, the last one only part filled so the
+     count stays exact. Very large fleets draw a fixed number of halls, each standing for more. */
+  var HALL_RACKS = 600, CAMPUS_MAX = 48;
+  function drawCampus(n, liquid){
+    var RW = 0.6, RD = 1.2, RH = 2.0, AISLE = 1.35, PER = 30, ROWS = HALL_RACKS / PER, S = 9, EDGE = 1.6, GAP = 6;
+    // each hall holds 600 and the last takes the rest; past the cap each drawn hall stands for more
+    var total = Math.ceil(n / HALL_RACKS), halls = Math.min(total, CAMPUS_MAX), per = halls < total ? n / halls : HALL_RACKS;
+    function rowY(r){ return EDGE + r * RD + Math.floor(r / 2) * AISLE + (r % 2) * 0.12; }
+    var HW = PER * RW + 2 * EDGE + (liquid ? 0.9 : 0), HD = rowY(ROWS - 1) + RD + EDGE;
+    var cols = Math.max(1, Math.ceil(Math.sqrt(halls * 1.5))), detail = halls <= 4 ? 2 : halls <= 12 ? 1 : 0;
+    var pts = [], out = [];
+    function iso(x, y, z){ return [(x - y) * COS * S, (x + y) * SIN * S - z * S]; }
+    function poly(p, fill, stroke, sw){
+      for(var i = 0; i < p.length; i++) pts.push(p[i]);
+      return '<polygon points="' + p.map(function(q){ return q[0].toFixed(1) + "," + q[1].toFixed(1); }).join(" ") + '" fill="' + fill + '"' +
+        (stroke ? ' stroke="' + stroke + '" stroke-width="' + (sw || 0.7) + '" stroke-linejoin="round"' : "") + "/>";
+    }
+    function box(x, y, w, d, h, top, front, side){
+      return poly([iso(x, y, h), iso(x + w, y, h), iso(x + w, y + d, h), iso(x, y + d, h)], top, "#0A0C0E", 0.5) +
+        poly([iso(x, y + d, h), iso(x + w, y + d, h), iso(x + w, y + d, 0), iso(x, y + d, 0)], front, "#0A0C0E", 0.5) +
+        poly([iso(x + w, y, h), iso(x + w, y + d, h), iso(x + w, y + d, 0), iso(x + w, y, 0)], side, "#0A0C0E", 0.5);
+    }
+    out.push("<defs>" +
+      '<linearGradient id="gTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#63EEB4"/><stop offset="1" stop-color="#41D294"/></linearGradient>' +
+      '<linearGradient id="gFront" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1D8E69"/><stop offset="1" stop-color="#0E5B43"/></linearGradient>' +
+      '<linearGradient id="gSide" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#136B51"/><stop offset="1" stop-color="#0A3F2F"/></linearGradient>' +
+      "</defs>");
+
+    // halls far to near, so nearer buildings paint over the ones behind them
+    var order = [];
+    for(var h = 0; h < halls; h++) order.push(h);
+    order.sort(function(a, b){ return (a % cols + Math.floor(a / cols)) - (b % cols + Math.floor(b / cols)); });
+    order.forEach(function(h){
+      var X = (h % cols) * (HW + GAP), Y = Math.floor(h / cols) * (HD + GAP);
+      // this hall's share of the fleet, as rack positions out of a full 600
+      var fill = Math.round(Math.min(HALL_RACKS, Math.max(0, n - h * per) / per * HALL_RACKS));
+      // the slab, with a lip so it reads as a building rather than a drawing of one
+      out.push(poly([iso(X + HW, Y, 0), iso(X + HW, Y + HD, 0), iso(X + HW, Y + HD, -0.7), iso(X + HW, Y, -0.7)], "#07090B"));
+      out.push(poly([iso(X, Y + HD, 0), iso(X + HW, Y + HD, 0), iso(X + HW, Y + HD, -0.7), iso(X, Y + HD, -0.7)], "#0B0E11"));
+      out.push(poly([iso(X, Y, 0), iso(X + HW, Y, 0), iso(X + HW, Y + HD, 0), iso(X, Y + HD, 0)], "#0F1418", "#1C2126"));
+      if(detail >= 1){
+        for(var a = 1; a < ROWS - 1; a += 2){
+          var ay = Y + rowY(a) + RD;
+          out.push(poly([iso(X + EDGE, ay, 0), iso(X + EDGE + PER * RW, ay, 0), iso(X + EDGE + PER * RW, ay + AISLE - 0.12, 0), iso(X + EDGE, ay + AISLE - 0.12, 0)], "#132831"));
+        }
+      }
+      for(var r = 0; r < ROWS; r++){
+        var k = Math.min(PER, fill - r * PER); if(k <= 0) break;
+        var x = X + EDGE, y = Y + rowY(r), w = k * RW;
+        out.push(box(x, y, w, RD, RH, "url(#gTop)", "url(#gFront)", "url(#gSide)"));
+        if(detail === 2){
+          // cabinet seams on the face you can see
+          for(var c = 1; c < k; c++){ var p0 = iso(x + c * RW, y + RD, RH), p1 = iso(x + c * RW, y + RD, 0);
+            out.push('<line x1="' + p0[0].toFixed(1) + '" y1="' + p0[1].toFixed(1) + '" x2="' + p1[0].toFixed(1) + '" y2="' + p1[1].toFixed(1) + '" stroke="#0B4636" stroke-width="0.6"/>'); }
+        }
+        if(liquid && detail >= 1) out.push(box(x + w + 0.08, y, 0.7, RD, 1.72, "#1A6B54", "#0F5040", "#07281F"));
+      }
+    });
+
+    var xs = pts.map(function(q){ return q[0]; }), ys = pts.map(function(q){ return q[1]; });
+    var minx = Math.min.apply(null, xs), maxx = Math.max.apply(null, xs), miny = Math.min.apply(null, ys), maxy = Math.max.apply(null, ys), pad = 8;
+    var svg = $("hall");
+    svg.setAttribute("viewBox", (minx - pad) + " " + (miny - pad) + " " + (maxx - minx + 2 * pad) + " " + (maxy - miny + 2 * pad));
+    svg.innerHTML = out.join("");
+    return { halls:total, drawn:halls, per:per };
+  }
+
   function renderHall(r){
-    var svg = $("hall"), marks = $("fleet"), none = $("noneFit"), cap = $("hallCap"), unit = areaUnitLc();
+    var svg = $("hall"), none = $("noneFit"), cap = $("hallCap"), unit = areaUnitLc(), cool = r.liquid ? "liquid cooled" : "cooled by air";
     if(r.racks === 0){
-      svg.setAttribute("hidden", ""); marks.hidden = true; none.hidden = false;
+      svg.setAttribute("hidden", ""); none.hidden = false;
       none.textContent = "Not one " + fmt(r.rackKw) + NB + "kW rack fits in the " + mwText(r.itMw - r.heldMw) + " left for compute.";
       cap.textContent = "";
       return;
     }
-    none.hidden = true;
+    none.hidden = true; svg.removeAttribute("hidden");
+    $("hallTitle").textContent = r.racks <= ISO_MAX ? "The hall" : "The campus";
     if(r.racks <= ISO_MAX){
       var info = drawHall(r.racks, r.sqft, r.liquid);
-      svg.removeAttribute("hidden"); marks.hidden = true; marks.innerHTML = "";
       cap.textContent = fmt(r.racks) + NB + pl(r.racks, "rack") + " in " + info.rows + NB + pl(info.rows, "row") + " of up to " + info.perRow +
         (r.liquid ? ", a coolant unit at the end of each row" : ", cooled by air") + " · " + fmt(area(r.sqft)) + NB + unit + " of white space" +
         (info.capped ? ", floor not to scale" : "");
-      svg.setAttribute("aria-label", "The hall from above at an angle: " + cap.textContent);
     } else {
-      var scale = 100, steps = [1, 2, 5, 10, 20, 50, 100];
-      for(var i = 0; i < steps.length; i++){ if(r.racks / steps[i] <= 420){ scale = steps[i]; break; } }
-      var n = Math.ceil(r.racks / scale), s = "";
-      for(var u = 0; u < n; u++) s += "<i></i>";
-      svg.setAttribute("hidden", ""); svg.innerHTML = ""; marks.innerHTML = s; marks.hidden = false;
-      cap.textContent = fmt(r.racks) + " racks, too many to draw as one hall · each mark is " + (scale > 1 ? scale + " racks" : "one rack") +
+      var c = drawCampus(r.racks, r.liquid);
+      cap.textContent = fmt(r.racks) + " racks, too many for one hall: " +
+        (c.drawn < c.halls ? "about " + fmt(c.halls) + " halls of " + HALL_RACKS + ", drawn as " + c.drawn + " of " + fmt(Math.round(c.per)) + " each"
+                           : c.halls + " halls of up to " + HALL_RACKS + ", " + cool) +
         " · " + fmt(area(r.sqft)) + NB + unit + " of white space";
-      marks.setAttribute("aria-label", cap.textContent);
     }
+    svg.setAttribute("aria-label", (r.racks <= ISO_MAX ? "The hall" : "The campus") + " from above at an angle: " + cap.textContent);
   }
 
   /* ---------- the waterfall: what each step between the fence and the racks takes ---------- */
