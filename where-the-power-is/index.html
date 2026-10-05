@@ -49,7 +49,7 @@
     --v-make:#3FE0A0;
     --v-slip:#FFEA6B;
     --v-miss:#FF5B5B;
-    --better:#3FE0A0; --worse:#FF8A7A;   /* change chips, always with an arrow and words */
+    --better:#3FE0A0; --worse:#FF9A8C;   /* change chips, always with an arrow and words */
     --action-bg:#EEF1F3; --action-bg-hover:#FFFFFF; --action-fg:#0A0C0E;
     --control-border:#2A3037; --control-border-hover:#7B838D;
     --link-underline:rgba(168,176,184,.45);
@@ -246,7 +246,7 @@
     background:#13171B;border:1px solid var(--line2);border-top:3px solid var(--line2);color:var(--tx);font:inherit;text-align:start;cursor:pointer}
   .tile .tn{font-size:var(--fs-caption);line-height:1.25;color:var(--tx2);overflow-wrap:break-word}
   .tile .tw{font-size:var(--fs-ui);font-weight:500;line-height:1.2}
-  .tile .tv{display:flex;align-items:center;gap:6px;font-size:var(--fs-micro);color:var(--tx3);line-height:1.2}
+  .tile .tv{display:flex;align-items:center;gap:6px;font-size:var(--fs-micro);color:var(--tx2);line-height:1.2}
   .tile.make{border-top-color:var(--v-make);background:#11201A}
   .tile.slip{border-top-color:var(--v-slip);background:#1F1E14}
   .tile.miss{border-top-color:var(--v-miss);background:#1F1416}
@@ -328,11 +328,12 @@
   .calc .c span{font-size:var(--fs-micro);color:var(--tx3)}
   .calc .c.out{border-color:var(--tx3)}
   .calc .op{color:var(--tx3);font-family:var(--mono);font-size:var(--fs-small);padding:0 2px}
-  .qd .note{margin:10px 0 0;color:var(--tx2);font-size:var(--fs-caption);max-width:62ch;text-wrap:pretty}
+  .qd .note{margin:10px 0 0;color:var(--tx2);font-size:var(--fs-caption);max-width:54ch;text-wrap:pretty}
   .qd .note + .note{color:var(--tx3);margin-top:6px}
 
   @container list (max-width:819px){
-    .pl thead{display:none}
+    /* the headers leave the screen but stay in the table, so each value keeps its column name for screen readers */
+    .pl thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
     .pl tr.qr{position:relative;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:16px;row-gap:4px;
       padding:12px var(--pad) 14px calc(var(--pad) + 2em);border-top:1px solid var(--line)}
     .pl tr.qr td{border:0;padding:0;background:none}
@@ -342,6 +343,10 @@
     .pl td.n{text-align:start}
     .pl td.n .bar{display:none}
     .pl td.n.q::before{content:"Queue ";color:var(--tx3)}
+    .pl td.n.co2::before{content:"Grid CO₂ ";color:var(--tx3)}
+    .pl td.n.co2::after{content:"/kWh";color:var(--tx3)}
+    .pl td.n.price::before{content:"Power ";color:var(--tx3)}
+    .pl td.n.price::after{content:"/kWh";color:var(--tx3)}
     .pl tr.qd{display:block} .pl tr.qd td{display:block;padding:0 var(--pad) 16px calc(var(--pad) + 2em)}
     .pl tr.qd td:first-child{display:none}
   }
@@ -380,7 +385,7 @@
   .ex{margin:0;align-self:start;background:var(--bg2);border:1px solid var(--line);padding:22px 26px}
   .ex figcaption{font-size:var(--fs-caption);color:var(--tx3);margin:0 0 12px}
   .ex .q{font-size:var(--fs-body);color:var(--tx);margin:0 0 12px;text-wrap:balance}
-  .ex .out{margin:14px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:var(--fs-small);color:var(--tx2);text-wrap:pretty}
+  .ex .out{margin:14px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:var(--fs-small);color:var(--tx2);max-width:54ch;text-wrap:pretty}
   .chain{margin:0;padding:0;list-style:none;font-size:var(--fs-small);line-height:1.55;color:var(--tx2)}
   .chain li{display:grid;grid-template-columns:1.6em minmax(0,1fr);padding:3px 0}
   .chain li::before{content:"\2192";color:var(--tx3);font-family:var(--mono)}
@@ -395,7 +400,7 @@
   .ref-t tbody th{color:var(--tx)}
   .ref-t .m{white-space:nowrap}
   .ref-t .ci{display:block;color:var(--tx3);font-size:var(--fs-caption)}
-  .ref-t td:last-child{max-width:44ch;text-wrap:pretty}
+  .ref-t .nt{display:block;max-width:44ch;text-wrap:pretty}   /* on the text, since table cells ignore max-width */
 
   dl.eq{margin:0}
   dl.eq div{display:grid;grid-template-columns:minmax(0,9em) minmax(0,1fr);gap:4px 24px;padding:12px 0;border-bottom:1px solid var(--line)}
@@ -533,7 +538,7 @@
       <h2 id="wiH">What if</h2>
       <div class="try">
         <button type="button" data-try="double">Double the load</button>
-        <button type="button" data-try="sooner">A year sooner</button>
+        <button type="button" data-try="sooner">Need it a year sooner</button>
         <button type="button" data-try="bridge">Bridge with gas</button>
         <button type="button" data-try="gw">Go to 1 GW</button>
         <button type="button" data-try="reset">Start over</button>
@@ -589,7 +594,7 @@
       </div>
     </div>
     <table class="pl">
-      <caption class="sr-only">The ten regions, ranked, with each one's energization window and verdict against your deadline, interconnection queue depth, grid carbon intensity and industrial power price</caption>
+      <caption class="sr-only">The ten regions, ranked, with each one’s energization window and verdict against your deadline, interconnection queue depth, grid carbon intensity and industrial power price</caption>
       <thead><tr><th scope="col"><span class="sr-only">Rank</span></th><th scope="col">Region</th><th scope="col" id="thWin">Window</th><th scope="col" class="n">Queue</th><th scope="col" class="n" id="thCo2">Grid CO₂</th><th scope="col" class="n" id="thPrice">Power price</th></tr></thead>
       <tbody id="queue"></tbody>
     </table>
@@ -730,7 +735,7 @@
      con:"Speed is real but so is exposure: an energy-only market with scarcity pricing, a large-load queue that hit 239 GW, and a statewide pause on new approvals while the state audits it."},
     {id:"se", name:"Southeast", area:"Georgia / Carolinas / TVA", lo:3, hi:5, q:"~45", co2:385, price:6.9, bridge:true,
      note:"Vertically integrated utilities that actively recruit large loads and build gas to serve them. Georgia just approved a 9,900 MW expansion for exactly this.",
-     con:"You get exactly one counterparty per state. If the utility's build slips, or the commission balks at the rate case, there is no market to route around them."},
+     con:"You get exactly one counterparty per state. If the utility’s build slips, or the commission balks at the rate case, there is no market to route around them."},
     {id:"spp", name:"SPP", area:"Oklahoma / Kansas / Plains", lo:3, hi:5, q:"~120", co2:395, price:6.3, bridge:true,
      note:"Cheap land, cheap wind-heavy power, shallower queues. The sleeper pick for latency-tolerant training loads.",
      con:"The transmission between the wind and anywhere you would put a campus is thin, and the fiber routes are thinner."},
@@ -748,7 +753,7 @@
      con:"The clean power is spoken for on paper: state climate targets claim every clean megawatt-hour, so new load triggers a compliance conversation, not just a study."},
     {id:"nw", name:"Pacific Northwest", area:"Washington / Oregon", lo:5, hi:8, q:"567", qn:"West pool", co2:290, price:6.4, bridge:false,
      note:"The original data center region: cheap hydro, cool air, deep fiber.",
-     con:"The hydro surplus that built the region is gone. BPA's transmission queue runs long enough that projects are installing batteries just to jump it, and new load competes with electrification for every drop."},
+     con:"The hydro surplus that built the region is gone. BPA’s transmission queue runs long enough that projects are installing batteries just to jump it, and new load competes with electrification for every drop."},
     {id:"ne", name:"New England", area:"ISO-NE", lo:6, hi:8, q:"~40", co2:245, price:17.9, bridge:false,
      note:"Strong fiber and finance adjacency, straining against a gas-constrained winter grid.",
      con:"Winter gas constraints cap everything. The region struggles to serve the load it already has in a cold snap, and it knows it."},
@@ -916,7 +921,7 @@
     tweenText("kv1", v.count, function(n){ return fmt(Math.round(n)); });
     $("ku1").textContent = "of " + REGIONS.length;
     $("vbar").innerHTML = r.byTime.map(function(x){ return '<span class="' + x.band + '"></span>'; }).join("");
-    $("ks1").textContent = r.counts.slip + " could slip · " + r.counts.miss + " too late";
+    $("ks1").textContent = r.counts.slip + " could slip · " + (r.counts.miss === 1 ? "1 misses" : r.counts.miss + " miss");
     if(b && b.count !== v.count) chip("kd1", v.count > b.count ? 1 : -1, Math.abs(v.count - b.count) + (v.count > b.count ? " more" : " fewer"), v.count > b.count ? "good" : "bad");
     else chip("kd1", 0, "");
 
@@ -971,7 +976,7 @@
     $("map").innerHTML = REGIONS.map(function(g){
       var p = TILE[g.id];
       return '<button type="button" class="tile" data-id="' + g.id + '" style="grid-column:' + (p[0] + 1) + ';grid-row:' + (p[1] + 1) + '">' +
-        '<span class="tn"><span class="l">' + SHORT[g.id] + '</span><span class="s">' + ABBR[g.id] + '</span></span><span class="tw"></span><span class="tv"><span class="dot"></span><span class="vw"></span></span></button>';
+        '<span class="tn"><span class="l">' + SHORT[g.id] + '</span><span class="s">' + ABBR[g.id] + '</span></span><span class="tw"></span><span class="tv"><span class="dot"></span><span class="vw"></span></span><span class="sr-only det"></span></button>';
     }).join("");
   }
   function renderMap(r){
@@ -982,7 +987,9 @@
       q(t, ".tw").innerHTML = '<span class="l">' + shortWin(x) + '</span><span class="s">’' + shortWin(x).slice(2) + '</span>';
       q(t, ".dot").className = "dot " + x.band;
       q(t, ".vw").innerHTML = '<span class="l">' + VWORD[x.band] + (x.bridged ? ", bridged" : "") + '</span><span class="s">' + VSHORT[x.band] + '</span>';
-      t.setAttribute("aria-label", x.g.name + ", " + x.g.area + ": " + verdictText(x, yr).toLowerCase() + ", window " + windowText(x) + (x.bridged ? ", bridged" : "") + ". Show details.");
+      // the button's name starts with what it shows; the full name and details follow, unseen
+      q(t, ".det").textContent = ", " + (x.g.name !== SHORT[id] ? x.g.name + ", " : "") + x.g.area + ". " + verdictText(x, yr) +
+        ", window " + windowText(x) + (x.bridged ? ", bridged" : "") + ". Opens its row in the list.";
       if(prev && prev !== x.band && !dragging) flash(t);
       t.setAttribute("data-band", x.band);
     });
@@ -1314,7 +1321,7 @@
         '<td class="m">' + fmt(g.co2) + NB + 'g/kWh</td>' +
         '<td class="m">' + g.price.toFixed(1) + '¢/kWh</td>' +
         '<td class="m">' + (g.bridge ? "Bridgeable" : "Grid only") + '</td>' +
-        '<td>' + g.note + '</td></tr>';
+        '<td><span class="nt">' + g.note + '</span></td></tr>';
     }).join("");
   }
   function buildProv(){
@@ -1471,7 +1478,7 @@
     $("queue").addEventListener("pointerleave", function(){ setHover(null); });
 
     $("copyLink").addEventListener("click", function(){ copy(location.href, "Link copied"); });
-    $("copySummary").addEventListener("click", function(){ copy(summary(), "Brief copied"); });
+    $("copySummary").addEventListener("click", function(){ copy(summary(), "Siting brief copied"); });
     window.addEventListener("beforeprint", function(){ $("printUrl").textContent = "Reproduce this screen: " + location.href; });
 
     var tlist = document.querySelector("[role=tablist]");
