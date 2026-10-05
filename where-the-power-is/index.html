@@ -225,7 +225,7 @@
   .viz > figure{margin:0;padding:12px var(--pad) 16px;min-width:0}
   .viz > figure:first-of-type{container:map / inline-size}
   .viz > figure + figure{border-inline-start:1px solid var(--line)}
-  .viz figcaption{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:0 0 12px;font-size:var(--fs-caption);color:var(--tx3)}
+  .viz figcaption{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 12px;margin:0 0 12px;font-size:var(--fs-caption);color:var(--tx3)}
   .viz figcaption b{font-size:var(--fs-small);font-weight:500;color:var(--tx)}
   /* side by side only while the tiles keep room for a name; below that the map sits on top */
   @container (max-width:959px){
@@ -260,6 +260,14 @@
   @container map (max-width:440px){
     .tile{padding:6px 6px 7px} .tile .tw{font-size:var(--fs-small)} .map{grid-auto-rows:minmax(72px,auto);gap:4px}
     .tile .l{display:none} .tile .s{display:inline}
+  }
+  /* the narrowest phones: tiles under 60px wide keep the name and the years, and the dot
+     and the coloured top rule carry the verdict (its word stays in the tile's label) */
+  @media(max-width:400px){ .viz > figure:first-of-type{padding-inline:10px} }
+  @container map (max-width:320px){
+    .map{gap:3px} .tile{padding:5px 3px 6px}
+    .tile .tn,.tile .tw{font-size:var(--fs-micro);white-space:nowrap}
+    .tile .vw{display:none}
   }
   .dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none}
   .dot.make{background:var(--v-make)} .dot.slip{background:var(--v-slip)} .dot.miss{background:var(--v-miss)}
