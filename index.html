@@ -15,7 +15,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://www.googletagmanager.com">
 <script src="/assets/analytics.js"></script>
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
@@ -28,6 +28,10 @@
   gtag('config', 'G-B4K7J0G5X6');
 </script>
 <style>
+  /* The index is a table of contents, not a landing page: a statement, the four tools
+     with the answer each one gives, and who made them. Decoration is out; the brand
+     glyphs and the worked examples carry the page. Mono is for the wordmark and for
+     numbers, never for labels. Green marks the answer and the brand, nothing else. */
   :root{
     color-scheme:dark;
     --bg:#0A0C0E;          /* page surface */
@@ -36,373 +40,243 @@
     --line2:#2A3037;       /* stronger rule */
     --tx:#EEF1F3;          /* primary text */
     --tx2:#A8B0B8;         /* secondary text */
-    --tx3:#7B838D;         /* labels only */
-    --grn:#3FE0A0;         /* signal green: data and live things only */
-    --grn2:#2FBF86;
+    --tx3:#7B838D;         /* fine print */
+    --grn:#3FE0A0;         /* signal green: the brand glyph and the answer */
     --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
     --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
-  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:16px;line-height:1.65;
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:16px;line-height:1.6;
     -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-  .wrap{max-width:1260px;margin:0 auto;padding:0 32px}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 32px}
   @media(max-width:640px){.wrap{padding:0 20px}}
-  a{color:var(--tx);text-decoration:none}
-
-  /* micro-label: the only place uppercase mono is allowed */
-  .lbl{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
-
-  /* first focusable element: lets keyboard and screen-reader users bypass the sticky header */
-  .skip{position:absolute;left:-9999px;top:0;z-index:60;font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:12px 18px;background:var(--tx);color:var(--bg);font-weight:600}
-  .skip:focus{left:0}
-  main{display:block;scroll-margin-top:64px}
+  a{color:inherit}
   :focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  .skip{position:absolute;left:-9999px;top:0;z-index:10;padding:12px 18px;background:var(--tx);color:var(--bg);font-weight:600;font-size:15px}
+  .skip:focus{left:0}
+  .glyph{color:var(--grn);flex:none;display:block}
 
   /* ---------- header ---------- */
-  header{position:sticky;top:0;z-index:40;background:rgba(10,12,14,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-  .bar{display:flex;align-items:center;justify-content:space-between;gap:16px;height:60px}
-  .mark{display:flex;align-items:center;gap:11px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx)}
-  .sq{width:9px;height:9px;background:var(--grn);flex:none}
-  .hnav{display:flex;gap:28px}
-  .hnav a{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);position:relative}
-  .hnav a::after{content:"";position:absolute;inset:-16px -10px}
-  .hnav a:hover{color:var(--tx)}
-  /* three links do not fit a 320px header next to the wordmark */
-  @media(max-width:400px){.hnav{gap:20px}.hnav a[href='#method']{display:none}}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:24px;height:76px}
+  .brand{display:inline-flex;align-items:center;gap:11px;text-decoration:none;
+    font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+  .brand .glyph{width:20px;height:20px}
+  .top nav{display:flex;gap:28px}
+  .top nav a{font-size:15px;color:var(--tx2);text-decoration:none;padding:12px 0}
+  .top nav a:hover{color:var(--tx)}
 
-  /* ---------- hero: the statement, then the machine ---------- */
-  .hero{padding:88px 0 0}
-  @media(max-width:700px){.hero{padding:56px 0 0}}
-  /* ---- shared hero type, identical in index, rack-budget and crash-cart ----
-     One scale across the suite. 84px is the largest that still holds every one of the three
-     headlines to two lines; at 100px the two longer tool headlines ran to three and the home
-     page stopped matching them. h1 .setup carries the two-tone on the headlines built as a
-     setup and a question — the question keeps full brightness, the setup steps back. */
-  h1{font-weight:500;font-size:clamp(40px,5.6vw,84px);line-height:1;letter-spacing:-.04em;margin:24px 0 0;max-width:25ch;text-wrap:balance}
-  h1 .setup{color:var(--tx2)}
-  .lede{font-size:17px;color:var(--tx2);max-width:60ch;margin:0;text-wrap:pretty}
-  .hero-body{margin:38px 0 0}
-  @media(max-width:700px){.hero-body{margin-top:30px}}
-  /* ---- end shared hero type ---- */
-  .hero-sub{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:28px 48px;margin:38px 0 52px}
-  @media(max-width:700px){.hero-sub{margin:30px 0 38px}}
-  .btns{display:flex;flex-wrap:wrap;gap:12px}
-  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;
-    display:inline-flex;align-items:center;gap:10px;padding:15px 24px;background:var(--tx);color:var(--bg);border:1px solid var(--tx);cursor:pointer}
-  .btn:hover{background:#fff;border-color:#fff}
-  .btn.ghost{background:transparent;color:var(--tx);border-color:var(--line2)}
-  .btn.ghost:hover{border-color:var(--grn);color:var(--grn)}
-  @media(max-width:640px){.btns{width:100%;flex-direction:column;align-items:stretch}.btns .btn{justify-content:center}}
+  /* ---------- intro ---------- */
+  .intro{padding-block:88px 96px}
+  @media(max-width:700px){.intro{padding-block:48px 64px}}
+  h1{font-size:clamp(38px,5vw,64px);font-weight:500;line-height:1.02;letter-spacing:-.04em;margin:0;max-width:14ch;text-wrap:balance}
+  .lede{font-size:18px;color:var(--tx2);max-width:56ch;margin:28px 0 0;text-wrap:pretty}
+  @media(max-width:700px){.lede{font-size:17px;margin-top:22px}}
+
+  /* ---------- the tools ----------
+     One row per tool. The left column says what it is; the right shows what it gives
+     back, using the inputs the tool opens with, so the numbers here match the page you
+     land on. The whole row is the link; the visible "Open tool" is its label. */
+  .tools{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+  .tool{position:relative;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);grid-template-rows:auto 1fr;
+    grid-template-areas:"text ex" "go ex";column-gap:80px;padding:52px 0;border-bottom:1px solid var(--line)}
+  .t-text{grid-area:text}
+  /* stacked: the link follows the example instead of splitting the tool from it */
+  @media(max-width:900px){.tool{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"text" "ex" "go";padding:40px 0 36px}
+    .tool .ex{margin-top:28px}}
+  .t-name{display:flex;align-items:center;gap:14px;margin:0;font-size:28px;font-weight:500;letter-spacing:-.025em;line-height:1.1}
+  .t-name .glyph{width:26px;height:26px}
+  .t-q{font-size:20px;line-height:1.35;letter-spacing:-.015em;color:var(--tx);margin:22px 0 0}
+  .t-q span{display:block;color:var(--tx2)}
+  .t-d{font-size:15px;color:var(--tx2);margin:10px 0 0;max-width:46ch;text-wrap:pretty}
+  .t-src{font-size:13px;line-height:1.5;color:var(--tx3);margin:18px 0 0;max-width:46ch}
+  .go{grid-area:go;align-self:end;justify-self:start;display:inline-flex;align-items:baseline;gap:6px;padding-top:28px;
+    font-size:15px;font-weight:500;color:var(--tx);text-decoration:none}
+  .go .arr{color:var(--grn)}
+  /* stretch the link over the row, and draw its focus ring around the row */
+  .go::after{content:"";position:absolute;inset:0}
+  .go:focus-visible{outline:none}
+  .go:focus-visible::after{outline:2px solid var(--grn);outline-offset:8px}
+  .tool:hover .go{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+
+  /* the worked example: inputs, a rule, then what comes out. The answer is green. */
+  .ex{grid-area:ex;align-self:start;margin:0;background:var(--bg2);border:1px solid var(--line);padding:22px 26px 20px}
+  @media(max-width:640px){.ex{padding:18px 18px 16px}}
+  .ex figcaption{font-size:13px;color:var(--tx3);margin:0 0 10px}
+  .ex dl{margin:0}
+  .ex dl div{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 24px;padding:6px 0}
+  .ex dt{font-size:14px;color:var(--tx2)}
+  .ex dd{margin:0 0 0 auto;font-family:var(--mono);font-size:14px;color:var(--tx);text-align:right;font-variant-numeric:tabular-nums}
+  .ex .out{border-top:1px solid var(--line2);margin-top:10px;padding-top:16px}
+  .ex .ans dt{color:var(--tx)}
+  .ex .ans dd{color:var(--grn);font-size:16px;font-weight:500}
+  .tool:hover .ex{border-color:var(--line2)}
+
   @media (prefers-reduced-motion: no-preference){
     html{scroll-behavior:smooth}
-    .btn{transition:background .15s ease,border-color .15s ease,color .15s ease}
-    .rise{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
-    .rise.d1{animation-delay:.06s}.rise.d2{animation-delay:.12s}.rise.d3{animation-delay:.18s}.rise.d4{animation-delay:.28s}
-    @keyframes rise{from{opacity:0;transform:translateY(14px)}}
-    /* a survey line sweeps the stage; pure decoration, gone under reduced motion */
-    .stage::after{content:"";position:absolute;top:0;bottom:0;left:-160px;width:140px;pointer-events:none;
-      background:linear-gradient(90deg,transparent,rgba(63,224,160,.04) 40%,rgba(63,224,160,.13) 50%,rgba(63,224,160,.04) 60%,transparent);
-      animation:scan 9s linear infinite}
-    @keyframes scan{to{left:calc(100% + 40px)}}
-    .tk{animation:tick 48s linear infinite}
-    @keyframes tick{to{transform:translateX(-50%)}}
+    .go .arr{display:inline-block;transition:transform .18s ease}
+    .tool:hover .go .arr{transform:translateX(4px)}
+    .ex{transition:border-color .18s ease}
   }
 
-  /* the stage: a framed dark field with registration ticks; the viz owns it */
-  .stage{position:relative;overflow:hidden;border:1px solid var(--line);background:
-    radial-gradient(52% 56% at 50% 52%, rgba(63,224,160,.08), transparent 72%),
-    radial-gradient(circle, #161B20 1px, transparent 1.1px);
-    background-size:100% 100%, 22px 22px;padding:58px 34px 22px;min-height:440px;
-    display:flex;flex-direction:column;justify-content:center}
-  @media(max-width:700px){.stage{min-height:300px;padding:48px 18px 16px}}
-  .tick{position:absolute;width:9px;height:9px;border:0 solid var(--line2)}
-  .tick.tl{top:-1px;left:-1px;border-top-width:1px;border-left-width:1px}
-  .tick.tr{top:-1px;right:-1px;border-top-width:1px;border-right-width:1px}
-  .tick.bl{bottom:-1px;left:-1px;border-bottom-width:1px;border-left-width:1px}
-  .tick.br{bottom:-1px;right:-1px;border-bottom-width:1px;border-right-width:1px}
-  /* HUD corner readouts */
-  .hud{position:absolute;top:16px;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
-  .hud.tl2{left:20px}
-  .hud.tr2{right:20px;color:var(--grn2)}
-  @media(max-width:640px){.hud.tr2{display:none}}
-  .stage svg{width:100%;height:auto;display:block;max-height:560px}
-  .stage .cap{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px 16px;margin-top:24px}
-  .cap-link{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--grn);white-space:nowrap;position:relative}
-  .cap-link::after{content:"";position:absolute;inset:-14px -8px}
-  .cap-link:hover{text-decoration:underline;text-underline-offset:4px}
+  /* ---------- about ---------- */
+  .about{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:56px 96px;padding-block:112px 120px;scroll-margin-top:24px}
+  @media(max-width:900px){.about{grid-template-columns:minmax(0,1fr);padding-block:72px 80px}}
+  .about h2{font-size:22px;font-weight:500;letter-spacing:-.02em;line-height:1.2;margin:0 0 20px}
+  .about p{font-size:16px;color:var(--tx2);margin:0 0 16px;max-width:60ch;text-wrap:pretty}
+  .about p b{color:var(--tx);font-weight:500}
+  .acts{display:flex;flex-wrap:wrap;align-items:center;gap:12px 28px;margin-top:28px}
+  .btn{display:inline-flex;align-items:center;padding:13px 22px;background:var(--tx);color:var(--bg);
+    font-size:15px;font-weight:500;text-decoration:none;border:1px solid var(--tx)}
+  .btn:hover{background:#fff;border-color:#fff}
+  .lnk{font-size:15px;font-weight:500;color:var(--tx);text-decoration:none;padding:12px 0}
+  .lnk:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+  .lnk .arr{color:var(--tx3)}
 
-  /* ---------- data ticker ---------- */
-  .ticker{border-top:1px solid var(--line);overflow:hidden;margin-top:72px}
-  @media(max-width:700px){.ticker{margin-top:48px}}
-  .tk{display:flex;width:max-content;padding:15px 0}
-  .half{display:flex}
-  .tk span{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-right:56px;white-space:nowrap}
-  .tk b{color:var(--grn);font-weight:500;margin-left:8px}
-
-  /* ---------- sections ---------- */
-  section{padding:104px 0;border-top:1px solid var(--line)}
-  @media(max-width:700px){section{padding:64px 0}}
-  .sec-row{display:flex;align-items:center;gap:26px;margin-bottom:40px}
-  .sec-num{font-family:var(--mono);font-weight:600;font-size:clamp(44px,4.8vw,70px);line-height:.9;color:var(--line2);flex:none;font-variant-numeric:tabular-nums}
-  @supports (-webkit-text-stroke:1px black){.sec-num{color:transparent;-webkit-text-stroke:1px var(--line2)}}
-  .sec-rule{flex:1;height:1px;background:var(--line)}
-  h2{font-weight:500;font-size:clamp(30px,3.6vw,48px);line-height:1.06;letter-spacing:-.035em;margin:0 0 44px;max-width:24ch;text-wrap:balance}
-
-  /* ---------- tool index: rows, not cards ---------- */
-  .tools{border-top:1px solid var(--line)}
-  .tool{display:grid;grid-template-columns:76px minmax(0,1fr) minmax(0,320px) 120px;gap:32px;align-items:start;
-    padding:40px 0 42px;border-bottom:1px solid var(--line);position:relative;color:inherit}
-  .tool .num{font-family:var(--mono);font-size:12px;color:var(--tx3);padding-top:13px}
-  .tool h3{font-weight:500;font-size:clamp(24px,2.8vw,38px);letter-spacing:-.03em;line-height:1.08;margin:0 0 12px;display:flex;align-items:baseline;gap:16px}
-  .tool p{margin:0;font-size:15px;color:var(--tx2);max-width:54ch;text-wrap:pretty}
-  .tool .meta{font-family:var(--mono);font-size:12px;line-height:1.8;color:var(--tx3);padding-top:13px}
-  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--line2);padding:4px 9px;color:var(--tx3);white-space:nowrap;justify-self:end;margin-top:11px}
-  .tag.on{border-color:rgba(63,224,160,.4);color:var(--grn)}
-  .tag.on::before{content:"";display:inline-block;width:5px;height:5px;background:var(--grn);margin-right:7px;vertical-align:1px}
-  /* stacked tool rows: number and status on the first line, then the tool, then its data */
-  @media(max-width:960px){
-    .tool{grid-template-columns:minmax(0,1fr) auto;gap:12px 16px;padding:30px 0 32px}
-    .tool .num{grid-row:1;grid-column:1;padding-top:0}
-    .tool .tag{grid-row:1;grid-column:2;justify-self:end;margin-top:-3px}
-    .tool > div:first-of-type{grid-row:2;grid-column:1 / -1}
-    .tool .meta{grid-row:3;grid-column:1 / -1;padding-top:0}
-  }
-  .tool .arr{display:inline-block;font-family:var(--mono);font-size:17px;color:var(--tx3);transform:translateX(0)}
-  a.tool:hover{background:linear-gradient(90deg,transparent,rgba(238,241,243,.025),transparent)}
-  a.tool:hover h3{color:var(--grn)}
-  a.tool:hover .arr{color:var(--grn)}
-  @media (prefers-reduced-motion: no-preference){
-    .tool .arr{transition:transform .18s ease,color .18s ease}
-    a.tool:hover .arr{transform:translateX(8px)}
-  }
-
-  /* ---------- method: three plain columns ---------- */
-  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:48px}
-  @media(max-width:820px){.three{grid-template-columns:1fr;gap:36px}}
-  .three .c{border-top:1px solid var(--line2);padding-top:22px}
-  .three .c .i{font-family:var(--mono);font-size:12px;color:var(--grn);margin-bottom:14px}
-  .three .c h3{font-weight:600;font-size:18px;letter-spacing:-.015em;margin:0 0 10px}
-  .three .c p{margin:0;font-size:15px;color:var(--tx2);text-wrap:pretty}
-
-  /* ---------- built by: the nameplate ----------
-     Real gear carries a nameplate. The credit reads like one: identity on the
-     left, a spec ledger on the right, actions along the bottom edge. */
-  .plate{position:relative;border:1px solid var(--line);background:var(--bg2)}
-  .plate-main{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:40px 88px;padding:52px 52px 44px}
-  .p-name{font-weight:500;font-size:clamp(34px,3.8vw,58px);letter-spacing:-.035em;line-height:1.05;margin-top:16px;color:var(--tx)}
-  .p-bio{font-size:16px;color:var(--tx2);max-width:44ch;margin:18px 0 0;text-wrap:pretty}
-  .p-spec{margin:0;align-self:center}
-  .p-spec > div{display:grid;grid-template-columns:96px 1fr;gap:24px;padding:15px 0 16px;border-top:1px solid var(--line);align-items:baseline}
-  .p-spec > div:last-child{border-bottom:1px solid var(--line)}
-  .p-spec dt{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
-  .p-spec dd{margin:0;font-family:var(--mono);font-size:14px;color:var(--tx)}
-  .p-spec dd.on{color:var(--grn)}
-  .p-spec dd.on::before{content:"";display:inline-block;width:6px;height:6px;background:var(--grn);margin-right:10px;vertical-align:1px}
-  .plate-ft{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;border-top:1px solid var(--line);padding:20px 52px}
-  .lnk{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx2);white-space:nowrap;padding:14px 2px}
-  .lnk:hover{color:var(--grn)}
-  @media(max-width:860px){
-    .plate-main{grid-template-columns:1fr;gap:36px;padding:32px 24px 30px}
-    .plate-ft{padding:16px 24px;flex-direction:column;align-items:stretch}
-    .plate-ft .btn{justify-content:center}
-    .lnk{text-align:center}
-  }
-
-  footer{border-top:1px solid var(--line);padding:44px 0 72px;font-size:15px;color:var(--tx3)}
-  footer a{color:var(--tx2)}
-  footer a:hover{color:var(--grn)}
-  footer .lbl{margin-bottom:14px}
-  footer p{margin:0;max-width:74ch}
-
-  /* scroll reveals: elements are visible by default; a script opts them in,
-     and only when motion is welcome */
-  .rv0{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
-  .rv0.rvIn{opacity:1;transform:none}
-
-  /* large screens: use them */
-  @media(min-width:1680px){
-    .wrap{max-width:1520px}
-    .stage{min-height:580px}
-    .stage svg{max-height:720px}
-    .lede{font-size:18px}
-    .tool p,.three .c p{font-size:16px}
-  }
-  @media(min-width:2200px){.wrap{max-width:1720px}}
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--line);padding:36px 0 56px;font-size:14px;color:var(--tx3)}
+  footer p{margin:0;max-width:72ch;text-wrap:pretty}
+  footer .meta{margin-top:14px;max-width:none}
+  footer .meta span{white-space:nowrap}
+  footer a{color:var(--tx2);text-decoration:none;white-space:nowrap}
+  footer a:hover{color:var(--tx);text-decoration:underline;text-underline-offset:4px}
 </style>
 </head>
 <body>
 
 <a class="skip" href="#main">Skip to content</a>
 
-<header>
-  <div class="wrap bar">
-    <div class="mark"><span class="sq" aria-hidden="true"></span>Infrabench</div>
-    <nav class="hnav" aria-label="Page sections"><a href="#tools">Tools</a><a href="#method">Method</a><a href="#contact">Contact</a></nav>
-  </div>
+<!-- Brand glyphs from .github/assets/logo/glyph: the drawn mark, and one per tool in
+     the same grammar. Inlined so they take the page's green through currentColor. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="g-infrabench" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="9" width="14" height="10" fill="currentColor"/></symbol>
+  <symbol id="g-rack-budget" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="16.2" width="14" height="2.8" fill="currentColor"/><rect x="5" y="12.6" width="14" height="2.8" fill="currentColor"/><rect x="5" y="9" width="14" height="2.8" fill="currentColor"/></symbol>
+  <symbol id="g-crash-cart" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="5" width="6" height="6" fill="currentColor"/><rect x="5" y="13" width="6" height="6" fill="currentColor"/><rect x="13" y="13" width="6" height="6" fill="currentColor"/><rect x="13.75" y="5.75" width="4.5" height="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+  <symbol id="g-power-map" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><line x1="5" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="0.8" opacity="0.5"/><line x1="15" y1="5" x2="15" y2="19" stroke="currentColor" stroke-width="0.8" opacity="0.5"/><rect x="13" y="7" width="4" height="4" fill="currentColor"/></symbol>
+  <symbol id="g-outage-replay" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="9" width="14" height="4" fill="currentColor"/><rect x="5" y="15" width="14" height="4" fill="currentColor"/></symbol>
+</svg>
+
+<header class="wrap top">
+  <a class="brand" href="/"><svg class="glyph" aria-hidden="true"><use href="#g-infrabench"/></svg>Infrabench</a>
+  <nav aria-label="Site">
+    <a href="#about">About</a>
+    <a href="https://github.com/adrianomucha/infrabench" target="_blank" rel="noopener">GitHub</a>
+  </nav>
 </header>
 
 <main id="main" tabindex="-1">
 
+<div class="wrap intro">
+  <h1>Published specs, corrected for reality.</h1>
+  <p class="lede">A rack is rated for 600&nbsp;kW, a drive for five years, an interconnection queue in gigawatts. None of it survives contact with a real site. Infrabench is a set of free tools that correct those numbers against public data, with every constant on the page.</p>
+</div>
+
 <div class="wrap">
-  <div class="hero">
-    <div class="lbl rise">Open tools for infrastructure</div>
-    <h1 class="rise d1">Published specs, corrected for reality.</h1>
-    <div class="hero-sub">
-      <p class="lede rise d2">A rack is rated for 600&nbsp;kW, a drive for five years, an interconnection queue in gigawatts. None of it survives contact with a real site. These are free tools that do the correction &mdash; on public data, with every constant shown.</p>
-      <div class="btns rise d3">
-        <a class="btn" href="/rack-budget/">Open Rack Budget</a>
-        <a class="btn ghost" href="/crash-cart/">Open Crash Cart</a>
-        <a class="btn ghost" href="/where-the-power-is/">Open Where the Power Is</a>
-        <a class="btn ghost" href="/outage-replay/">Open Outage Replay</a>
+  <!-- Example figures are each tool's opening state. If a tool's defaults or model
+       change, update its numbers here to match. -->
+  <ol class="tools" role="list" aria-label="Tools">
+
+    <li class="tool">
+      <div class="t-text">
+        <h2 class="t-name"><svg class="glyph" aria-hidden="true"><use href="#g-rack-budget"/></svg>Rack Budget</h2>
+        <p class="t-q"><span>You have the megawatts.</span> What actually fits?</p>
+        <p class="t-d">Power, cooling and floor area for an AI hall. Start from a megawatt budget or from a fleet size and get the other side, plus the heat you have to reject.</p>
+        <p class="t-src">Data: NVIDIA platform disclosures, Uptime Institute PUE survey</p>
       </div>
-    </div>
-    <div class="stage rise d4">
-      <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
-      <span class="hud tl2" aria-hidden="true">Hall view &mdash; isometric</span>
-      <span class="hud tr2" aria-hidden="true">Liquid cooled</span>
-      <svg id="hall" aria-hidden="true"></svg>
-      <div class="cap">
-        <span class="lbl" aria-hidden="true">30 MW &middot; PUE 1.2 &middot; 177 &times; GB200 NVL72 &middot; 12,744 GPUs</span>
-        <a class="cap-link" href="/rack-budget/#m=A&amp;p=gb200&amp;pue=1.2&amp;mg=15&amp;mw=30">Run this configuration &rarr;</a>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="ticker" aria-hidden="true">
-  <div class="tk">
-    <div class="half">
-      <span>Rack density 2021&rarr;2027<b>6&rarr;600 kW</b></span>
-      <span>GB200 NVL72<b>120 kW</b></span>
-      <span>Rubin Ultra / Kyber<b>600 kW</b></span>
-      <span>Survey median PUE<b>1.56</b></span>
-      <span>New-build PUE<b>1.1&ndash;1.2</b></span>
-      <span>One ton of cooling<b>3.517 kW</b></span>
-      <span>Backblaze fleet<b>~300K drives</b></span>
-      <span>SMART flag likelihood<b>18.3&times;</b></span>
-      <span>Public drive telemetry<b>13 years</b></span>
-      <span>US interconnection queue<b>2,061 GW</b></span>
-      <span>Queued capacity ever built<b>~13%</b></span>
-      <span>ERCOT large-load requests<b>239 GW</b></span>
-      <span>Median status-page lag<b>48 min</b></span>
-      <span>Longest documented lag<b>101 min</b></span>
-      <span>Hidden assumptions<b>0</b></span>
-    </div>
-    <div class="half">
-      <span>Rack density 2021&rarr;2027<b>6&rarr;600 kW</b></span>
-      <span>GB200 NVL72<b>120 kW</b></span>
-      <span>Rubin Ultra / Kyber<b>600 kW</b></span>
-      <span>Survey median PUE<b>1.56</b></span>
-      <span>New-build PUE<b>1.1&ndash;1.2</b></span>
-      <span>One ton of cooling<b>3.517 kW</b></span>
-      <span>Backblaze fleet<b>~300K drives</b></span>
-      <span>SMART flag likelihood<b>18.3&times;</b></span>
-      <span>Public drive telemetry<b>13 years</b></span>
-      <span>US interconnection queue<b>2,061 GW</b></span>
-      <span>Queued capacity ever built<b>~13%</b></span>
-      <span>ERCOT large-load requests<b>239 GW</b></span>
-      <span>Median status-page lag<b>48 min</b></span>
-      <span>Longest documented lag<b>101 min</b></span>
-      <span>Hidden assumptions<b>0</b></span>
-    </div>
-  </div>
-</div>
-
-<section id="tools">
-  <div class="wrap">
-    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">01</span><span class="sec-rule"></span><span class="lbl">The bench &middot; 04 live</span></div>
-    <h2 class="rv">Four corrections, one method.</h2>
-    <div class="tools">
-
-      <a class="tool rv" href="/rack-budget/">
-        <span class="num">01</span>
-        <div>
-          <h3>Rack Budget <span class="arr" aria-hidden="true">&rarr;</span></h3>
-          <p>Power, cooling and floor area for an AI hall. Start from a megawatt budget or from a fleet size and get the other side, plus the heat you have to reject and the room it lands in.</p>
-        </div>
-        <div class="meta">30 MW at PUE 1.2 &rarr; 177 GB200 racks<br>6,039 tons &middot; 7,080 sq ft</div>
-        <span class="tag on">Live</span>
-      </a>
-
-      <a class="tool rv" href="/crash-cart/">
-        <span class="num">02</span>
-        <div>
-          <h3>Crash Cart <span class="arr" aria-hidden="true">&rarr;</span></h3>
-          <p>Drive failure triage on thirteen years of public fleet telemetry. Not a dashboard, a work queue: which drives to pull this week, ranked by risk times blast radius.</p>
-        </div>
-        <div class="meta">Backblaze Drive Stats<br>~300,000 drives &middot; real failures</div>
-        <span class="tag on">Live</span>
-      </a>
-
-      <a class="tool rv" href="/where-the-power-is/">
-        <span class="num">03</span>
-        <div>
-          <h3>Where the power is <span class="arr" aria-hidden="true">&rarr;</span></h3>
-          <p>Siting under a power constraint. Put in the megawatts you need and the year you need them, get the US grid regions that can actually deliver, ranked by the earliest realistic energization window.</p>
-        </div>
-        <div class="meta">LBNL Queued Up &middot; eGRID &middot; EIA<br>2,061 GW queued &middot; ~13% ever built</div>
-        <span class="tag on">Live</span>
-      </a>
-
-      <a class="tool rv" href="/outage-replay/">
-        <span class="num">04</span>
-        <div>
-          <h3>Outage replay <span class="arr" aria-hidden="true">&rarr;</span></h3>
-          <p>Public cloud incidents reconstructed as an operator timeline. What the console showed, when it showed it, and how long the truth took to surface.</p>
-        </div>
-        <div class="meta">AWS, Azure, GCP, Cloudflare, Fastly<br>6 incidents &middot; 48 min median gap</div>
-        <span class="tag on">Live</span>
-      </a>
-
-    </div>
-  </div>
-</section>
-
-<section id="method">
-  <div class="wrap">
-    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">02</span><span class="sec-rule"></span><span class="lbl">How these are built</span></div>
-    <h2 class="rv">No secrets, no trust required.</h2>
-    <div class="three rv">
-      <div class="c">
-        <div class="i">01</div>
-        <h3>Public data only</h3>
-        <p>Every input is something you could go and download yourself. Nothing proprietary, nothing behind an NDA, nothing you have to take on trust.</p>
-      </div>
-      <div class="c">
-        <div class="i">02</div>
-        <h3>Constants in the open</h3>
-        <p>Each tool states its assumptions and shows the arithmetic that produced every number. If you disagree with a constant, you know exactly which one to argue with.</p>
-      </div>
-      <div class="c">
-        <div class="i">03</div>
-        <h3>One decision out</h3>
-        <p>Numbers on a screen are data. Each tool ends by naming the thing that will actually stop you, because that is the part someone has to act on.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="contact">
-  <div class="wrap">
-    <div class="plate rv">
-      <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
-      <div class="plate-main">
-        <div>
-          <div class="lbl">Built by</div>
-          <div class="p-name">Adrian Mucha</div>
-          <p class="p-bio">Product designer for the software most designers avoid: operator consoles where a wrong click costs real money.</p>
-        </div>
-        <dl class="p-spec">
-          <div><dt>Focus</dt><dd>Data centers &middot; AI tooling</dd></div>
-          <div><dt>Base</dt><dd>Los Angeles, CA</dd></div>
-          <div><dt>Status</dt><dd class="on">Open to new work</dd></div>
+      <figure class="ex">
+        <figcaption>Worked example</figcaption>
+        <dl>
+          <div><dt>Power at the fence</dt><dd>30 MW</dd></div>
+          <div><dt>Overhead</dt><dd>PUE 1.2, 15% margin</dd></div>
+          <div><dt>Rack</dt><dd>GB200 NVL72, 120 kW</dd></div>
+          <div class="out ans"><dt>Racks that fit</dt><dd>177</dd></div>
+          <div><dt>Heat to reject</dt><dd>6,039 tons</dd></div>
+          <div><dt>White space</dt><dd>7,080 sq ft</dd></div>
         </dl>
+      </figure>
+      <a class="go" href="/rack-budget/">Open tool<span class="sr-only">: Rack Budget</span><span class="arr" aria-hidden="true">&rarr;</span></a>
+    </li>
+
+    <li class="tool">
+      <div class="t-text">
+        <h2 class="t-name"><svg class="glyph" aria-hidden="true"><use href="#g-crash-cart"/></svg>Crash Cart</h2>
+        <p class="t-q"><span>You cannot pull them all.</span> Which ones this week?</p>
+        <p class="t-d">Drive failure triage on thirteen years of public fleet telemetry. Not a dashboard but a work queue, ranked by risk times blast radius.</p>
+        <p class="t-src">Data: Backblaze Drive Stats, about 300,000 drives</p>
       </div>
-      <div class="plate-ft">
-        <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Get in touch</a>
-        <a class="lnk" href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">See the work &rarr;</a>
+      <figure class="ex">
+        <figcaption>Worked example</figcaption>
+        <dl>
+          <div><dt>Fleet</dt><dd>3,000 drives, 4 to 22 TB</dd></div>
+          <div><dt>Redundancy</dt><dd>Erasure-coded 17+3</dd></div>
+          <div><dt>Crew capacity</dt><dd>12 pulls a week</dd></div>
+          <div class="out ans"><dt>Pull this week</dt><dd>12 &times; Seagate 12 TB</dd></div>
+          <div><dt>Still in the queue</dt><dd>344 drives</dd></div>
+          <div><dt>Queue clears in</dt><dd>34 weeks</dd></div>
+        </dl>
+      </figure>
+      <a class="go" href="/crash-cart/">Open tool<span class="sr-only">: Crash Cart</span><span class="arr" aria-hidden="true">&rarr;</span></a>
+    </li>
+
+    <li class="tool">
+      <div class="t-text">
+        <h2 class="t-name"><svg class="glyph" aria-hidden="true"><use href="#g-power-map"/></svg>Where the power is</h2>
+        <p class="t-q"><span>The chips are the easy part.</span> Where is the power?</p>
+        <p class="t-d">Siting under a power constraint. Ten US grid regions ranked by the earliest realistic date a utility can energize your load, drawn against your deadline.</p>
+        <p class="t-src">Data: LBNL Queued Up, EPA eGRID, EIA</p>
       </div>
+      <figure class="ex">
+        <figcaption>Worked example</figcaption>
+        <dl>
+          <div><dt>New load</dt><dd>300 MW</dd></div>
+          <div><dt>Needed by</dt><dd>2030</dd></div>
+          <div><dt>Power source</dt><dd>Grid only</dd></div>
+          <div class="out ans"><dt>Earliest window</dt><dd>ERCOT, 2028&ndash;2030</dd></div>
+          <div><dt>Regions that make 2030</dt><dd>1 of 10</dd></div>
+          <div><dt>Next fastest</dt><dd>Southeast, 2029&ndash;2031</dd></div>
+        </dl>
+      </figure>
+      <a class="go" href="/where-the-power-is/">Open tool<span class="sr-only">: Where the power is</span><span class="arr" aria-hidden="true">&rarr;</span></a>
+    </li>
+
+    <li class="tool">
+      <div class="t-text">
+        <h2 class="t-name"><svg class="glyph" aria-hidden="true"><use href="#g-outage-replay"/></svg>Outage replay</h2>
+        <p class="t-q"><span>The dashboard was green.</span> How long had it been wrong?</p>
+        <p class="t-d">Six public cloud incidents replayed against the provider&rsquo;s own retrospective: what the status page said, and how long after customers started failing.</p>
+        <p class="t-src">Data: retrospectives from AWS, Azure, Google Cloud, Cloudflare and Fastly</p>
+      </div>
+      <figure class="ex">
+        <figcaption>Worked example</figcaption>
+        <dl>
+          <div><dt>Incident</dt><dd>Google Cloud, 12 June 2025</dd></div>
+          <div><dt>First customer impact</dt><dd>17:51 UTC</dd></div>
+          <div><dt>First status post</dt><dd>19:05 UTC</dd></div>
+          <div class="out ans"><dt>Status page stayed green</dt><dd>74 min</dd></div>
+          <div><dt>A 15-minute alert beats it by</dt><dd>59 min</dd></div>
+          <div><dt>Median gap, all six</dt><dd>48 min</dd></div>
+        </dl>
+      </figure>
+      <a class="go" href="/outage-replay/">Open tool<span class="sr-only">: Outage replay</span><span class="arr" aria-hidden="true">&rarr;</span></a>
+    </li>
+
+  </ol>
+</div>
+
+<section class="wrap about" id="about" aria-label="About">
+  <div>
+    <h2>How the tools are built</h2>
+    <p><b>Public data only.</b> Every input is something you could download yourself. Nothing proprietary, nothing behind an NDA, nothing you have to take on trust.</p>
+    <p><b>Every constant on the page.</b> Each tool states its assumptions and shows the arithmetic behind every number. If you disagree with a constant, you know exactly which one to argue with.</p>
+    <p><b>One decision out.</b> Each tool ends by naming the thing that will actually stop you, because that is the part someone has to act on.</p>
+  </div>
+  <div>
+    <h2>Built by Adrian Mucha</h2>
+    <p>A product designer for the software most designers avoid: data center tools, AI tooling and operator consoles where a wrong click costs real money. Based in Los Angeles and open to new work.</p>
+    <div class="acts">
+      <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Email Adrian</a>
+      <a class="lnk" href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">See the portfolio <span class="arr" aria-hidden="true">&#8599;</span></a>
     </div>
   </div>
 </section>
@@ -411,112 +285,10 @@
 
 <footer>
   <div class="wrap">
-    <div class="lbl">Infrabench</div>
-    <p>Free tools, no accounts, no tracking, no lead forms. Figures are public as of 2026 and change fast, so verify against your own engineer before spending money.
-    Built by <a href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">Adrian Mucha</a> / FruitBat Design, Los Angeles.</p>
+    <p>Figures are public as of 2026 and change fast. These are planning heuristics for the first conversation, not engineering submittals, so check them with your own engineer before spending money.</p>
+    <p class="meta"><span>Infrabench by <a href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">Adrian Mucha</a> / FruitBat Design, Los Angeles</span> <span>&middot; MIT licensed</span> <span>&middot; <a href="https://github.com/adrianomucha/infrabench" target="_blank" rel="noopener">Source on GitHub</a></span></p>
   </div>
 </footer>
 
-<script>
-/* The hero draws the thing the tools are about: the worked example itself — 30 MW at
-   PUE 1.2 with a 15 percent margin is 177 GB200 racks — rendered by the same isometric
-   code Rack Budget uses. The caption's link opens that exact configuration. */
-(function(){
-  "use strict";
-  var COS = 0.866, SIN = 0.5;
-  var n = 177, liquid = true;
-  var RW = 0.6, RD = 1.2, RH = 2.0, AISLE = 1.35;
-  var rows = Math.max(1, Math.round(Math.sqrt(n / 2.4)));
-  var perRow = Math.ceil(n / rows);
-  if(perRow > 30){ perRow = 30; rows = Math.ceil(n / perRow); }
-
-  var rowLen = [];
-  for(var rw = 0; rw < rows; rw++) rowLen.push(Math.min(perRow, n - rw*perRow));
-  var bankW = perRow * RW, bankD = rows * RD + Math.floor(rows/2) * AISLE;
-  var hallW = bankW + 3.2, hallD = bankD + 3.2;
-  var ox = (hallW - bankW)/2, oy = (hallD - bankD)/2;
-  function rowY(r){ return oy + r*RD + Math.floor(r/2)*AISLE + (r%2)*0.12; }
-
-  var S = 9, pts = [], out = [];
-  function iso(x,y,z){ return [(x-y)*COS*S, (x+y)*SIN*S - z*S]; }
-  function poly(p, fill, stroke, sw, op){
-    for(var i=0;i<p.length;i++) pts.push(p[i]);
-    return '<polygon points="' + p.map(function(q){ return q[0].toFixed(1)+','+q[1].toFixed(1); }).join(' ') +
-           '" fill="'+fill+'"' + (stroke ? ' stroke="'+stroke+'" stroke-width="'+(sw||0.7)+'" stroke-linejoin="round"' : '') +
-           (op!==undefined ? ' opacity="'+op+'"' : '') + '/>';
-  }
-  function line(a, b, stroke, sw, op){
-    return '<line x1="'+a[0].toFixed(1)+'" y1="'+a[1].toFixed(1)+'" x2="'+b[0].toFixed(1)+'" y2="'+b[1].toFixed(1)+
-           '" stroke="'+stroke+'" stroke-width="'+sw+'"'+(op!==undefined?' opacity="'+op+'"':'')+'/>';
-  }
-
-  out.push('<defs>'+
-    '<linearGradient id="gTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#63EEB4"/><stop offset="1" stop-color="#41D294"/></linearGradient>'+
-    '<linearGradient id="gFront" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1D8E69"/><stop offset="1" stop-color="#0E5B43"/></linearGradient>'+
-    '<linearGradient id="gSide" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#136B51"/><stop offset="1" stop-color="#0A3F2F"/></linearGradient>'+
-    '<linearGradient id="gCdu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0F5040"/><stop offset="1" stop-color="#07281F"/></linearGradient>'+
-    '</defs>');
-
-  out.push(poly([iso(0,0,0),iso(hallW,0,0),iso(hallW,hallD,0),iso(0,hallD,0)], "#0F1418", "#1C2126"));
-  for(var gx = 0.6; gx < hallW; gx += 0.6) out.push(line(iso(gx,0,0), iso(gx,hallD,0), "#161C21", 0.5));
-  for(var gy = 0.6; gy < hallD; gy += 0.6) out.push(line(iso(0,gy,0), iso(hallW,gy,0), "#161C21", 0.5));
-  for(var pr = 1; pr < rows - 1; pr += 2){
-    var ay = rowY(pr) + RD, aw = Math.max(rowLen[pr], rowLen[pr+1]) * RW;
-    if(ay + AISLE > hallD) break;
-    out.push(poly([iso(ox,ay,0),iso(ox+aw,ay,0),iso(ox+aw,ay+AISLE,0),iso(ox,ay+AISLE,0)], "#132831", "#1E3A44", 0.5));
-  }
-  for(var sr = 0; sr < rows; sr++){
-    var sy = rowY(sr), sw2 = rowLen[sr]*RW, dx = 0.42, dy = 0.42;
-    out.push(poly([iso(ox+dx,sy+dy,0),iso(ox+sw2+dx+0.25,sy+dy,0),iso(ox+sw2+dx+0.25,sy+RD+dy,0),iso(ox+dx,sy+RD+dy,0)],
-             "#05070A", null, 0, 0.55));
-  }
-
-  var cabs = [];
-  for(var r2 = 0; r2 < rows; r2++)
-    for(var c2 = 0; c2 < rowLen[r2]; c2++) cabs.push([c2*RW, rowY(r2), r2, c2]);
-  cabs.sort(function(a,b){ return (a[0]+a[1]) - (b[0]+b[1]); });
-
-  cabs.forEach(function(p){
-    var x = p[0]+ox, y = p[1];
-    out.push(poly([iso(x,y,RH),iso(x+RW,y,RH),iso(x+RW,y+RD,RH),iso(x,y+RD,RH)], "url(#gTop)", "#0A0C0E"));
-    out.push(poly([iso(x,y+RD,RH),iso(x+RW,y+RD,RH),iso(x+RW,y+RD,0),iso(x,y+RD,0)], "url(#gFront)", "#0A0C0E"));
-    out.push(poly([iso(x+RW,y,RH),iso(x+RW,y+RD,RH),iso(x+RW,y+RD,0),iso(x+RW,y,0)], "url(#gSide)", "#0A0C0E"));
-    if(liquid && p[3] === rowLen[p[2]] - 1){
-      var cx = x + RW + 0.08, CW = 0.7, CH = 1.72;
-      out.push(poly([iso(cx,y,CH),iso(cx+CW,y,CH),iso(cx+CW,y+RD,CH),iso(cx,y+RD,CH)], "#1A6B54", "#0A0C0E"));
-      out.push(poly([iso(cx,y+RD,CH),iso(cx+CW,y+RD,CH),iso(cx+CW,y+RD,0),iso(cx,y+RD,0)], "url(#gCdu)", "#0A0C0E"));
-      out.push(poly([iso(cx+CW,y,CH),iso(cx+CW,y+RD,CH),iso(cx+CW,y+RD,0),iso(cx+CW,y,0)], "#07281F", "#0A0C0E"));
-    }
-  });
-
-  var xs = pts.map(function(q){return q[0];}), ys = pts.map(function(q){return q[1];});
-  var minx = Math.min.apply(null,xs), maxx = Math.max.apply(null,xs);
-  var miny = Math.min.apply(null,ys), maxy = Math.max.apply(null,ys), pad = 8;
-  var svg = document.getElementById("hall");
-  svg.setAttribute("viewBox", (minx-pad)+" "+(miny-pad)+" "+(maxx-minx+2*pad)+" "+(maxy-miny+2*pad));
-  svg.innerHTML = out.join("");
-})();
-
-/* Scroll reveals. Content is visible by default; motion is opted into only when
-   the browser is happy to move things. */
-(function(){
-  "use strict";
-  if(!("IntersectionObserver" in window)) return;
-  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  var els = document.querySelectorAll(".rv");
-  var io = new IntersectionObserver(function(es){
-    es.forEach(function(en){
-      if(en.isIntersecting){ en.target.classList.add("rvIn"); io.unobserve(en.target); }
-    });
-  }, { rootMargin: "0px 0px -70px 0px" });
-  els.forEach(function(e){
-    // anything already on screen never blinks out
-    var r = e.getBoundingClientRect();
-    if(r.top < window.innerHeight && r.bottom > 0) return;
-    e.classList.add("rv0");
-    io.observe(e);
-  });
-})();
-</script>
 </body>
 </html>

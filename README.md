@@ -20,7 +20,7 @@ five years, an interconnection queue is rated in gigawatts. None of those surviv
 contact with a real site.
 
 Infrabench is a small set of free tools that do the correction, on public data,
-with every constant shown on the page. No accounts, no tracking, no lead forms.
+with every constant shown on the page. No accounts, no lead forms.
 
 ![Rack Budget](.github/assets/rack-budget.png)
 
