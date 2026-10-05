@@ -15,7 +15,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://www.googletagmanager.com">
 <script src="/assets/analytics.js"></script>
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
@@ -28,773 +28,538 @@
   gtag('config', 'G-B4K7J0G5X6');
 </script>
 <style>
+  /* Crash Cart on the suite's home-page system: the same tokens, type scale and column
+     rules as /index.html. The tool leads; explanation follows it. Mono is for numbers
+     and the wordmark. Green is the brand and focus; the four band colours are status
+     (pull, schedule, watch, hold) and always travel with their name in words. */
   :root{
     color-scheme:dark;
-    /* --- suite chrome, shared with the rest of Infrabench --- */
     --bg:#0A0C0E;          /* page surface */
     --bg2:#0E1114;         /* raised, one step */
     --line:#1C2126;        /* hairline */
     --line2:#2A3037;       /* stronger rule */
     --tx:#EEF1F3;          /* primary text */
-    --tx2:#A8B0B8;         /* secondary text */
-    --tx2b:#C7CDD4;        /* dense mono passages: one step brighter to stay readable */
-    --tx3:#7B838D;         /* labels only */
-    --grn:#3FE0A0;         /* signal green: data and live things only */
-    --grn2:#2FBF86;
-    /* --- risk ramp, ordinal, least to most urgent ---
-       Four bands searched rather than picked: monotone OKLab lightness across the three
-       warm steps, and every pair separated by at least deltaE 12 under normal vision and
-       all three dichromacies. The band colour is never asked to carry text: hue drives
-       fills, bars and row rules only and every band is also spelled out in words. */
-    --r-hold:#3FE0A0;      /* no action */
-    --r-watch:#FFEA6B;     /* watch */
-    --r-sched:#FF9802;     /* schedule */
-    --r-pull:#FF5B5B;      /* pull this week */
-    --w-hold:#0E1F1B;      /* row washes: the band at 10 percent over the surface */
-    --w-watch:#1F2015;
-    --w-sched:#20180D;
-    --w-pull:#201113;
+    --tx2:#C4CDD5;         /* secondary text, APCA Lc 75 */
+    --tx3:#AAB3BD;         /* fine print, APCA Lc 60 */
+    --grn:#3FE0A0;         /* the brand glyph and focus */
+    /* Status bands, least to most urgent. The three warm steps were searched for colour
+       vision separation (validator: worst all-pairs dE 10.3 under deutan, 15.3 normal) and
+       hold is a recessive neutral, since most of any fleet is on hold and should read as
+       context. Fills only; never text. */
+    --r-pull:#FF5B5B;
+    --r-sched:#FF9802;
+    --r-watch:#FFEA6B;
+    --r-hold:#2C333B;
+    --r-week:#EEF1F3;      /* drives the crew pulls this week */
+    --action-bg:#EEF1F3; --action-bg-hover:#FFFFFF; --action-fg:#0A0C0E;
+    --control-border:#2A3037; --control-border-hover:#7B838D;
+    --link-underline:rgba(168,176,184,.45);
+    --fs-caption:13px; --fs-small:14px; --fs-ui:15px; --fs-body:16px; --fs-lead:18px;
+    --fs-sub:20px; --fs-heading:22px; --fs-title:28px; --fs-display:clamp(30px,3.1vw,44px);
+    --col-gap:80px;
     --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
     --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
+  @media(max-width:700px){:root{--fs-lead:17px;--fs-display:clamp(28px,8vw,34px)}}
+  @media(min-width:1680px){:root{--fs-caption:14px;--fs-small:15px;--fs-ui:16px;--fs-body:17px;--fs-lead:20px;
+    --fs-sub:23px;--fs-heading:26px;--fs-title:34px;--fs-display:52px;--col-gap:112px}}
+  @media(min-width:2200px){:root{--fs-small:16px;--fs-body:18px;--fs-lead:21px;--fs-sub:24px;--fs-title:36px;--fs-display:56px;--col-gap:136px}}
+
   *{box-sizing:border-box}
+  [hidden]{display:none !important}
   html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
-  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:16px;line-height:1.65;
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:var(--fs-body);line-height:1.6;
     -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
   .wrap{max-width:1260px;margin:0 auto;padding:0 32px}
   @media(max-width:640px){.wrap{padding:0 20px}}
-  a{color:var(--tx);text-decoration:none}
-
-  /* micro-label: the only place uppercase mono is allowed */
-  .lbl{font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
-
-  /* first focusable element: lets keyboard and screen-reader users bypass the sticky header */
-  .skip{position:absolute;inset-inline-start:-9999px;top:0;z-index:60;font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:12px 18px;background:var(--tx);color:var(--bg);font-weight:600}
-  .skip:focus{inset-inline-start:0}
-  main{display:block;scroll-margin-top:64px}
+  @media(min-width:1680px){.wrap{max-width:1520px}}
+  @media(min-width:2200px){.wrap{max-width:1720px}}
+  a{color:inherit}
   :focus-visible{outline:2px solid var(--grn);outline-offset:3px}
-  /* announced to assistive tech only: the result summary and the copy confirmation */
-  .sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+  .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  .skip{position:absolute;inset-inline-start:-9999px;top:0;z-index:20;padding:12px 18px;background:var(--action-bg);color:var(--action-fg);font-weight:600;font-size:var(--fs-ui)}
+  .skip:focus{inset-inline-start:0}
+  .glyph{color:var(--grn);flex:none;display:block}
+  h2{font-size:var(--fs-heading);font-weight:500;letter-spacing:-.02em;line-height:1.2;margin:0}
+  h3{font-size:var(--fs-ui);font-weight:500;line-height:1.3;margin:0}
 
   /* ---------- header ---------- */
-  header{position:sticky;top:0;z-index:40;background:rgba(10,12,14,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-  .bar{display:flex;align-items:center;justify-content:space-between;gap:16px;height:60px}
-  .mark{display:flex;align-items:center;gap:11px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx)}
-  .mark .suite{display:flex;align-items:center;gap:11px;color:var(--tx3);position:relative}
-  .mark .suite::after{content:"";position:absolute;inset:-16px -8px}
-  .mark .suite:hover{color:var(--tx)}
-  .mark .sep{color:var(--line2)}
-  .mark .tool{color:var(--tx)}
-  .sq{width:9px;height:9px;background:var(--grn);flex:none}
-  nav{display:flex;gap:28px}
-  nav a{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);position:relative;display:inline-block}
-  nav a::after{content:"";position:absolute;inset:-16px -10px}
-  nav a:hover{color:var(--tx)}
-  @media(max-width:860px){nav{display:none}}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:76px}
+  .crumb{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand{display:inline-flex;align-items:center;gap:11px;text-decoration:none;
+    font-family:var(--mono);font-size:var(--fs-caption);font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+  .brand .glyph{width:20px;height:20px}
+  .crumb .sep{color:var(--line2)}
+  .crumb .here{font-size:var(--fs-ui);color:var(--tx2);white-space:nowrap}
+  .top nav{display:flex;gap:28px}
+  .top nav a{font-size:var(--fs-ui);color:var(--tx2);text-decoration:none;padding:12px 0;white-space:nowrap}
+  .top nav a:hover{color:var(--tx)}
+  @media(max-width:560px){.top nav{display:none}}
 
-  /* ---------- shared type ---------- */
-  /* ---- shared hero type, identical in index, rack-budget and crash-cart ----
-     One scale across the suite. 84px is the largest that still holds every one of the three
-     headlines to two lines; at 100px the two longer tool headlines ran to three and the home
-     page stopped matching them. h1 .setup carries the two-tone on the headlines built as a
-     setup and a question — the question keeps full brightness, the setup steps back. */
-  h1{font-weight:500;font-size:clamp(40px,5.6vw,84px);line-height:1;letter-spacing:-.04em;margin:24px 0 0;max-width:25ch;text-wrap:balance;color:var(--tx)}
-  h1 .setup{color:var(--tx2)}
-  .lede{font-size:17px;color:var(--tx2);max-width:60ch;margin:0;text-wrap:pretty}
-  .hero-body{margin:38px 0 0}
-  @media(max-width:700px){.hero-body{margin-top:30px}}
-  /* ---- end shared hero type ---- */
-  h2{font-weight:500;font-size:clamp(26px,3vw,40px);line-height:1.1;letter-spacing:-.03em;margin:18px 0 18px;max-width:28ch;text-wrap:balance}
-  h3{font-weight:600;font-size:17px;letter-spacing:-.015em;margin:0 0 8px}
-  .lede a{color:var(--tx);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:4px}
-  .lede a:hover{color:var(--grn);text-decoration-color:var(--grn)}
-  @keyframes drop{from{opacity:0;transform:translateY(-5px)}}
-  /* motion is opt-in: under reduced motion the reveals, toast and the profile list are
-     instant. The chevron still flips, it just does not travel there. */
+  /* ---------- intro: short, so the tool is on the first screen ---------- */
+  .intro{padding-block:40px 44px}
+  .intro h1{display:flex;flex-wrap:wrap;gap:0 .3em;font-size:var(--fs-display);font-weight:500;line-height:1.08;letter-spacing:-.03em;margin:0;text-wrap:balance}
+  .intro h1 span{color:var(--tx2)}
+  .intro .lede{font-size:var(--fs-lead);color:var(--tx2);max-width:60ch;margin:16px 0 0;text-wrap:pretty}
+  .intro .src{font-size:var(--fs-caption);color:var(--tx3);margin:12px 0 0}
+
+  /* ---------- the console: controls on the left, the answer on the right ---------- */
+  .console{display:grid;grid-template-columns:minmax(290px,4fr) minmax(0,8fr);column-gap:var(--col-gap);
+    padding-block:8px 104px;border-top:1px solid var(--line)}
+  @media(max-width:960px){.console{grid-template-columns:minmax(0,1fr);row-gap:40px;padding-bottom:72px}}
+
+  /* controls stay in reach while the results scroll beside them */
+  .ctl{align-self:start;position:sticky;top:0;max-height:100vh;overflow-y:auto;scrollbar-width:thin;padding-block:32px 8px;padding-inline-end:6px}
+  @media(max-width:960px){.ctl{position:static;max-height:none;overflow:visible}}
+  .grp{border:0;margin:0 0 30px;padding:0;min-width:0}
+  .grp > legend,.grp-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;width:100%;
+    padding:0;margin:0 0 12px;font-size:var(--fs-ui);font-weight:500;color:var(--tx)}
+  .grp-h label{cursor:pointer}
+  .grp output,.grp-h .val{font-size:var(--fs-ui);font-weight:500;color:var(--tx);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .hint{font-size:var(--fs-small);line-height:1.5;color:var(--tx2);margin:10px 0 0;text-wrap:pretty}
+
+  /* chips: native radios, so arrows move the choice and the group reads as one control */
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{position:relative;display:inline-flex}
+  .chip input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+  .chip span{display:inline-block;padding:7px 12px;border:1px solid var(--control-border);font-size:var(--fs-small);line-height:1.4;
+    color:var(--tx2);white-space:nowrap;cursor:pointer}
+  .chip input:hover + span{border-color:var(--control-border-hover);color:var(--tx)}
+  .chip input:checked + span{border-color:var(--tx);color:var(--tx);background:var(--bg2)}
+  .chip input:focus-visible + span{outline:2px solid var(--grn);outline-offset:2px}
+
+  /* sliders: a hairline track that fills to the value, and a white thumb */
+  input[type=range]{-webkit-appearance:none;appearance:none;display:block;width:100%;height:28px;margin:0;background:transparent;cursor:pointer;
+    --fill:50%}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:linear-gradient(to right,var(--tx2) var(--fill),var(--line2) var(--fill))}
+  input[type=range]::-moz-range-track{height:2px;background:var(--line2)}
+  input[type=range]::-moz-range-progress{height:2px;background:var(--tx2)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-8px;border-radius:50%;background:var(--tx);border:3px solid var(--bg)}
+  input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--tx);border:3px solid var(--bg)}
+  input[type=range]:focus-visible{outline:none}
+  input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 2px var(--grn)}
+  input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 2px var(--grn)}
+  .scale{display:flex;justify-content:space-between;font-size:var(--fs-caption);color:var(--tx3);margin-top:2px;font-variant-numeric:tabular-nums}
+
+  details.more{margin-top:4px;border-top:1px solid var(--line)}
+  details.more > summary{cursor:pointer;list-style:none;padding:14px 0;font-size:var(--fs-ui);font-weight:500;color:var(--tx2)}
+  details.more > summary::-webkit-details-marker{display:none}
+  details.more > summary::before{content:"+";display:inline-block;width:1.1em;color:var(--tx3);font-family:var(--mono)}
+  details.more[open] > summary::before{content:"\2212"}
+  details.more > summary:hover{color:var(--tx)}
+  details.more .grp{margin-top:8px}
+
+  /* ---------- results ---------- */
+  .res{min-width:0;padding-top:32px}
+  .hl{font-size:clamp(32px,3.4vw,48px);font-weight:500;letter-spacing:-.03em;line-height:1.05;margin:0}
+  .hl .n{color:var(--grn)}
+  .hl-sub{font-size:var(--fs-lead);color:var(--tx);margin:16px 0 0;max-width:60ch;text-wrap:pretty}
+  .means{font-size:var(--fs-body);color:var(--tx2);margin:10px 0 0;max-width:62ch;text-wrap:pretty}
+
+  /* the four numbers that move with every change, each with what it was before */
+  .kpis{display:flex;flex-wrap:wrap;justify-content:space-between;gap:18px 32px;margin:28px 0 0;padding:20px 0 0;border-top:1px solid var(--line)}
+  .kpi{margin:0;min-width:0;flex:0 1 auto}
+  .kpi dd{margin:0}
+  /* phone: two by two, with the odds, the longest figure, across the full width */
+  @media(max-width:620px){.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+    .kpi:last-child{grid-column:1 / -1} .kpi .v{white-space:normal}}
+  .kpi dt{font-size:var(--fs-small);color:var(--tx2);line-height:1.35}
+  .kpi .v{display:block;margin-top:6px;font-size:var(--fs-title);font-weight:500;letter-spacing:-.02em;line-height:1.1;white-space:nowrap}
+  .kpi .v small{font-size:var(--fs-ui);font-weight:400;color:var(--tx2);letter-spacing:0;margin-inline-start:.3em}
+  .kpi .was{display:block;min-height:1.5em;margin-top:4px;font-size:var(--fs-caption);color:var(--tx3)}
+
+  /* try: one press each, so the first thing to do with the tool is obvious */
+  .try{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:28px 0 0}
+  .try > span{font-size:var(--fs-small);color:var(--tx3);margin-inline-end:4px}
+  .try button{font:inherit;font-size:var(--fs-small);color:var(--tx);background:none;border:1px solid var(--control-border);padding:7px 12px;cursor:pointer;white-space:nowrap}
+  .try button:hover{border-color:var(--control-border-hover)}
+  .try button:disabled{color:var(--tx3);cursor:default;border-color:var(--line)}
+
+  /* ---------- the wall: one square per drive, most urgent first ---------- */
+  .wall{margin:32px 0 0}
+  .wall-hd{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px 24px;margin-bottom:14px}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin:0;padding:0;list-style:none;font-size:var(--fs-small);color:var(--tx2)}
+  .legend li{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+  .legend b{font-weight:500;color:var(--tx);font-variant-numeric:tabular-nums}
+  .sw{width:10px;height:10px;flex:none;border-radius:1px}
+  .sw.week{background:var(--r-week)} .sw.pull{background:var(--r-pull)} .sw.sched{background:var(--r-sched)}
+  .sw.watch{background:var(--r-watch)} .sw.hold{background:var(--r-hold)}
+  .wall-sub{font-size:var(--fs-small);color:var(--tx2);margin:-4px 0 14px;max-width:72ch;text-wrap:pretty}
+  .wall-box{position:relative}
+  #wall{display:block;width:100%;touch-action:pan-y}
+  .wall-note{font-size:var(--fs-caption);color:var(--tx3);margin:12px 0 0}
+  .tip{position:absolute;z-index:5;pointer-events:none;min-width:200px;max-width:280px;padding:10px 12px;background:#14181C;border:1px solid var(--line2);
+    font-size:var(--fs-small);line-height:1.45;color:var(--tx2);box-shadow:0 8px 24px rgba(0,0,0,.45)}
+  .tip b{display:block;color:var(--tx);font-weight:500}
+  .tip .k{display:flex;align-items:center;gap:7px;margin-top:6px;color:var(--tx)}
+
+  /* ---------- the pull list ---------- */
+  .list{margin:44px 0 0}
+  .list-hd{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 24px;margin-bottom:10px}
+  .list-hd p{margin:0;font-size:var(--fs-small);color:var(--tx3)}
+  table.pl{width:100%;border-collapse:collapse;font-size:var(--fs-ui)}
+  .pl th{font-size:var(--fs-caption);font-weight:400;color:var(--tx3);text-align:start;padding:8px 10px 10px 0;border-bottom:1px solid var(--line2)}
+  .pl th.num,.pl td.num{text-align:end;padding-inline-end:20px}
+  .pl td{padding:12px 10px 12px 0;border-bottom:1px solid var(--line);vertical-align:top}
+  .pl td.rk{width:2.2em;color:var(--tx3);font-variant-numeric:tabular-nums}
+  .pl td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pl .who{min-width:0}
+  .pl .exp{display:block;width:100%;padding:0;margin:0;background:none;border:0;font:inherit;color:inherit;text-align:start;cursor:pointer}
+  .pl .exp .nm{display:block;color:var(--tx)}
+  .pl .exp .nm::after{content:"+";font-family:var(--mono);color:var(--tx3);margin-inline-start:.5em}
+  .pl .exp[aria-expanded="true"] .nm::after{content:"\2212"}
+  .pl .exp:hover .nm{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
+  .pl .sub{display:block;font-size:var(--fs-small);color:var(--tx2);margin-top:2px}
+  .pl .when{white-space:nowrap}
+  .pl .when .bd{display:flex;align-items:center;gap:7px;font-size:var(--fs-small);color:var(--tx2);margin-top:2px}
+  .pl tr.qr.past td{color:var(--tx2)}
+  .pl tr.qr.lit td{background:var(--bg2)}
+  .pl tr.qd td{padding:4px 0 20px 0;border-bottom:1px solid var(--line)}
+  .pl tr.hold td{color:var(--tx3);font-size:var(--fs-small)}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none}
+  .dot.pull{background:var(--r-pull)} .dot.sched{background:var(--r-sched)} .dot.watch{background:var(--r-watch)} .dot.hold{background:var(--r-hold)}
+  @media(max-width:640px){
+    .pl thead{display:none}
+    /* the rank hangs in the margin, so every wrapped line of the row starts under the name */
+    .pl tr.qr{position:relative;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:14px;row-gap:4px;
+      padding:14px 0 14px calc(1.6em + 10px);border-bottom:1px solid var(--line)}
+    .pl tr.qr td{border:0;padding:0;font-size:var(--fs-small)}
+    .pl td.rk{position:absolute;inset-inline-start:0;top:14px;font-size:var(--fs-ui)} .pl td.who{flex:1 1 100%;font-size:var(--fs-ui)}
+    .pl td.num{padding:0;text-align:start}
+    .pl td.num.rate::after{content:" a year";color:var(--tx3)}
+    .pl td.num.risk::after{content:" at risk";color:var(--tx3)}
+    .pl td.when,.pl td.when .bd{display:inline-flex;align-items:center;gap:7px;margin:0}
+    .pl tr.qd{display:block} .pl tr.qd td{display:block;padding:0 0 18px calc(1.6em + 10px)}
+    .pl tr.hold{display:block;padding:14px 0} .pl tr.hold td{display:inline;border:0;padding:0}
+  }
+
+  /* the arithmetic behind a row, one step per line */
+  .chain{margin:0;padding:0;list-style:none;font-size:var(--fs-small);line-height:1.55;color:var(--tx2)}
+  .chain li{display:grid;grid-template-columns:1.6em minmax(0,1fr);padding:3px 0}
+  .chain li::before{content:"\2192";color:var(--tx3);font-family:var(--mono)}
+  .chain li:first-child::before{content:""}
+  .chain b{color:var(--tx);font-weight:500;font-variant-numeric:tabular-nums}
+  .qd .note{margin:10px 0 0 1.6em;color:var(--tx3);font-size:var(--fs-small);max-width:60ch;text-wrap:pretty}
+
+  .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+  .btn{display:inline-flex;align-items:center;padding:12px 20px;background:var(--action-bg);color:var(--action-fg);
+    font:inherit;font-size:var(--fs-ui);font-weight:500;text-decoration:none;border:1px solid var(--action-bg);cursor:pointer}
+  .btn:hover{background:var(--action-bg-hover);border-color:var(--action-bg-hover)}
+  .btn.ghost{background:none;color:var(--tx);border-color:var(--control-border)}
+  .btn.ghost:hover{border-color:var(--control-border-hover)}
+
+  /* ---------- sections below the tool ---------- */
+  .sec{padding-block:96px;border-top:1px solid var(--line)}
+  @media(max-width:700px){.sec{padding-block:64px}}
+  .sec-hd{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);column-gap:var(--col-gap);row-gap:12px;align-items:baseline;margin-bottom:40px}
+  .sec-hd p{margin:0;color:var(--tx2);max-width:54ch;text-wrap:pretty}
+  @media(max-width:900px){.sec-hd{grid-template-columns:minmax(0,1fr)}}
+  .two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);column-gap:var(--col-gap);row-gap:48px}
+  @media(max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
+  .steps{margin:0;padding:0;list-style:none;counter-reset:s}
+  .steps li{counter-increment:s;display:grid;grid-template-columns:2em minmax(0,1fr);padding:0 0 22px}
+  .steps li::before{content:counter(s);font-family:var(--mono);color:var(--tx3);font-size:var(--fs-small);padding-top:2px}
+  .steps h3{font-size:var(--fs-body);margin-bottom:4px}
+  .steps p{margin:0;color:var(--tx2);font-size:var(--fs-body);text-wrap:pretty}
+  .ex{margin:0;align-self:start;background:var(--bg2);border:1px solid var(--line);padding:22px 26px 22px}
+  .ex figcaption{font-size:var(--fs-caption);color:var(--tx3);margin:0 0 12px}
+  .ex .q{font-size:var(--fs-body);color:var(--tx);margin:0 0 12px}
+  .curve{margin-top:56px}
+  .curve-hd{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 24px;margin-bottom:12px}
+  .curve-hd p{margin:0;color:var(--tx2);font-size:var(--fs-small);max-width:64ch}
+  .curve-box{position:relative}
+  #curve{display:block;width:100%;height:auto;overflow:visible}
+  .ctip{position:absolute;z-index:5;pointer-events:none;padding:8px 10px;background:#14181C;border:1px solid var(--line2);font-size:var(--fs-small);line-height:1.4;color:var(--tx2);white-space:nowrap}
+  .ctip b{display:block;color:var(--tx);font-weight:500}
+
+  /* drive data */
+  .tscroll{overflow-x:auto}
+  table.ref{width:100%;border-collapse:collapse;font-size:var(--fs-small);min-width:720px}
+  .ref th{font-weight:400;color:var(--tx3);text-align:start;padding:8px 16px 10px 0;border-bottom:1px solid var(--line2);font-size:var(--fs-caption)}
+  .ref td,.ref tbody th{padding:12px 16px 12px 0;border-bottom:1px solid var(--line);vertical-align:top;text-align:start;font-weight:400;color:var(--tx2)}
+  .ref tbody th{color:var(--tx)}
+  .ref .m{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .ref .ci{display:block;color:var(--tx3);font-size:var(--fs-caption)}
+  .ref td:last-child{max-width:40ch;text-wrap:pretty}
+
+  /* method */
+  dl.eq{margin:0}
+  dl.eq div{display:grid;grid-template-columns:minmax(0,11em) minmax(0,1fr);gap:4px 24px;padding:12px 0;border-bottom:1px solid var(--line)}
+  dl.eq div:first-child{border-top:1px solid var(--line)}
+  dl.eq dt{color:var(--tx);font-size:var(--fs-small)}
+  dl.eq dd{margin:0;color:var(--tx2);font-size:var(--fs-small);font-family:var(--mono);line-height:1.6}
+  dl.eq dd i{font-family:var(--sans);font-style:normal;color:var(--tx3)}
+  @media(max-width:560px){dl.eq div{grid-template-columns:minmax(0,1fr)}}
+  .calls p{margin:0 0 16px;color:var(--tx2);text-wrap:pretty}
+  .calls p b{color:var(--tx);font-weight:500}
+
+  /* about and footer, as on the home page */
+  .about .two p{color:var(--tx2);margin:12px 0 0;max-width:54ch;text-wrap:pretty}
+  .acts{display:flex;flex-wrap:wrap;align-items:center;gap:12px 28px;margin-top:24px}
+  .lnk{font-size:var(--fs-ui);font-weight:500;color:var(--tx);text-decoration:none;padding:12px 0}
+  .lnk:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
+  footer{padding:0 0 56px;font-size:var(--fs-small);color:var(--tx3)}
+  footer .wrap::before{content:"";display:block;border-top:1px solid var(--line);margin-bottom:36px}
+  footer p{margin:0;max-width:72ch;text-wrap:pretty}
+  footer .fine{color:var(--tx2)}
+  footer .meta{margin-top:14px}
+  footer a{color:var(--tx2);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em;text-decoration-color:var(--link-underline)}
+  footer a:hover{color:var(--tx);text-decoration-color:currentColor}
+
+  /* phone: when the answer scrolls away under the controls, a one-line copy rides along */
+  .mini{position:fixed;inset-inline:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:15;display:none;align-items:center;justify-content:space-between;gap:12px;
+    padding:12px 16px;background:#14181C;border:1px solid var(--line2);box-shadow:0 10px 30px rgba(0,0,0,.5);font-size:var(--fs-small);color:var(--tx2)}
+  .mini b{color:var(--tx);font-weight:500;font-size:var(--fs-ui)}
+  .mini.on{display:flex}
+  @media(min-width:961px){.mini.on{display:none}}
+
+  .toast{position:fixed;bottom:24px;inset-inline-start:50%;transform:translate(-50%,8px);z-index:30;padding:10px 16px;background:var(--action-bg);color:var(--action-fg);
+    font-size:var(--fs-small);font-weight:500;opacity:0;pointer-events:none}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
   @media (prefers-reduced-motion: no-preference){
     html{scroll-behavior:smooth}
-    .toast{transition:opacity .22s ease, transform .22s ease}
-    .caret{transition:transform .18s ease, color .18s ease}
-    .sel-list{animation:drop .14s ease-out}
-    .btn{transition:background .15s ease,border-color .15s ease,color .15s ease}
-    .rise{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
-    .rise.d1{animation-delay:.06s}.rise.d2{animation-delay:.12s}
-    @keyframes rise{from{opacity:0;transform:translateY(14px)}}
-  }
-  section{padding:96px 0;border-top:1px solid var(--line);scroll-margin-top:64px}
-  @media(max-width:700px){section{padding:64px 0}}
-
-  /* ---------- hero ---------- */
-  .hero{padding:88px 0 64px}
-  @media(max-width:700px){.hero{padding:56px 0 44px}}
-  /* provenance as one quiet line, the way the console captions its fleet: it reads as a
-     credit under the prose it belongs to, which a free-standing table of three rows did not */
-  .hero-meta{font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--tx3);margin:22px 0 0;line-height:1.7}
-
-  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;
-    display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:15px 24px;
-    background:var(--tx);color:var(--bg);border:1px solid var(--tx);cursor:pointer}
-  .btn:hover{background:#fff;border-color:#fff}
-  .btn.ghost{background:transparent;color:var(--tx);border-color:var(--line2)}
-  .btn.ghost:hover{border-color:var(--grn);color:var(--grn)}
-  .btn:active{transform:translateY(1px)}
-
-  /* ---------- console: the briefing ----------
-     Not a form. You describe the fleet in one editable sentence, the way you would say it
-     out loud, and the tool answers in a sentence of its own, followed by the work order.
-     The editable values are the only green in the prose, underlined so they read as
-     controls; everything around them is plain text. */
-  .console-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:12px 72px;align-items:stretch;margin-top:6px}
-  @media(max-width:980px){.console-grid{grid-template-columns:1fr;gap:0}}
-  /* 26px is a display size, so it takes display leading: 1.55 keeps the sentence reading as
-     one sentence while still clearing the control underlines. The gap between the two
-     sentences has to beat that leading, or the four lines read as one undifferentiated block. */
-  .config{font-size:clamp(20px,2.4vw,26px);line-height:1.55;color:var(--tx2);margin:8px 0 0;text-wrap:balance;letter-spacing:-.012em}
-  .config + .config{margin-top:.62em}
-  /* Both controls are the same typeface at the same size, so giving them the same
-     line-height and padding puts their rules at the same depth below the shared baseline. */
-  .iv-num{font-family:var(--mono);font-size:.92em;font-weight:500;color:var(--grn);background:transparent;line-height:1.15;
-    border:0;border-bottom:1px solid var(--line2);padding:0 1px 3px;text-align:center;font-variant-numeric:tabular-nums}
-  .iv-num:hover{border-bottom-color:var(--tx3)}
-  .iv-num:focus{outline:0;border-bottom-color:var(--grn)}
-  input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-  .iv-num{-moz-appearance:textfield;appearance:textfield}
-  .config-note{font-size:15px;color:var(--tx2);margin:26px 0 0;max-width:60ch;text-wrap:pretty}
-  /* mono is already wide; .08em on top of that pushed the strip past its own column */
-  .config-meta{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--tx3);margin:14px 0 0;line-height:1.6}
-  /* a value never parts from its unit at a line break */
-  .nb{white-space:nowrap}
-
-  /* ---------- assumptions ----------
-     Two constants, each read the way the stat cells below the queue read: the term, the
-     figure, then where the figure came from. Two halves split by a hairline, so the panel
-     fills its width instead of stranding the provenance in a column of its own. Green
-     stays on the editable value, the rule the console sentence already follows. */
-  details.more.assump>.d-body{padding:0}
-  .aledger{display:grid;grid-template-columns:repeat(2,1fr);background:var(--bg2);border-top:1px solid var(--line)}
-  /* 37px is where the summary's own text starts, past the +/- marker and its gap, so the
-     panel keeps one left edge from the disclosure down through the cells */
-  .acell{display:flex;flex-direction:column;padding:28px 37px 30px}
-  .acell + .acell{border-inline-start:1px solid var(--line)}
-  /* a real label: the term names the input and is its click target */
-  .aterm{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--tx3);cursor:pointer;margin-bottom:15px}
-  .aterm:hover{color:var(--tx2)}
-  .aval{display:flex;align-items:baseline;gap:9px;white-space:nowrap}
-  /* centred inside its own width, the figure would hang off the term's left edge: in a
-     stacked cell it reads from the start, so term, figure and note share one margin */
-  .aval .iv-num{font-size:26px;text-align:start;padding:0 1px 5px 0}
-  .aval .u{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--tx3)}
-  /* the note sits on the cell's floor: when one provenance line runs longer than the
-     other, the slack opens above the notes rather than below one of them */
-  .anote{margin:auto 0 0;padding-top:20px;font-size:14px;line-height:1.7;color:var(--tx2);max-width:60ch;text-wrap:pretty}
-  @media(max-width:760px){
-    .aledger{grid-template-columns:1fr}
-    .acell{padding:22px 18px 24px}
-    .acell + .acell{border-inline-start:0;border-top:1px solid var(--line)}
-    .anote{max-width:none}
+    .toast{transition:opacity .2s ease,transform .2s ease}
+    .kpi .was{transition:opacity .3s ease}
   }
 
-  /* ---------- profile and scheme pickers ----------
-     The ARIA select-only combobox pattern, worn inline as a word in the sentence. */
-  /* baseline, not bottom: aligning to the bottom of a display-leading line box dropped the
-     picker's rule well below the rule under the neighbouring number on the same line */
-  .sel{position:relative;display:inline-block;max-width:100%;vertical-align:baseline}
-  .sel-btn{display:inline-flex;align-items:baseline;gap:7px;font-family:var(--mono);font-size:.92em;font-weight:500;line-height:1.15;
-    color:var(--grn);background:transparent;border:0;border-bottom:1px solid var(--line2);padding:0 1px 3px;cursor:pointer;white-space:nowrap;max-width:100%}
-  .sel-btn:hover{border-bottom-color:var(--tx3)}
-  .sel-btn[aria-expanded="true"]{border-bottom-color:var(--grn)}
-  .sel-btn:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
-  .sel-btn .nm{min-width:0;overflow:hidden;text-overflow:ellipsis}
-  .caret{flex:none;width:.4em;height:.4em;color:var(--tx3);align-self:center}
-  .sel-btn:hover .caret{color:var(--grn)}
-  .sel-btn[aria-expanded="true"] .caret{color:var(--grn);transform:rotate(180deg)}
-  .sel-list{position:absolute;z-index:50;inset-inline-start:0;top:calc(100% + 7px);margin:0;padding:5px 0;list-style:none;
-    min-width:min(300px,86vw);background:var(--bg2);border:1px solid var(--line2);box-shadow:0 22px 48px rgba(0,0,0,.62);
-    max-height:min(54vh,340px);overflow-y:auto;overscroll-behavior:contain;font-size:14px;font-weight:400}
-  .sel-list[hidden]{display:none}
-  .sel-opt{display:flex;align-items:center;gap:12px;padding:11px 14px;font-family:var(--mono);font-size:14px;color:var(--tx2);cursor:pointer;white-space:nowrap}
-  @media(max-width:640px){.sel-opt{padding:14px;font-size:15px}}
-  .sel-opt .mk{width:6px;height:6px;flex:none}
-  .sel-opt .nm{flex:1}
-  .sel-opt .kw{font-variant-numeric:tabular-nums;font-size:12px}
-  .sel-opt[aria-selected="true"],.sel-opt.act{color:var(--tx)}
-  .sel-opt[aria-selected="true"] .mk{background:var(--grn)}
-  /* one highlight for pointer and keyboard alike: the row Enter would take */
-  .sel-opt.act{background:rgba(63,224,160,.07);box-shadow:inset 2px 0 0 var(--grn2)}
-  /* declared after the outline:0 above so the keyboard ring actually wins the cascade */
-  .iv-num:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
-
-  /* ---------- the answer ----------
-     The reply comes back in the same register the question was asked in: one sentence,
-     with the figure carrying the sentence's only colour, on a framed plate with the
-     suite's registration ticks. */
-  .headline-out{position:relative;display:flex;flex-direction:column;border:1px solid var(--line);background:var(--bg2);
-    padding:28px 30px 26px;margin:10px 0 0}
-  @media(max-width:980px){.headline-out{margin-top:36px}}
-  .tick{position:absolute;width:9px;height:9px;border:0 solid var(--line2)}
-  .tick.tl{top:-1px;left:-1px;border-top-width:1px;border-left-width:1px}
-  .tick.tr{top:-1px;right:-1px;border-top-width:1px;border-right-width:1px}
-  .tick.bl{bottom:-1px;left:-1px;border-bottom-width:1px;border-left-width:1px}
-  .tick.br{bottom:-1px;right:-1px;border-bottom-width:1px;border-right-width:1px}
-  .headline-out .lbl{margin-bottom:14px}
-  .headline-out .lbl::before{content:"";display:inline-block;width:6px;height:6px;background:var(--grn);margin-right:10px;vertical-align:1px}
-  .big{font-weight:500;font-size:clamp(24px,2.6vw,34px);line-height:1.25;letter-spacing:-.025em;color:var(--tx);font-variant-numeric:tabular-nums;text-wrap:balance}
-  /* Geist Mono's caps run ~4.5% taller than Archivo's at a shared size, so the mono figure
-     read a size up from the sentence carrying it. .95em lands the two cap heights together. */
-  .big .a{color:var(--grn2);margin-inline-end:4px;font-family:var(--mono);font-weight:400;font-size:.95em}
-  .big .v{color:var(--grn);font-family:var(--mono);font-size:.95em}
-  .headline-out .note{font-size:15px;color:var(--tx2);margin:14px 0 20px}
-
-  /* ---------- the band bar ----------
-     The fleet as one stacked bar under the answer, worst band first. Decorative, so it
-     is hidden from assistive tech and the caption below carries the counts as text. */
-  .bar-wrap{margin-top:auto;padding-top:18px;border-top:1px solid var(--line)}
-  .bandbar{display:flex;height:8px;background:var(--line);gap:2px}
-  .bandbar span{display:block;height:100%;min-width:2px}
-  .bandbar .b-pull{background:var(--r-pull)}
-  .bandbar .b-sched{background:var(--r-sched)}
-  .bandbar .b-watch{background:var(--r-watch)}
-  .bandbar .b-hold{background:var(--r-hold)}
-  .bar-cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-top:12px;line-height:1.7}
-
-  /* ---------- progressive disclosure ---------- */
-  details.more{border:1px solid var(--line);margin-top:26px}
-  details.more>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px;padding:15px 18px;
-    font-family:var(--mono);font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--tx2)}
-  details.more>summary::-webkit-details-marker{display:none}
-  details.more>summary::before{content:"+";font-family:var(--mono);font-weight:600;color:var(--grn);width:1ch}
-  details.more[open]>summary::before{content:"\2212"}
-  details.more>summary:hover{color:var(--tx)}
-  details.more>summary:focus-visible{outline:2px solid var(--grn);outline-offset:-2px}
-  details.more>.d-body{padding:4px 18px 20px}
-
-  /* ---------- the queue ---------- */
-  .q-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:52px 0 12px}
-  .q-t{font-family:var(--mono);font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--tx3)}
-  .queue{border-top:1px solid var(--line);margin-bottom:34px}
-  .qrow{display:grid;grid-template-columns:26px 1fr auto;gap:14px;align-items:baseline;padding:18px 18px 19px;border-bottom:1px solid var(--line);border-inline-start:2px solid var(--line2)}
-  .qrow.b-watch{border-inline-start-color:var(--r-watch);background:var(--w-watch)}
-  .qrow.b-sched{border-inline-start-color:var(--r-sched);background:var(--w-sched)}
-  .qrow.b-pull{border-inline-start-color:var(--r-pull);background:var(--w-pull)}
-  .qrow.b-hold{border-inline-start-color:var(--r-hold);background:var(--w-hold)}
-  /* Everything below the crew's capacity for the week is real work that is not getting done.
-     The wash goes quiet and the band line says 'waits' in words; the text itself never dims,
-     because a row that waits still has to be read. */
-  .qrow.past{background:transparent}
-  .qrow .rk{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--tx3);font-variant-numeric:tabular-nums}
-  .qrow .nm{font-weight:600;font-size:16px;color:var(--tx);letter-spacing:-.015em}
-  .qrow .sub{font-size:14px;color:var(--tx2);margin-top:5px;line-height:1.5}
-  .qrow .ev{font-family:var(--mono);font-size:12px;letter-spacing:.01em;color:var(--tx2);margin-top:9px;line-height:1.8}
-  .qrow .ev b{color:var(--tx);font-weight:600}
-  .qrow .amt{font-family:var(--mono);font-size:17px;font-weight:600;color:var(--tx);text-align:end;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .qrow .amt small{display:block;font-size:11px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-top:7px}
-  /* the band is named in words next to its mark: hue is a second channel here, never the only one */
-  .band{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--tx2);margin-top:12px}
-  .band .mk{width:8px;height:8px;flex:none;background:var(--line2)}
-  .band.b-watch .mk{background:var(--r-watch)}
-  .band.b-sched .mk{background:var(--r-sched)}
-  .band.b-pull .mk{background:var(--r-pull)}
-  .band.b-hold .mk{background:var(--r-hold)}
-  .cut{display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid var(--line);
-    font-family:var(--mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--tx3)}
-  .cut .rule{flex:1;height:1px;background:var(--line2)}
-  @media(max-width:520px){
-    .qrow{grid-template-columns:22px 1fr;padding-inline:12px}
-    .qrow .amt{grid-column:2;text-align:start;margin-top:10px}
-    .qrow .amt small{display:inline;margin-inline-start:6px}
-  }
-
-  /* stats: hairline typography instead of boxed cells. One rule runs the width of the row and
-     one closes it, and the cells are divided rather than spaced, so the four figures read as a
-     single band. Broken into four short rules with nothing underneath, they drifted. */
-  .grid{display:grid;grid-template-columns:repeat(4,1fr);
-    border-top:1px solid var(--line2);border-bottom:1px solid var(--line)}
-  .cell{display:flex;flex-direction:column;padding:18px 26px 20px;border-inline-start:1px solid var(--line)}
-  .cell:first-child{border-inline-start:0;padding-inline-start:0}
-  .cell:last-child{padding-inline-end:0}
-  /* four across only while a cell can still hold "1 in 42 million" on one line and its label
-     on two. Below that the row went to three-line labels over a wrapped figure, so it drops
-     to two wide columns rather than four cramped ones. */
-  @media(max-width:1140px){
-    .grid{grid-template-columns:repeat(2,1fr)}
-    .cell{padding-inline:22px}
-    .cell:nth-child(odd){border-inline-start:0;padding-inline-start:0}
-    .cell:nth-child(even){padding-inline-end:0}
-    .cell:nth-child(n+3){border-top:1px solid var(--line)}
-  }
-  /* and one across once two would squeeze the figure again */
-  @media(max-width:560px){
-    .grid{grid-template-columns:1fr}
-    .cell{padding-inline:0;border-inline-start:0}
-    .cell + .cell{border-top:1px solid var(--line)}
-  }
-  .cell .k{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-bottom:12px;line-height:1.5}
-  /* the figures sit on the row's floor, so a label that wraps still leaves the numbers on one
-     line: reserving two label lines everywhere put dead air under the short ones instead */
-  .cell .v{margin-top:auto;font-family:var(--mono);font-weight:500;font-size:24px;letter-spacing:-.02em;line-height:1.1;color:var(--tx);font-variant-numeric:tabular-nums}
-  .cell .v small{font-size:11px;font-weight:400;letter-spacing:.1em;color:var(--tx3);margin-inline-start:6px}
-  /* the reality check reads the band above it, so it sits close; the buttons are the next
-     thing you do, and take the wider gap */
-  .flag{border-inline-start:2px solid var(--grn2);padding:2px 0 2px 20px;margin-top:26px;font-size:15px;line-height:1.75;color:var(--tx2)}
-  .flag .t{font-family:var(--mono);font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--grn);margin-inline-end:16px;white-space:nowrap}
-  .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:42px}
-  @media(max-width:640px){
-    .actions{flex-direction:column;align-items:stretch;width:100%}
-  }
-
-  /* ---------- steps ---------- */
-  .steps{display:grid;grid-template-columns:repeat(2,1fr);gap:44px 48px;margin-top:52px}
-  @media(max-width:820px){.steps{grid-template-columns:1fr;gap:36px}}
-  .step{border-top:1px solid var(--line2);padding-top:22px}
-  .step .n{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--grn);margin-bottom:14px}
-  .step p{margin:0 0 10px;font-size:15px;color:var(--tx2);text-wrap:pretty}
-  .step p:last-child{margin-bottom:0}
-  .step b{color:var(--tx);font-weight:500}
-
-  /* ---------- the wear curve ---------- */
-  .curve{position:relative;border:1px solid var(--line);background:var(--bg2);padding:30px 30px 24px;margin-top:36px}
-  @media(max-width:700px){.curve{padding:22px 18px 18px}}
-  /* Figure header, the same shape the step blocks use: a green eyebrow naming the figure,
-     then a real heading. These panels used to open with one dim micro-label doing both
-     jobs and then three lines of grey, which gave a titled block no title. */
-  .fig-hd{margin-bottom:16px}
-  .fig-hd .n{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--grn);margin-bottom:9px}
-  .fig-hd h3{margin:0}
-  .curve .s{font-size:15px;color:var(--tx2);margin:0 0 20px;max-width:68ch;text-wrap:pretty}
-  /* the sentence that tells you what to do with the chart, lifted the way the steps lift theirs */
-  .curve .s b{color:var(--tx);font-weight:500}
-  .curve svg{width:100%;height:auto;display:block;overflow:visible}
-  .curve svg .hit{fill:transparent;cursor:pointer}
-  .curve svg .hit:focus-visible{outline:2px solid var(--grn);outline-offset:2px}
-  .curve-legend{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:16px;font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--tx2)}
-  /* the key mirrors the mark: a stroke for the line, a ring for the cohort dots */
-  .curve-legend .lk{display:inline-block;width:16px;height:2px;background:var(--grn);margin-inline-end:8px;vertical-align:4px}
-  .curve-legend .mk{display:inline-block;width:9px;height:9px;border-radius:50%;box-shadow:inset 0 0 0 1.6px var(--grn);margin-inline-end:8px;vertical-align:-1px}
-  .curve-legend .who{margin-inline-start:auto;color:var(--tx3)}
-  @media(max-width:700px){.curve-legend .who{margin-inline-start:0}}
-  /* the readout: the figure leads, what it belongs to follows */
-  .c-tip{position:absolute;z-index:5;pointer-events:none;transform:translate(-50%,-100%);
-    background:var(--bg);border:1px solid var(--line2);padding:9px 13px 10px;
-    font-family:var(--mono);font-size:12px;line-height:1.6;color:var(--tx3);
-    box-shadow:0 14px 30px rgba(0,0,0,.62);white-space:nowrap}
-  .c-tip[hidden]{display:none}
-  .c-tip b{display:block;font-weight:500;font-size:14px;color:var(--grn);letter-spacing:-.01em;margin-bottom:3px}
-  .c-tip span{display:block}
-  .c-tip .m{color:var(--tx2b)}
-
-  .worked{border:1px solid var(--line);background:var(--bg2);padding:32px 34px;margin-top:36px}
-  @media(max-width:700px){.worked{padding:24px 20px}}
-  .worked .fig-hd{margin-bottom:22px}
-  /* 2.2 leading was carrying the whole structure: it separated the steps, but it separated a
-     wrapped step's own two lines by exactly as much, so on a narrow screen one step read as
-     two. Structure moves to the markup and the leading comes back to a readable 1.7. */
-  .chain{font-family:var(--mono);font-size:15px;line-height:1.6;color:var(--tx2b);overflow-x:auto}
-  .chain .premise{margin:0 0 18px;color:var(--tx)}
-  .chain ol{list-style:none;margin:0;padding:0}
-  /* the arrow hangs in the margin, so a wrapped line sits under its own step's text and the
-     arrows themselves read as the column of steps. That column, not a large gap, is what
-     separates one step from the next, so the steps can sit closer than they did on 2.2. */
-  .chain li{padding-inline-start:2ch;text-indent:-2ch;margin-top:6px}
-  .chain li:first-child{margin-top:0}
-  .chain .a{color:var(--grn)}
-  /* 600 against a 400 body punched the figures out of their sentences; the lift to --tx
-     already carries the emphasis, so the weight only needs one step */
-  .chain b{font-weight:500;color:var(--tx)}
-  .worked .out{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);font-size:16px;color:var(--tx2)}
-
-  /* ---------- table ----------
-     Six numeric columns do not fit a phone. Dropping columns would drop the drive days and the
-     interval, which are the two things that say whether a rate can be trusted, so the table
-     scrolls inside its own box instead and the page never scrolls sideways. */
-  .tscroll{overflow-x:auto;margin-top:30px;overscroll-behavior-x:contain}
-  .tscroll table{margin-top:0}
-  table{width:100%;border-collapse:collapse;font-size:15px;margin-top:30px}
-  th,td{text-align:start;padding:14px 16px 14px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--tx2)}
-  thead th{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);font-weight:400}
-  td.m{font-family:var(--mono);font-size:14px;white-space:nowrap;color:var(--tx);font-variant-numeric:tabular-nums}
-  /* the model is the row's header: a real <th scope="row">, styled as the row's anchor */
-  th.name{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--tx);white-space:nowrap}
-  /* the AFR bar is a length, so the comparison down the column survives without colour */
-  .afrbar{display:block;height:5px;background:var(--grn2);margin-top:8px;min-width:2px}
-  .ci{font-family:var(--mono);font-size:12px;font-weight:400;color:var(--tx3);white-space:nowrap}
-  @media(max-width:700px){
-    table th:last-child, table td:last-child{display:none}
-    th,td{padding-inline-end:10px}
-  }
-
-  /* ---------- method ----------
-     The model on the left, the judgement calls on the right, so the section fills its
-     width the way the console does instead of hugging the margin. */
-  .method-grid{display:grid;grid-template-columns:minmax(0,11fr) minmax(0,9fr);gap:12px 40px;align-items:stretch;margin-top:4px}
-  @media(max-width:980px){.method-grid{grid-template-columns:1fr;gap:0}}
-  /* the model as a ledger: one term, one expression per row, at reading size */
-  .formula{position:relative;margin-top:32px;border:1px solid var(--line);background:var(--bg2);padding:26px 30px 12px;display:flex;flex-direction:column}
-  @media(max-width:700px){.formula{padding:20px 18px 8px}}
-  .model-hd{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
-  .model-hd .g{color:var(--grn2)}
-  .frow{display:grid;grid-template-columns:minmax(150px,200px) 1fr;gap:4px 24px;padding:14px 0 15px;
-    border-bottom:1px solid var(--line);font-family:var(--mono);font-size:14px;line-height:1.8}
-  .frow:last-child{border-bottom:0}
-  @media(max-width:640px){.frow{grid-template-columns:1fr}}
-  .frow .ft{color:var(--grn);font-weight:500}
-  .frow .fx{color:var(--tx2b);overflow-wrap:break-word}
-  .frow .fx var{font-style:italic;color:var(--tx)}
-  .frow .fn{color:var(--tx3);font-style:italic}
-  ul.plain{padding-inline-start:0;list-style:none;margin:32px 0 0}
-  /* inside a frame the list drops its dash markers and takes the ledger's row rhythm */
-  /* the notes fill the frame: rows share the height evenly, so a panel matched
-     to the taller ledger never ends in dead space */
-  .formula ul.plain{margin:0;max-width:none;flex:1;display:flex;flex-direction:column}
-  .formula ul.plain li{flex:1;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:12px 0;padding-inline-start:0;margin:0;border-bottom:1px solid var(--line);font-size:15px;line-height:1.7}
-  .formula ul.plain li:last-child{border-bottom:0}
-  .formula ul.plain li:before{content:none}
-  ul.plain li{position:relative;padding-inline-start:28px;margin-bottom:16px;font-size:16px;line-height:1.7;color:var(--tx2)}
-  ul.plain li:before{content:"\2014";position:absolute;inset-inline-start:0;font-family:var(--mono);color:var(--grn2)}
-  ul.plain li b{color:var(--tx);font-weight:500}
-
-  /* ---------- section index: outlined ghost numerals ---------- */
-  .sec-row{display:flex;align-items:center;gap:26px;margin-bottom:38px}
-  .sec-num{font-family:var(--mono);font-weight:600;font-size:clamp(44px,4.8vw,70px);line-height:.9;color:var(--line2);flex:none;font-variant-numeric:tabular-nums}
-  @supports (-webkit-text-stroke:1px black){.sec-num{color:transparent;-webkit-text-stroke:1px var(--line2)}}
-  .sec-rule{flex:1;height:1px;background:var(--line)}
-
-  /* scroll reveals: elements are visible by default; a script opts them in,
-     and only when motion is welcome */
-  .rv0{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
-  .rv0.rvIn{opacity:1;transform:none}
-
-  /* ---------- built by: the nameplate ----------
-     Real gear carries a nameplate. The credit reads like one: identity on the
-     left, a spec ledger on the right, actions along the bottom edge. */
-  .plate{position:relative;border:1px solid var(--line);background:var(--bg2)}
-  .plate-main{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:40px 88px;padding:52px 52px 44px}
-  .p-name{font-weight:500;font-size:clamp(34px,3.8vw,58px);letter-spacing:-.035em;line-height:1.05;margin-top:16px;color:var(--tx)}
-  .p-bio{font-size:16px;color:var(--tx2);max-width:44ch;margin:18px 0 0;text-wrap:pretty}
-  .p-spec{margin:0;align-self:center}
-  .p-spec > div{display:grid;grid-template-columns:96px 1fr;gap:24px;padding:15px 0 16px;border-top:1px solid var(--line);align-items:baseline}
-  .p-spec > div:last-child{border-bottom:1px solid var(--line)}
-  .p-spec dt{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
-  .p-spec dd{margin:0;font-family:var(--mono);font-size:14px;color:var(--tx)}
-  .p-spec dd.on{color:var(--grn)}
-  .p-spec dd.on::before{content:"";display:inline-block;width:6px;height:6px;background:var(--grn);margin-right:10px;vertical-align:1px}
-  .plate-ft{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;border-top:1px solid var(--line);padding:20px 52px}
-  .lnk{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx2);white-space:nowrap;padding:14px 2px}
-  .lnk:hover{color:var(--grn)}
-  @media(max-width:860px){
-    .plate-main{grid-template-columns:1fr;gap:36px;padding:32px 24px 30px}
-    .plate-ft{padding:16px 24px;flex-direction:column;align-items:stretch}
-    .plate-ft .btn{justify-content:center}
-    .lnk{text-align:center}
-  }
-
-  footer{border-top:1px solid var(--line);padding:44px 0 72px;font-size:15px;color:var(--tx3)}
-  footer a{color:var(--tx2)}
-  footer a:hover{color:var(--grn)}
-  footer .lbl{margin-bottom:14px}
-
-  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--tx);color:var(--bg);font-family:var(--mono);font-weight:600;font-size:12px;letter-spacing:.13em;text-transform:uppercase;padding:13px 20px;opacity:0;pointer-events:none;z-index:60}
-  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
-  .print-url{display:none}
-
-  /* print: a one-page pull sheet. Only the console survives, on white. */
   @media print{
-    @page{margin:11mm}
-    :root{--bg:#fff;--bg2:#fff;--line:#c7cdd5;--line2:#a8b1bc;--tx:#12161b;--tx2:#39424d;--tx3:#66707c;--grn:#0b7f58;--grn2:#0b7f58;
-      --r-hold:#0b7f58;--r-watch:#9a7d00;--r-sched:#b45309;--r-pull:#b3261e;
-      --w-hold:#fff;--w-watch:#fff;--w-sched:#fff;--w-pull:#fff}
-    body{background:#fff;font-size:14px}
-    header{position:static;background:#fff;backdrop-filter:none;box-shadow:none}
-    header nav{display:none}
-    section:not(#console),footer,.toast{display:none}
-    #console{display:block;padding:12px 0 0;border-top:0}
-    .actions,.hint,.skip,.caret,.sel-list,details.more,.config-note{display:none}
-    .hero{padding:16px 0 8px}
-    .console-grid{display:block}
-    .config{font-size:15px;line-height:1.7;margin-top:4px}
-    .headline-out{margin-top:14px;padding:14px 16px 12px;background:#fff}
-    .headline-out,.grid,.flag,.qrow{break-inside:avoid}
-    .bar-wrap{max-width:390px}
-    .print-url{display:block;margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--tx3);word-break:break-all}
+    :root{--bg:#fff;--bg2:#fff;--line:#c7cdd5;--line2:#a8b1bc;--tx:#12161b;--tx2:#39424d;--tx3:#5b6470}
+    .top nav,.ctl,.try,.actions,.mini,.toast,.wall,.skip,.sec,.about{display:none}
+    .console{display:block;border:0;padding:0}
+    .print-url{display:block;margin-top:14px;font-family:var(--mono);font-size:11px;word-break:break-all}
   }
-
-  /* large screens: use them */
-  @media(min-width:1680px){
-    .wrap{max-width:1520px}
-    .config{font-size:28px}
-    .lede{font-size:18px}
-    .step p{font-size:16px}
-  }
-  @media(min-width:2200px){.wrap{max-width:1720px}}
+  .print-url{display:none}
 </style>
 </head>
 <body>
 
-<a class="skip" href="#main">Skip to content</a>
+<a class="skip" href="#console">Skip to the tool</a>
 
-<header>
-  <div class="wrap bar">
-    <div class="mark">
-      <a class="suite" href="/"><span class="sq" aria-hidden="true"></span>Infrabench</a>
-      <span class="sep">/</span>
-      <span class="tool">Crash Cart</span>
-    </div>
-    <nav aria-label="Page sections">
-      <a href="#console">Console</a>
-      <a href="#how">How it works</a>
-      <a href="#drives">Drive table</a>
-      <a href="#method">Method</a>
-    </nav>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="g-infrabench" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="9" width="14" height="10" fill="currentColor"/></symbol>
+</svg>
+
+<header class="wrap top">
+  <div class="crumb">
+    <a class="brand" href="/"><svg class="glyph" aria-hidden="true"><use href="#g-infrabench"/></svg>Infrabench</a>
+    <span class="sep" aria-hidden="true">/</span>
+    <span class="here">Crash Cart</span>
   </div>
+  <nav aria-label="Page">
+    <a href="#how">How it works</a>
+    <a href="#data">Drive data</a>
+    <a href="#method">Method</a>
+  </nav>
 </header>
 
-<main id="main" tabindex="-1">
+<main id="main">
 
-<!-- ================= HERO ================= -->
-<div class="wrap">
-  <div class="hero">
-    <div class="lbl rise">Tool 02 &mdash; Fleet failure triage</div>
-    <h1 class="rise d1"><span class="setup">You cannot pull them all.</span> Which ones this week?</h1>
-    <div class="hero-body rise d2">
-      <p class="lede">A failure rate says how many drives will die this year, not which ones. Crash Cart turns thirteen years of public fleet data into a short list: the drives worth a service trip this week, with the evidence behind each one. Every constant is in <a href="#method">the method</a>.</p>
-      <!-- counted off the drive table on this page, so it cannot drift from what the tool queues -->
-      <p class="hero-meta" id="heroMeta"></p>
-    </div>
-  </div>
+<div class="wrap intro">
+  <h1><span>You cannot pull them all.</span> Which ones this week?</h1>
+  <p class="lede">A failure rate says how many drives will die this year, not which ones. Describe your fleet and Crash Cart ranks the drives worth a service trip this week, on thirteen years of public failure data.</p>
+  <!-- counted off the drive table below, so it cannot drift from what the tool queues -->
+  <p class="src" id="prov"></p>
 </div>
 
-<!-- ================= CONSOLE ================= -->
-<section id="console">
-  <div class="wrap">
-    <div class="sec-row"><span class="sec-num" aria-hidden="true">01</span><span class="sec-rule"></span><span class="lbl">The console</span></div>
+<!-- ================= THE TOOL ================= -->
+<section class="wrap console" id="console" aria-label="Crash Cart">
+  <p class="sr-only" id="srStatus" role="status"></p>
 
-    <!-- stable region, populated on every recalculation so the result is announced -->
-    <p class="sr" id="srStatus" role="status"></p>
-    <span class="sr" id="profLabel">Fleet profile</span>
-    <span class="sr" id="schemeLabel">Redundancy scheme</span>
+  <div class="ctl">
+    <fieldset class="grp">
+      <legend>Fleet</legend>
+      <div class="chips" id="profChips"></div>
+      <p class="hint" id="profNote"></p>
+    </fieldset>
 
-    <!-- The fleet, described rather than filled in. The spans and inputs sit inline in
-         running text; the combobox machinery is the same select-only pattern as before,
-         just worn as a word in the sentence. -->
-    <div class="console-grid">
-      <div>
-        <!-- divs, not <p>: a <ul> may not sit inside a paragraph, and the parser would
-             split the sentence apart at the first picker's listbox if it did -->
-        <div class="config">My fleet is a
-          <span class="sel"><span class="sel-btn" id="prof" role="combobox" tabindex="0" aria-controls="profList" aria-expanded="false" aria-labelledby="profLabel"><span class="nm" id="profName"></span><svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span><ul class="sel-list" id="profList" role="listbox" aria-labelledby="profLabel" hidden></ul></span> of
-          <span class="nb"><input class="iv-num" type="number" id="drives" value="3000" min="20" max="500000" step="10" aria-label="Fleet size in drives"> drives</span> in
-          <span class="sel"><span class="sel-btn" id="scheme" role="combobox" tabindex="0" aria-controls="schemeList" aria-expanded="false" aria-labelledby="schemeLabel"><span class="nm" id="schemeName"></span><svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span><ul class="sel-list" id="schemeList" role="listbox" aria-labelledby="schemeLabel" hidden></ul></span> groups.</div>
-        <div class="config">The crew can pull <span class="nb"><input class="iv-num" type="number" id="pulls" value="12" min="0" max="2000" step="1" aria-label="Crew capacity in pulls per week"> drives</span> a week.</div>
-
-        <p class="config-note" id="profNote"></p>
-        <p class="config-meta" id="fleetMeta"></p>
-      </div>
-
-      <div class="headline-out">
-        <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
-        <div class="lbl">The answer</div>
-        <div class="big"><span class="a">&rarr;</span> Pull <span class="v"><span id="bigNum">&mdash;</span> <span id="bigUnit"></span></span> this week.</div>
-        <div class="note" id="outNote"></div>
-        <div class="bar-wrap"><div class="bandbar" id="bandbar" aria-hidden="true"></div><div class="bar-cap" id="barCap"></div></div>
-      </div>
+    <div class="grp">
+      <div class="grp-h"><label for="drives">Fleet size</label><output id="drivesOut" for="drives"></output></div>
+      <input type="range" id="drives" min="0" max="1000" step="1" aria-valuetext="">
+      <div class="scale" aria-hidden="true"><span>100</span><span>1,000</span><span>10,000</span><span>100,000</span></div>
     </div>
 
-    <!-- Full width, under both columns: opening it moves the whole section down as one
-         piece instead of growing the question column alone and unbalancing the grid. -->
-    <details class="more assump">
+    <div class="grp">
+      <div class="grp-h"><label for="pulls">Crew capacity</label><output id="pullsOut" for="pulls"></output></div>
+      <input type="range" id="pulls" min="0" max="100" step="1">
+      <div class="scale" aria-hidden="true"><span>0</span><span>50</span><span>100 a week</span></div>
+    </div>
+
+    <fieldset class="grp">
+      <legend>Redundancy</legend>
+      <div class="chips" id="schemeChips"></div>
+      <p class="hint" id="schemeNote"></p>
+    </fieldset>
+
+    <div class="grp">
+      <div class="grp-h"><label for="years">Look ahead</label><output id="yearsOut" for="years"></output></div>
+      <input type="range" id="years" min="0" max="5" step="0.5">
+      <p class="hint">Ages every drive in the fleet, with no refresh, along the published wear curve.</p>
+    </div>
+
+    <details class="more">
       <summary>Assumptions</summary>
-      <div class="d-body">
-        <!-- The term labels the input for real, so clicking it focuses the field; the unit
-             and the provenance line ride along as the input's description. -->
-        <div class="aledger">
-          <div class="acell">
-            <label class="aterm" for="smart">SMART coverage</label>
-            <span class="aval"><input class="iv-num" type="number" id="smart" value="4.2" min="0" max="40" step="0.1"
-              aria-describedby="smartUnit smartNote"><span class="u" id="smartUnit">percent of drives</span></span>
-            <p class="anote" id="smartNote"></p>
-          </div>
-          <div class="acell">
-            <label class="aterm" for="rebuild">Rebuild rate</label>
-            <span class="aval"><input class="iv-num" type="number" id="rebuild" value="150" min="10" max="1000" step="5"
-              aria-describedby="rebuildUnit rebuildNote"><span class="u" id="rebuildUnit">MB/s</span></span>
-            <p class="anote" id="rebuildNote"></p>
-          </div>
-        </div>
+      <div class="grp">
+        <div class="grp-h"><label for="smart">SMART coverage</label><output id="smartOut" for="smart"></output></div>
+        <input type="range" id="smart" min="0" max="15" step="0.1">
+        <p class="hint" id="smartNote"></p>
+      </div>
+      <div class="grp">
+        <div class="grp-h"><label for="rebuild">Rebuild rate</label><output id="rebuildOut" for="rebuild"></output></div>
+        <input type="range" id="rebuild" min="50" max="500" step="10">
+        <p class="hint" id="rebuildNote"></p>
       </div>
     </details>
+  </div>
 
-    <div class="q-head">
-      <div class="q-t">The work, ranked</div>
-      <div class="q-t">By data at risk</div>
+  <div class="res">
+    <div id="answer">
+      <p class="hl" id="hl"></p>
+      <p class="hl-sub" id="hlSub"></p>
+      <p class="means" id="means"></p>
     </div>
-    <div class="queue" id="queue"></div>
 
-    <div class="grid" id="cells"></div>
-    <div class="flag"><span class="t">Reality check</span><span id="flagText"></span></div>
+    <figure class="wall" aria-labelledby="wallTitle">
+      <div class="wall-hd">
+        <h3 id="wallTitle"></h3>
+        <ul class="legend" id="legend"></ul>
+      </div>
+      <p class="wall-sub" id="fleetNote"></p>
+      <!-- The wall is a picture of the pull list below, which carries every value in it;
+           the hover readout adds the drive's place in the plan, never a number the table lacks. -->
+      <div class="wall-box">
+        <canvas id="wall" role="img"></canvas>
+        <div class="tip" id="wallTip" hidden aria-hidden="true"></div>
+      </div>
+      <p class="wall-note" id="wallNote"></p>
+    </figure>
+    <dl class="kpis" id="kpis"></dl>
+
+    <div class="try" role="group" aria-label="Try a change">
+      <span>Try</span>
+      <button type="button" data-try="crew">Double the crew</button>
+      <button type="button" data-try="raid5">Drop to RAID 5</button>
+      <button type="button" data-try="nosmart">Turn off SMART</button>
+      <button type="button" data-try="age">Five years on</button>
+      <button type="button" data-try="reset">Start over</button>
+    </div>
+
+
+    <div class="list">
+      <div class="list-hd">
+        <h3>The pull list</h3>
+        <p>Ranked by data at risk. Open a row for its arithmetic.</p>
+      </div>
+      <table class="pl">
+        <caption class="sr-only">Drive groups in the queue, most urgent first, with annual failure rate, data at risk in the next 30 days and the week each group is pulled</caption>
+        <thead><tr><th scope="col"><span class="sr-only">Rank</span></th><th scope="col">Drives</th><th scope="col" class="num">Annual rate</th><th scope="col" class="num">At risk, 30 days</th><th scope="col">When</th></tr></thead>
+        <tbody id="queue"></tbody>
+      </table>
+    </div>
+
     <div class="actions">
-      <button class="btn" id="copyLink">Copy shareable link</button>
-      <button class="btn ghost" id="copySummary">Copy pull sheet</button>
+      <button class="btn" type="button" id="copyLink">Copy link to this setup</button>
+      <button class="btn ghost" type="button" id="copySheet">Copy pull sheet</button>
     </div>
     <div class="print-url" id="printUrl"></div>
   </div>
 </section>
 
 <!-- ================= HOW IT WORKS ================= -->
-<section id="how">
+<section class="sec" id="how">
   <div class="wrap">
-    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">02</span><span class="sec-rule"></span><span class="lbl">How it works</span></div>
-    <h2 class="rv">Four steps from a base rate to a work order</h2>
-    <p class="lede">Each row of the queue is one drive population carried through the same four multiplications. You can do the arithmetic yourself.</p>
-
-    <div class="steps rv">
-      <div class="step">
-        <div class="n">STEP 01 / BASE RATE</div>
-        <h3>Start from the published rate</h3>
-        <p>Each model starts at its published lifetime failure rate, carrying the <b>drive days</b> behind it, so a thin record shows up as a wide confidence interval rather than as false certainty.</p>
-      </div>
-      <div class="step">
-        <div class="n">STEP 02 / AGE</div>
-        <h3>Adjust for age</h3>
-        <p>Failure rates follow a bathtub: a bump in the first months, a floor near year two, a climb that gets serious after year five. Each cohort gets the <b>multiplier for its age</b>, not the fleet average.</p>
-      </div>
-      <div class="step">
-        <div class="n">STEP 03 / EVIDENCE</div>
-        <h3>Weigh the SMART evidence</h3>
-        <p>In the public fleet, 77 percent of failed drives showed one of five SMART warnings, against 4 percent of healthy ones. A flagged drive is about <b>18 times</b> likelier to fail; a clean one, a quarter as likely.</p>
-      </div>
-      <div class="step">
-        <div class="n">STEP 04 / BLAST RADIUS</div>
-        <h3>Weigh what a failure costs</h3>
-        <p>Every failure starts a rebuild that exposes the whole group. Multiply the chance of failure by the <b>data sitting behind it</b>, and the queue sorts itself: risk times blast radius.</p>
-      </div>
+    <div class="sec-hd">
+      <h2>How it works</h2>
+      <p>Each row of the pull list is one batch of drives carried through the same four steps. The example on the right follows whatever is at the top of your list.</p>
+    </div>
+    <div class="two">
+      <ol class="steps">
+        <li><div><h3>Start from the published rate</h3><p>Every model begins at its lifetime failure rate from Backblaze Drive Stats, with the drive days behind it, so a thin record shows as a wide interval rather than false certainty.</p></div></li>
+        <li><div><h3>Adjust for age</h3><p>Failure rates follow a bathtub: a bump in the first months, a floor near year two, then a climb that gets serious after year five. Each batch takes the multiplier for its own age.</p></div></li>
+        <li><div><h3>Weigh the SMART evidence</h3><p>In the public fleet, 77 percent of failed drives showed one of five SMART warnings, against 4 percent of healthy ones. A flagged drive is about 18 times likelier to fail; a clean one, a quarter as likely.</p></div></li>
+        <li><div><h3>Weigh what a failure costs</h3><p>Every failure starts a rebuild that exposes its whole group. Multiply the chance of failure by the data sitting behind it and the list sorts itself: risk times blast radius.</p></div></li>
+      </ol>
+      <figure class="ex">
+        <figcaption>Worked example, from your current list</figcaption>
+        <p class="q" id="wxQ"></p>
+        <ol class="chain" id="wx"></ol>
+      </figure>
     </div>
 
-    <details class="more">
-    <summary>The wear curve and a worked example</summary>
-    <div class="d-body">
     <div class="curve">
-      <div class="fig-hd">
-        <div class="n">The wear curve</div>
-        <h3>The bathtub, with your fleet on it</h3>
+      <div class="curve-hd">
+        <h3>The wear curve, with your fleet on it</h3>
+        <p>The age multiplier from step two. Each ring is one batch in the fleet you picked, sized by drive count; move Look ahead and watch them climb. A fleet on the right-hand climb is not a maintenance problem, it is a refresh decision.</p>
       </div>
-      <p class="s">The age multiplier applied at step 01, drawn against drive age. Each dot is one cohort in the profile you picked, sized by drive count. <b>A fleet sitting on the right-hand climb is not a maintenance problem, it is a refresh decision.</b></p>
-      <svg id="curve" viewBox="0 0 720 260" role="img" aria-labelledby="curveTitle curveDesc">
-        <title id="curveTitle">Failure rate multiplier against drive age</title>
-        <desc id="curveDesc">A shallow bathtub curve. The multiplier starts near 1.45 in the first months, falls to about 0.8 at year two, and climbs steadily past year five to roughly 3.9 by year ten. Your selected fleet cohorts are plotted along it.</desc>
-      </svg>
-      <div class="curve-legend" id="curveLegend"></div>
-      <!-- Hover and focus readout. It never gates a value: the axes carry the multiplier and
-           the age, the dot labels carry capacity, each dot's own aria-label carries all of
-           it, and the queue rows below repeat the count, the age and the multiplier. -->
-      <div class="c-tip" id="curveTip" hidden aria-hidden="true"><b></b><span class="m"></span><span></span></div>
-    </div>
-
-    <div class="worked">
-      <div class="fig-hd">
-        <div class="n">Worked example</div>
-        <h3>One row of the default queue</h3>
+      <div class="curve-box">
+        <svg id="curve" role="img" aria-labelledby="curveTitle curveDesc"><title id="curveTitle">Failure rate multiplier against drive age</title><desc id="curveDesc">A shallow bathtub: about 1.45 times the lifetime average in the first months, 0.8 at year two, then rising past year five to about 3.9 by year ten. The batches in your fleet are plotted along it.</desc></svg>
+        <div class="ctip" id="curveTip" hidden aria-hidden="true"></div>
       </div>
-      <!-- One element per step rather than <br>-separated lines: a step that wraps has to
-           stay one step, which line-height alone cannot express. The arrows are decorative
-           and hidden from assistive tech, which reads the steps as the list they are. -->
-      <div class="chain">
-        <p class="premise">600 x Toshiba MG07ACA14TA, 14 TB, 5.1 years old, of which 25 are flagged by SMART</p>
-        <ol>
-          <li><span class="a" aria-hidden="true">&rarr;</span> lifetime AFR <b>1.0 percent</b> per year</li>
-          <li><span class="a" aria-hidden="true">&rarr;</span> times the age multiplier at 5.1 years, 1.50 = 1.51 percent</li>
-          <li><span class="a" aria-hidden="true">&rarr;</span> times the flagged likelihood ratio, 18.3 = <b>27.5 percent</b> per year</li>
-          <li><span class="a" aria-hidden="true">&rarr;</span> over 30 days = 2.23 percent per drive, across the 25 that are flagged</li>
-          <li><span class="a" aria-hidden="true">&rarr;</span> <b>0.56 expected failures</b> in the next 30 days</li>
-          <li><span class="a" aria-hidden="true">&rarr;</span> each one opens a 25.9 hour rebuild across a 17+3 group holding <b>238 TB</b></li>
-          <li><span class="a" aria-hidden="true">&rarr;</span> <b>133 TB</b> drops to two parity units in the next 30 days, and that is the sort key</li>
-          <li><span class="a" aria-hidden="true">&rarr;</span> chance any of it is actually lost, about 1 in 12 billion</li>
-        </ol>
-      </div>
-      <div class="out">What moved this row up the queue was not the AFR, which is unremarkable. The SMART flag multiplied the risk eighteen-fold, and a 238&nbsp;TB group multiplied the consequence.</div>
     </div>
-    </div>
-    </details>
   </div>
 </section>
 
-<!-- ================= DRIVE TABLE ================= -->
-<section id="drives">
+<!-- ================= DRIVE DATA ================= -->
+<section class="sec" id="data">
   <div class="wrap">
-    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">03</span><span class="sec-rule"></span><span class="lbl">The drive table</span></div>
-    <h2 class="rv">Published lifetime rates</h2>
-    <p class="lede">Every model the console can queue, with its published failure rate and the drive days behind it.</p>
+    <div class="sec-hd">
+      <h2>The drive data</h2>
+      <p>Every model the tool can queue, with its published lifetime failure rate, the 95 percent interval on it, and the record behind it.</p>
+    </div>
     <details class="more">
-    <summary>The full drive table</summary>
-    <div class="d-body">
-    <div class="tscroll" tabindex="0" role="region" aria-label="Drive model table, scrolls horizontally">
-      <table>
-        <caption class="sr">Drive models the console can queue, with published lifetime annualized failure rates, 95 percent confidence intervals and drive days observed, from Backblaze Drive Stats</caption>
-        <thead><tr><th scope="col">Model</th><th scope="col">Capacity</th><th scope="col">Lifetime AFR</th><th scope="col">95% interval</th><th scope="col">Drive days</th><th scope="col">Notes</th></tr></thead>
+    <summary id="refSum">Show all drive models</summary>
+    <div class="tscroll" tabindex="0" role="region" aria-label="Drive models, scrolls sideways on narrow screens">
+      <table class="ref">
+        <caption class="sr-only">Drive models with published lifetime annualized failure rates, 95 percent intervals and drive days observed, from Backblaze Drive Stats</caption>
+        <thead><tr><th scope="col">Model</th><th scope="col">Capacity</th><th scope="col">Lifetime rate</th><th scope="col">95% interval</th><th scope="col">Drive days</th><th scope="col">Notes</th></tr></thead>
         <tbody id="refBody"></tbody>
       </table>
-    </div>
     </div>
     </details>
   </div>
 </section>
 
 <!-- ================= METHOD ================= -->
-<section id="method">
+<section class="sec" id="method">
   <div class="wrap">
-    <div class="sec-row rv"><span class="sec-num" aria-hidden="true">04</span><span class="sec-rule"></span><span class="lbl">The method</span></div>
-    <h2 class="rv">Every constant, in the open</h2>
-    <p class="lede">This is the whole model. If you disagree with a constant, you know exactly which one to argue with.</p>
-
-    <div class="method-grid rv">
-      <div class="formula">
-        <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
-        <div class="model-hd"><span class="lbl">The model</span><span class="lbl g">9 equations</span></div>
-        <div class="frow"><span class="ft">Annual rate</span><span class="fx">lifetime AFR &times; age multiplier &times; evidence ratio</span></div>
-        <div class="frow"><span class="ft">Evidence ratio</span><span class="fx">18.26 if flagged, 0.24 if clean, normalized to the prevalence you set</span></div>
-        <div class="frow"><span class="ft">P(fail in 30 days)</span><span class="fx">1 &minus; exp(&minus;annual rate &times; 30 / 365)</span></div>
-        <div class="frow"><span class="ft">Rebuild hours</span><span class="fx">drive capacity TB &times; 10^6 / rebuild MB per s / 3600</span></div>
-        <div class="frow"><span class="ft">Exposure per survivor</span><span class="fx">1 &minus; exp(&minus;cohort rate &times; rebuild hours / 8760)</span></div>
-        <div class="frow"><span class="ft">P(group loses data)</span><span class="fx">P(at least <var>m</var> of the <var>k</var>+<var>m</var>&minus;1 survivors fail inside that window)</span></div>
-        <div class="frow"><span class="ft">Blast radius</span><span class="fx"><var>k</var> &times; drive capacity, the data the group is holding</span></div>
-        <div class="frow"><span class="ft">TB at risk, 30 days</span><span class="fx">drives &times; P(fail in 30 days) &times; blast radius &nbsp;<span class="fn">the sort key</span></span></div>
-        <div class="frow"><span class="ft">TB actually lost</span><span class="fx">the same, &times; P(group loses data) &nbsp;<span class="fn">the fleet total</span></span></div>
-      </div>
-
-      <div class="formula">
-        <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
-        <div class="model-hd"><span class="lbl">The judgement calls</span><span class="lbl g">5 notes</span></div>
-        <ul class="plain">
-        <li><b>The SMART evidence is Bayes, not a threshold.</b> Flagged drives carry an 18x likelihood ratio, clean ones 0.24x, renormalized to the prevalence you set so total expected failures are preserved.</li>
-        <li><b>The age multiplier</b> follows the published bathtub shape, normalized so a mixed-age fleet averages 1.0.</li>
-        <li><b>Rebuild rate is the effective rate on a live system,</b> not the drive's spec sheet; 150 MB/s is an honest default. Unrecoverable read errors are counted only where no parity is left.</li>
-        <li><b>The queue holds drives with a reason.</b> The bands sit at 1.5 percent a year (watch), 5 (schedule) and 15 (pull). A clean drive is usually fine even at six years.</li>
-        <li><b>A triage heuristic, not a warranty model.</b> Figures are the published lifetime table, rounded; re-pull the current quarter before you spend money, and nothing here replaces watching your own fleet.</li>
-        </ul>
+    <div class="sec-hd">
+      <h2>Method</h2>
+      <p>This is the whole model. If you disagree with a constant, you know exactly which one to argue with.</p>
+    </div>
+    <div class="two">
+      <dl class="eq">
+        <div><dt>Annual rate</dt><dd>lifetime rate &times; age multiplier &times; evidence ratio</dd></div>
+        <div><dt>Evidence ratio</dt><dd>18.26 if flagged, 0.24 if clean <i>normalized to the coverage you set</i></dd></div>
+        <div><dt>Chance of failing in 30 days</dt><dd>1 &minus; exp(&minus;annual rate &times; 30 / 365)</dd></div>
+        <div><dt>Rebuild hours</dt><dd>capacity TB &times; 10<sup>6</sup> / rebuild MB/s / 3600</dd></div>
+        <div><dt>Exposure per survivor</dt><dd>1 &minus; exp(&minus;batch rate &times; rebuild hours / 8760)</dd></div>
+        <div><dt>Chance a group loses data</dt><dd>P(at least <var>m</var> of the <var>k</var>+<var>m</var>&minus;1 survivors fail in that window)</dd></div>
+        <div><dt>Blast radius</dt><dd><var>k</var> &times; capacity <i>the data the group holds</i></dd></div>
+        <div><dt>At risk, 30 days</dt><dd>drives &times; chance of failing &times; blast radius <i>the sort key</i></dd></div>
+        <div><dt>Data actually lost</dt><dd>the same &times; chance the group loses data <i>the fleet total</i></dd></div>
+      </dl>
+      <div class="calls">
+        <p><b>SMART is evidence, not a threshold.</b> Flagged drives carry an 18&times; likelihood ratio and clean ones 0.24&times;, renormalized to the coverage you set so the fleet's total expected failures are preserved.</p>
+        <p><b>The age multiplier</b> follows the published bathtub shape, normalized so a mixed-age fleet averages 1.0. <b>Look ahead</b> adds the same years to every batch and reads the curve at the new age: no replacements, no new drives, no change in rates beyond the curve.</p>
+        <p><b>Rebuild rate is the effective rate on a live system,</b> not the spec sheet; 150 MB/s is an honest default. Unrecoverable read errors count only where no parity is left.</p>
+        <p><b>The list holds drives with a reason.</b> The bands sit at 1.5 percent a year (watch), 5 (schedule) and 15 (pull). Weeks after the first assume the crew also absorbs the drives that newly earn a place each week.</p>
+        <p><b>A triage heuristic, not a warranty model.</b> Figures are the published lifetime table, rounded; re-pull the current quarter before you spend money, and nothing here replaces watching your own fleet.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ================= CTA ================= -->
-<section class="cta">
-  <div class="wrap">
-    <div class="plate rv">
-      <i class="tick tl"></i><i class="tick tr"></i><i class="tick bl"></i><i class="tick br"></i>
-      <div class="plate-main">
-        <div>
-          <div class="lbl">Built by</div>
-          <div class="p-name">Adrian Mucha</div>
-          <p class="p-bio">Product designer for the software most designers avoid: operator consoles where a wrong click costs real money.</p>
-        </div>
-        <dl class="p-spec">
-          <div><dt>Focus</dt><dd>Data centers &middot; AI tooling</dd></div>
-          <div><dt>Base</dt><dd>Los Angeles, CA</dd></div>
-          <div><dt>Status</dt><dd class="on">Open to new work</dd></div>
-        </dl>
-      </div>
-      <div class="plate-ft">
-        <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Get in touch</a>
-        <a class="lnk" href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">See the work &rarr;</a>
+<section class="sec about" aria-label="About">
+  <div class="wrap two">
+    <div>
+      <h2>Part of Infrabench</h2>
+      <p>Free tools for the people who build data centers, on public data with every constant on the page. <a class="lnk" href="/">See all the tools</a></p>
+    </div>
+    <div>
+      <h2>Built by Adrian Mucha</h2>
+      <p>A product designer for the software most designers avoid: data center tools, AI tooling and operator consoles where a wrong click costs real money. Based in Los Angeles and open to new work.</p>
+      <div class="acts">
+        <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Email Adrian</a>
+        <a class="lnk" href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">See the portfolio <span aria-hidden="true">&#8599;</span></a>
       </div>
     </div>
   </div>
@@ -804,21 +569,13 @@
 
 <footer>
   <div class="wrap">
-    <div class="lbl">Sources and fine print</div>
-    Drive models, lifetime annualized failure rates and drive day counts from
-    <a href="https://www.backblaze.com/cloud-storage/resources/hard-drive-test-data" target="_blank" rel="noopener">Backblaze Drive Stats</a>,
-    published quarterly since 2013 and released under a permissive licence for any use with attribution.
-    The five predictive SMART attributes and their prevalence come from Backblaze's
-    <a href="https://www.backblaze.com/blog/what-smart-stats-indicate-hard-drive-failures/" target="_blank" rel="noopener">analysis of SMART stats against real failures</a>.
-    Unrecoverable read error rates are the manufacturer specifications on current enterprise nearline datasheets.
-    Figures are rounded and current as of the cited quarter. Re-pull the table before you spend money against a decimal in here.
-    <br><br>
-    Crash Cart is part of <a href="/">Infrabench</a>, a set of open tools for the people who build data centers.
-    Built by <a href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">Adrian Mucha</a> / FruitBat Design, Los Angeles.
+    <p class="fine">Drive models, lifetime failure rates and drive days from <a href="https://www.backblaze.com/cloud-storage/resources/hard-drive-test-data" target="_blank" rel="noopener">Backblaze Drive Stats</a>, published quarterly since 2013 under a permissive licence with attribution. The five predictive SMART attributes and their prevalence come from Backblaze's <a href="https://www.backblaze.com/blog/what-smart-stats-indicate-hard-drive-failures/" target="_blank" rel="noopener">analysis of SMART stats against real failures</a>. Unrecoverable read error rates are the manufacturer specification on current enterprise nearline datasheets. Figures are rounded; re-pull the table before you spend money against a decimal in here.</p>
+    <p class="meta">Crash Cart is part of <a href="/">Infrabench</a> by <a href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">Adrian Mucha</a> / FruitBat Design, Los Angeles &middot; MIT licensed &middot; <a href="https://github.com/adrianomucha/infrabench" target="_blank" rel="noopener">Source on GitHub</a></p>
   </div>
 </footer>
 
-<div class="toast" id="toast" role="status">Copied</div>
+<div class="mini" id="mini" aria-hidden="true"><span><b id="miniN"></b></span><span id="miniW"></span></div>
+<div class="toast" id="toast" role="status"></div>
 
 <script>
 (function(){
@@ -849,8 +606,7 @@
     {id:"st24",    brand:"Seagate", model:"ST24000NM002H",    tb:24, afr:0.6, days:3.8, note:"24 TB, recent. Interval is wide because the record is short."}
   ];
 
-  /* Fleet profiles. Share is the fraction of the fleet, age is in years. Names are
-     lowercase noun phrases because they sit mid-sentence in the console. */
+  /* Fleet profiles. Share is the fraction of the fleet, age is in years. */
   var PROFILES = [
     {id:"mixed", name:"mixed estate", note:"The common case: a 4 TB tail nobody has decommissioned, two generations of 14 TB in the middle, and a 22 TB build that landed last year. The oldest drives fail the most and cost the least; the newest, the reverse.",
      mix:[["st4000",.08,8.6],["st12a",.16,6.4],["tosh14",.20,5.1],["wdc14",.14,3.8],["tosh16",.16,2.6],["wdc22",.26,1.4]]},
@@ -864,14 +620,14 @@
      mix:[["st4000",.30,9.5],["hgst4",.20,9.0],["st8",.30,7.8],["hgst8",.20,8.2]]}
   ];
 
-  /* k data units, m parity units. Group size is k+m. Names read as "in <name> groups". */
+  /* k data units, m parity units. Group size is k+m. */
   var SCHEMES = [
-    {id:"ec173",  name:"erasure-coded 17+3",   k:17, m:3, note:"Three parity shards across twenty drives, the standard vault geometry. Losing one drive is paperwork."},
-    {id:"ec82",   name:"erasure-coded 8+2",    k:8,  m:2, note:"Two parity shards. Tighter groups, less data behind each failure, less headroom during a rebuild."},
-    {id:"raid6",  name:"RAID 6 (6+2)",         k:6,  m:2, note:"Two parity drives. Survives a second failure during rebuild, which is the whole reason it exists."},
-    {id:"raid5",  name:"RAID 5 (4+1)",         k:4,  m:1, note:"One parity drive. A second failure or a single unrecoverable read during rebuild is data loss."},
-    {id:"mirror", name:"mirrored (RAID 1/10)", k:1,  m:1, note:"One copy. Fast rebuild, no tolerance for a bad sector on the survivor while it runs."},
-    {id:"none",   name:"unprotected",          k:1,  m:0, note:"Every failure is data loss. Included because a surprising number of fleets have a tier like this."}
+    {id:"ec173",  name:"erasure-coded 17+3",   short:"17+3",   k:17, m:3, note:"Three parity shards across twenty drives, the standard vault geometry. Losing one drive is paperwork."},
+    {id:"ec82",   name:"erasure-coded 8+2",    short:"8+2",    k:8,  m:2, note:"Two parity shards. Tighter groups, less data behind each failure, less headroom during a rebuild."},
+    {id:"raid6",  name:"RAID 6 (6+2)",         short:"RAID 6", k:6,  m:2, note:"Two parity drives. Survives a second failure during rebuild, which is the whole reason it exists."},
+    {id:"raid5",  name:"RAID 5 (4+1)",         short:"RAID 5", k:4,  m:1, note:"One parity drive. A second failure or a single unrecoverable read during rebuild is data loss."},
+    {id:"mirror", name:"mirrored (RAID 1/10)", short:"Mirror", k:1,  m:1, note:"One copy. Fast rebuild, no tolerance for a bad sector on the survivor while it runs."},
+    {id:"none",   name:"unprotected",          short:"None",   k:1,  m:0, note:"Every failure is data loss. Included because a surprising number of fleets have a tier like this."}
   ];
 
   /* Age multiplier against drive age in years, interpolated between the knots. */
@@ -885,13 +641,13 @@
   var WEAROUT = 0.015, SCHED_BAND = 0.05, PULL_BAND = 0.15;
 
   var $ = function(id){ return document.getElementById(id); };
-  var state = { profile:"mixed", drives:3000, scheme:"ec173", smart:4.2, rebuild:150, pulls:12 };
+  var DEFAULTS = { profile:"mixed", drives:3000, scheme:"ec173", smart:4.2, rebuild:150, pulls:12, years:0 };
+  var state = { profile:"mixed", drives:3000, scheme:"ec173", smart:4.2, rebuild:150, pulls:12, years:0 };
 
-  /* Prose below is authored with ordinary spaces and welded on the way out: a figure and
-     its unit are one word, so a wrap never strands a "22" at the end of a line and its
-     "TB" at the start of the next. */
-  var NB = "\u00A0";
-  var UNITS = /(\d)\u0020(?=TB\b|MB\/s|yr\b|hours?\b|percent\b)/g;
+  /* Prose is authored with ordinary spaces and welded on the way out: a figure and its
+     unit are one word, so a wrap never strands a "22" at the end of a line. */
+  var NB = " ";
+  var UNITS = /(\d) (?=TB\b|MB\/s|yr\b|hours?\b|percent\b|years?\b|weeks?\b|drives?\b)/g;
   function weld(s){ return s.replace(UNITS, "$1"+NB); }
 
   function fmt(n, d){
@@ -909,8 +665,7 @@
     return n.toExponential(1);
   }
   /* Rebuild survival probabilities span eleven orders of magnitude between a 17+3 vault and
-     a RAID 5 set of 16 TB drives. A percentage prints as either "40%" or "0.000%", so anything
-     rarer than one in a thousand is said in odds, which is how the risk gets discussed anyway. */
+     a RAID 5 set of 16 TB drives, so anything rarer than one in a thousand is said in odds. */
   function odds(p){
     if(!isFinite(p) || p <= 0) return "never";
     if(p >= 0.1) return Math.round(p*100)+"%";
@@ -927,8 +682,6 @@
     return list[0];
   }
   function profile(){ return byId(PROFILES, state.profile); }
-  // share-weighted mean age, and the capacity span: the two facts that tell one profile
-  // from another, so they ride in the trigger and the pill rather than in a longer name
   function profileAge(p){
     var w = 0, a = 0;
     p.mix.forEach(function(c){ w += c[1]; a += c[1]*c[2]; });
@@ -960,8 +713,6 @@
     var rel = 1.96/Math.sqrt(fails);
     return [Math.max(0, afr*(1-rel)), afr*(1+rel), fails];
   }
-  // a well-sampled model has an interval narrower than one decimal place, and printing it as
-  // "1.0 to 1.0" reads as a bug rather than as the precision it actually is
   function ivText(iv){
     var d = iv[0].toFixed(1) === iv[1].toFixed(1) ? 2 : 1;
     return iv[0].toFixed(d)+" to "+iv[1].toFixed(d)+"%";
@@ -982,7 +733,7 @@
   function compute(){
     var p = profile(), sc = scheme(), prev = state.smart/100;
     var lrPos = SENS/PREV, lrNeg = (1-SENS)/(1-PREV);
-    // renormalize so moving the prevalence slider does not invent or destroy failures
+    // renormalize so moving the prevalence does not invent or destroy failures
     var norm = prev*lrPos + (1-prev)*lrNeg;
     if(norm <= 0) norm = 1;
 
@@ -992,7 +743,8 @@
     for(i=0;i<p.mix.length;i++) shareSum += p.mix[i][1];
 
     for(i=0;i<p.mix.length;i++){
-      var md = model(p.mix[i][0]), age = p.mix[i][2];
+      // Look ahead ages every batch by the same years; nothing else about it changes
+      var md = model(p.mix[i][0]), age = p.mix[i][2] + (state.years || 0);
       var n = Math.round(state.drives * (p.mix[i][1]/shareSum));
       if(n <= 0) continue;
       totalDrives += n;
@@ -1021,16 +773,14 @@
         if(sc.m === 0){ pLoss = 1; }
         else {
           /* The drives rebuilding alongside this one are ordinary members of the cohort, not
-             copies of the one that died, so their exposure runs at the pre-evidence rate. Using
-             the flagged rate here would quietly assume the whole group is sick. */
+             copies of the one that died, so their exposure runs at the pre-evidence rate. */
           var exposure = 1 - Math.exp(-base*rebuildH/8760);       // per survivor, per rebuild
           pLoss = atLeast(group-1, exposure, sc.m);
           if(sc.m === 1) pLoss = pLoss + (1-pLoss)*pUre;
         }
-        /* Two different consequences, and they rank differently. tbExposed is the data that
-           drops a layer of protection, which always happens and is the work being scheduled.
-           tbLost is the data actually gone, which for a three-parity vault is vanishingly rare
-           and belongs in the fleet total rather than in the sort. */
+        /* tbExposed is the data that drops a layer of protection, which always happens and is
+           the work being scheduled; tbLost is the data actually gone, which belongs in the
+           fleet total rather than in the sort. */
         var tbExposed = expFail * blastTb;
         var tbLost = expFail * pLoss * blastTb;
         totalTb += tbExposed;
@@ -1060,8 +810,7 @@
     var arrivals = (totalFail30/0.767) * (7/30);
     var thisWeek = Math.min(state.pulls, queueDrives);
 
-    /* What the week's capacity actually buys, prorated through the row it lands inside, so the
-       reality check can quote a real share instead of asserting the top of a queue matters. */
+    // what the week's capacity buys, prorated through the row it lands inside
     var budget = thisWeek, tbCovered = 0;
     for(i=0;i<queue.length && budget>0;i++){
       var take = Math.min(budget, queue[i].n);
@@ -1077,306 +826,71 @@
       backlogWeeks: state.pulls > arrivals ? queueDrives/Math.max(state.pulls-arrivals, 1e-9) : Infinity
     };
   }
+  /* ===== MODEL END: everything above is the model; everything below draws it ===== */
+
+  var BAND = { pull:"Pull", sched:"Schedule", watch:"Watch", hold:"Hold" };
+  var reduce = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches:false };
+  function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function plural(n, one, many){ return n === 1 ? one : (many || one + "s"); }
+
+  /* ---------- weeks ----------
+     The first week takes exactly the crew's capacity. After that the backlog shrinks by
+     capacity less the drives that newly earn a place each week, which is the same rate the
+     "clears in" figure uses, so the last row's week and that figure agree. */
+  function weekOf(d, r){
+    if(d < r.thisWeek) return 1;
+    var eff = state.pulls - r.arrivals;
+    if(eff <= 0) return Infinity;
+    return 1 + Math.ceil((d + 1 - r.thisWeek) / eff);
+  }
+  function weekText(a, b){
+    if(!isFinite(a)) return "Not at this pace";
+    if(b === 1) return "This week";
+    if(!isFinite(b)) return "Week " + a + " on, if ever";
+    if(a === b) return "Week " + a;
+    return "Weeks " + a + "–" + b;
+  }
 
   /* ---------- the headline number, tweened ---------- */
-  var bigCur = null, bigRaf = null;
-  var noMotion = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
-  function setBig(target, decimals, unit){
-    $("bigUnit").textContent = unit;
-    if(bigCur === null || !isFinite(bigCur)){ bigCur = target; $("bigNum").textContent = fmt(target, decimals); return; }
-    if(bigRaf) cancelAnimationFrame(bigRaf);
-    // the count-up is decoration; snap straight to the value when motion is not wanted
-    if(noMotion && noMotion.matches){ bigCur = target; $("bigNum").textContent = fmt(target, decimals); return; }
-    var from = bigCur, t0 = null, DUR = 220;
-    function step(ts){
-      if(t0===null) t0 = ts;
-      var k = Math.min((ts-t0)/DUR, 1);
-      k = 1 - Math.pow(1-k, 3);
-      $("bigNum").textContent = fmt(from + (target-from)*k, decimals);
-      if(k<1){ bigRaf = requestAnimationFrame(step); } else { bigCur = target; bigRaf = null; }
-    }
-    bigRaf = requestAnimationFrame(step);
+  var bigCur = null, bigRaf = 0;
+  function setBig(target){
+    var el = $("bigNum"); if(!el) return;
+    if(bigCur === null || reduce.matches){ bigCur = target; el.textContent = fmt(target); return; }
+    cancelAnimationFrame(bigRaf);
+    var from = bigCur, t0 = null;
+    (function step(ts){
+      if(t0 === null) t0 = ts;
+      var k = Math.min((ts - t0) / 260, 1); k = 1 - Math.pow(1 - k, 3);
+      el.textContent = fmt(from + (target - from) * k);
+      if(k < 1) bigRaf = requestAnimationFrame(step);
+    })(performance.now());
     bigCur = target;
   }
 
-  var BANDNAME = { pull:"Pull this week", sched:"Schedule", watch:"Watch", hold:"Hold" };
-  var BANDCLASS = { pull:"b-pull", sched:"b-sched", watch:"b-watch", hold:"b-hold" };
-
-  /* ---------- the band bar ----------
-     The whole fleet as one stacked bar, worst band first, so the share of the fleet that
-     is actually work reads at a glance. The caption carries the counts as text. Colour
-     comes from the same CSS risk tokens the queue rows use, never from values coined here. */
-  function renderBand(r){
-    var order = ["pull","sched","watch","hold"], counts = {};
-    order.forEach(function(b){ counts[b] = 0; });
-    r.rows.forEach(function(row){ counts[row.band] += row.n; });
-
-    var html = "";
-    if(r.totalDrives > 0){
-      order.forEach(function(b){
-        if(counts[b] > 0)
-          html += '<span class="b-'+b+'" style="width:'+(100*counts[b]/r.totalDrives).toFixed(2)+'%"></span>';
-      });
-    }
-    $("bandbar").innerHTML = html;
-
-    // One line: the fleet total lives in the meta line across the gutter, so the caption
-    // carries only the four bands, with pull shortened to one word; the chips in the
-    // queue keep the full name. Counts stay welded to their band names with no-break
-    // spaces so that if a longer fleet does force a wrap, it breaks between segments,
-    // never inside one.
-    var lines = order.filter(function(b){ return counts[b] > 0; }).map(function(b){
-      var name = b === "pull" ? "pull" : BANDNAME[b].toLowerCase();
-      return fmt(counts[b])+NB+name;
-    });
-    $("barCap").textContent = r.totalDrives === 0
-      ? "No drives in this fleet"
-      : lines.join(NB+"· ");
-  }
-
-  /* ---------- the queue ---------- */
-  function renderQueue(r){
-    if(r.queue.length === 0){
-      $("queue").innerHTML = '<div class="qrow b-hold"><span class="rk">&mdash;</span><div><div class="nm">Nothing in the queue</div>'+
-        '<div class="sub">Nothing is flagged and nothing has aged past 1.5 percent a year. '+
-        'The right number of service trips this week is zero.</div></div><div class="amt"></div></div>';
-      return;
-    }
-    var budget = state.pulls, spent = 0, cutDrawn = false, html = "";
-    r.queue.forEach(function(row, i){
-      var past = spent >= budget;
-      // the week's capacity almost never lands on a row boundary, so the row it runs out
-      // inside says so rather than leaving the cut line to imply the whole row is covered
-      var covered = Math.max(0, Math.min(budget - spent, row.n));
-      /* The line falls at a row boundary because a row is a population, not a drive, so it
-         cannot carry a drive count of its own without contradicting the headline. It names the
-         capacity; the headline names how many of those drives that buys. */
-      if(past && !cutDrawn){
-        cutDrawn = true;
-        html += '<div class="cut"><span>Crew capacity, '+fmt(budget)+' pull'+(budget===1?"":"s")+' a week</span>'+
-                '<span class="rule"></span><span>Everything below waits</span></div>';
+  /* ---------- the answer ---------- */
+  function renderAnswer(r){
+    var top = r.queue[0];
+    var hl = $("hl");
+    if(r.queueDrives === 0){
+      hl.textContent = "Nothing to pull this week.";
+      $("hlSub").textContent = "Nothing is flagged and nothing has aged past 1.5 percent a year.";
+    } else if(state.pulls === 0){
+      hl.textContent = "Your crew pulls nothing this week.";
+      $("hlSub").textContent = weld(fmt(r.queueDrives)+" drives are waiting, led by "+fmt(top.n)+" "+top.md.brand+" "+top.md.model+".");
+    } else {
+      if(!$("bigNum")){
+        hl.innerHTML = 'Pull <span class="n" id="bigNum"></span> <span id="bigUnit"></span> this week.';
+        bigCur = null;
       }
-      spent += row.n;
-
-      var ev = 'AFR <b>'+row.md.afr.toFixed(1)+'%</b> x age '+row.ageMul.toFixed(2)+
-               ' x '+(row.flagged ? 'SMART <b>'+row.lr.toFixed(1)+'</b>' : 'clean '+row.lr.toFixed(2))+
-               ' = <b>'+(row.rate*100).toFixed(1)+'%</b> a year';
-
-      html += '<div class="qrow '+BANDCLASS[row.band]+(past?" past":"")+'">'+
-        '<span class="rk">'+(i+1)+'</span>'+
-        '<div>'+
-          '<div class="nm">'+fmt(row.n)+' x '+row.md.model+'</div>'+
-          '<div class="sub">'+row.md.brand+' · '+row.md.tb+' TB · '+row.age.toFixed(1)+' years · '+
-            (row.flagged ? 'flagged by SMART' : 'no SMART canaries')+'</div>'+
-          '<div class="ev">'+ev+'</div>'+
-          '<div class="band '+BANDCLASS[row.band]+'"><span class="mk"></span>'+BANDNAME[row.band]+
-            (covered > 0 && covered < row.n ? ' · '+fmt(covered)+' of '+fmt(row.n)+' fit this week' : '')+
-            (past ? ' · waits for crew capacity' : '')+'</div>'+
-        '</div>'+
-        '<div class="amt">'+fmtSmall(row.tb)+'<small>TB at risk / 30d</small></div>'+
-      '</div>';
-    });
-    $("queue").innerHTML = html;
-  }
-
-  /* ---------- the wear curve ----------
-     Drawn at the panel's real pixel width, one SVG unit per CSS pixel, so the chart's
-     10px labels sit on the same type scale as the rest of the page instead of being
-     stretched up with the viewBox. Re-rendered on resize and when its details opens. */
-  function renderCurve(){
-    var p = profile(), box = $("curve"), tip = $("curveTip");
-    var W = Math.max(200, box.clientWidth || 720);
-    /* the plot used to be 260 tall at any width, so on a wide screen the bathtub flattened
-       into a straight line and the whole point of the chart went missing. Height tracks
-       width instead, inside bounds that keep it readable on a phone and from sprawling. */
-    var H = Math.round(Math.max(250, Math.min(380, W*0.36)));
-    var narrow = W < 520;   // on a phone the cohort labels collide, so the legend carries them
-    /* The bottom band holds two rows, the tick numbers and the axis name. At 38 they sat
-       13px apart with the name centred straight under the middle tick, which read as one
-       jumbled line. 48 gives the numbers room under the baseline they label and the name
-       clear air under them. The y-axis gutter only needs to fit "0x", so a phone gets it
-       back as plot width. */
-    var L = narrow ? 32 : 46, R = 16, T = 20, B = 48;
-    box.setAttribute("viewBox", "0 0 " + W + " " + H);
-    var maxAge = 11, maxMul = 4.4;
-    var SURF = "#0E1114", GRN = "#3FE0A0", INK = "#7B838D";
-    function X(a){ return L + (a/maxAge)*(W-L-R); }
-    function Y(m){ return T + (1 - m/maxMul)*(H-T-B); }
-    var out = [], i;
-
-    out.push('<defs><linearGradient id="cvWash" x1="0" y1="0" x2="0" y2="1">' +
-      '<stop offset="0" stop-color="'+GRN+'" stop-opacity=".17"/>' +
-      '<stop offset="1" stop-color="'+GRN+'" stop-opacity="0"/></linearGradient></defs>');
-
-    /* whole-number gridlines: 1.1x, 2.2x, 3.3x were an artefact of dividing the axis by
-       four, and you cannot read a value off ticks like that. The 1x line is the lifetime
-       average by definition, so it carries that label instead of a second dashed line
-       sitting on top of it. */
-    for(i=0;i<=4;i++){
-      var y = Y(i), avg = i === 1;
-      out.push('<line x1="'+L+'" y1="'+y.toFixed(1)+'" x2="'+(W-R)+'" y2="'+y.toFixed(1)+'" stroke="'+(avg?'#2A3037':'#1C2126')+'" stroke-width="1"/>');
-      /* no "0x": it sat diagonally above the "0" of the other axis and the origin read as
-         "0x 0". An evenly stepped 1x-4x scale says where its floor is without labelling it. */
-      if(i) out.push('<text x="'+(L-10)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" fill="'+INK+'" font-family="Geist Mono, monospace" font-size="11">'+i+'x</text>');
-      if(avg) out.push('<text x="'+(W-R-4)+'" y="'+(y-7).toFixed(1)+'" text-anchor="end" fill="'+INK+'" font-family="Geist Mono, monospace" font-size="11" letter-spacing="1">'+(narrow?'AVERAGE':'LIFETIME AVERAGE')+'</text>');
+      setBig(r.thisWeek);
+      $("bigUnit").textContent = plural(r.thisWeek, "drive");
+      var first = Math.min(r.thisWeek, top.n);
+      $("hlSub").textContent = weld("Start with "+(first < top.n ? fmt(first)+" of the "+fmt(top.n) : "the "+fmt(top.n))+" "+
+        top.md.brand+" "+top.md.model+": "+top.md.tb+" TB, "+top.age.toFixed(1)+" years old, "+
+        (top.flagged ? "flagged by SMART." : "with no SMART warning, just age."));
     }
-    for(i=0;i<=10;i+=2){
-      out.push('<text x="'+X(i).toFixed(1)+'" y="'+(Y(0)+19).toFixed(1)+'" text-anchor="middle" fill="'+INK+'" font-family="Geist Mono, monospace" font-size="11">'+i+'</text>');
-    }
-    /* Left, not centred. Centred put it at an x that answered to nothing, so the strip read
-       as text scattered at four alignments; on the panel's own left edge it stacks with the
-       legend under it and everything below the plot shares one margin. Same ink as the
-       ticks: at 11px anything dimmer drops under 4.5:1 on this surface, so the space above
-       it does the work of setting it back, not the colour. */
-    out.push('<text x="0" y="'+(Y(0)+40).toFixed(1)+'" fill="'+INK+'" font-family="Geist Mono, monospace" font-size="11" letter-spacing="1.4">DRIVE AGE, YEARS</text>');
-
-    var d = "", a;
-    for(a=0; a<=maxAge; a+=0.1) d += (d?"L":"M") + X(a).toFixed(1) + " " + Y(ageMul(a)).toFixed(1) + " ";
-    // a wash under the line gives the bathtub its shape at a glance, before you read a value
-    out.push('<path d="'+d+'L '+X(maxAge).toFixed(1)+' '+Y(0).toFixed(1)+' L '+X(0).toFixed(1)+' '+Y(0).toFixed(1)+' Z" fill="url(#cvWash)"/>');
-    out.push('<path d="'+d+'" fill="none" stroke="'+GRN+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>');
-
-    // crosshair, drawn once and moved: the reader aims at an age, not at a 2px line
-    out.push('<g id="cvHover" opacity="0" pointer-events="none">' +
-      '<line y1="'+T+'" y2="'+Y(0).toFixed(1)+'" stroke="#2A3037" stroke-width="1"/>' +
-      '<circle r="4.5" fill="'+SURF+'" stroke="'+GRN+'" stroke-width="2"/></g>');
-
-    var shareSum = 0, marks = [];
-    for(i=0;i<p.mix.length;i++) shareSum += p.mix[i][1];
-    p.mix.forEach(function(c){
-      var md = model(c[0]), n = Math.round(state.drives*(c[1]/shareSum));
-      var age = Math.min(c[2], maxAge), mul = ageMul(c[2]);
-      var x = X(age), y = Y(mul);
-      var rr = Math.max(4, Math.min(15, Math.sqrt(n)/3.2));
-      marks.push({x:x, y:y, r:rr, md:md, n:n, age:c[2], mul:mul});
-      // surface ring first, so a dot sitting on the line still reads as a dot
-      out.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+rr.toFixed(1)+'" fill="'+SURF+'" stroke="'+SURF+'" stroke-width="3"/>');
-      out.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+rr.toFixed(1)+'" fill="none" stroke="'+GRN+'" stroke-width="1.6"/>');
-      out.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="2.4" fill="'+GRN+'"/>');
-      if(!narrow) out.push('<text x="'+x.toFixed(1)+'" y="'+(y-rr-8).toFixed(1)+'" text-anchor="middle" fill="#A8B0B8" font-family="Geist Mono, monospace" font-size="11">'+md.tb+' TB</text>');
-    });
-    // hit areas last so they sit above the marks, and wide enough to actually hit
-    marks.forEach(function(m, idx){
-      out.push('<circle class="hit" data-i="'+idx+'" cx="'+m.x.toFixed(1)+'" cy="'+m.y.toFixed(1)+'" r="'+Math.max(m.r+9, 14).toFixed(1)+'"' +
-        ' tabindex="0" role="img" aria-label="'+attr(m.md.brand+' '+m.md.model+', '+m.md.tb+' TB, '+m.age.toFixed(1)+' years old, '+fmt(m.n)+' drives, age multiplier '+m.mul.toFixed(2))+'"/>');
-    });
-
-    box.innerHTML = out.join("");
-    $("curveLegend").innerHTML =
-      '<span><span class="lk"></span>Age multiplier</span>' +
-      '<span><span class="mk"></span>Your cohorts, sized by drive count</span>' +
-      '<span class="who"></span>';
-    $("curveLegend").lastChild.textContent = p.name;
-
-    /* The readout reads its geometry from cv, which every render replaces, so the listeners
-       below are wired to the box once at startup rather than restacked on each resize. */
-    cv = { W:W, L:L, R:R, T:T, Y:Y, maxAge:maxAge, marks:marks,
-           hover:box.querySelector("#cvHover") };
-    cv.hLine = cv.hover.firstChild;
-    cv.hDot  = cv.hover.lastChild;
-    box.querySelectorAll(".hit").forEach(function(el){
-      var idx = +el.getAttribute("data-i");
-      el.addEventListener("pointerenter", function(){ curveShowMark(idx); });
-      el.addEventListener("focus", function(){ curveShowMark(idx); });
-      el.addEventListener("pointerleave", curveHide);
-      el.addEventListener("blur", curveHide);
-    });
-  }
-
-  /* ---- the curve's hover and focus readout ---- */
-  var cv = null;
-  /* An <svg> has no offsetLeft, so the readout is placed off bounding rects: the plot
-     point, expressed relative to the panel it is absolutely positioned in. It is then
-     kept inside that panel, and flipped below the point when there is no room above. */
-  function curvePlace(px, py){
-    var box = $("curve"), tip = $("curveTip"), wrap = box.closest(".curve");
-    var r = box.getBoundingClientRect(), wr = wrap.getBoundingClientRect();
-    var s = r.width / cv.W;
-    tip.hidden = false;                                   // measurable before it is placed
-    var x = r.left - wr.left + px*s, y = r.top - wr.top + py*s;
-    var half = tip.offsetWidth/2;
-    tip.style.left = Math.max(half+4, Math.min(wr.width-half-4, x)) + "px";
-    var above = y - 14 - tip.offsetHeight >= 0;
-    tip.style.transform = above ? "translate(-50%,-100%)" : "translate(-50%,0)";
-    tip.style.top = (above ? y - 14 : y + 22) + "px";
-  }
-  function curveSay(val, l1, l2){
-    var tip = $("curveTip");
-    tip.children[0].textContent = val;
-    tip.children[1].textContent = l1;
-    tip.children[2].textContent = l2 || "";
-  }
-  function curveHide(){
-    $("curveTip").hidden = true;
-    if(cv) cv.hover.setAttribute("opacity", "0");
-  }
-  function curveShowMark(idx){
-    var m = cv.marks[idx];
-    cv.hover.setAttribute("opacity", "0");
-    curveSay(m.mul.toFixed(2)+"x at "+m.age.toFixed(1)+" yr",
-             m.md.brand+" "+m.md.model,
-             m.md.tb+" TB · "+fmt(m.n)+" drives");
-    curvePlace(m.x, m.y - m.r);
-  }
-  function curveTrack(e){
-    if(!cv) return;
-    if(e.target.classList && e.target.classList.contains("hit")) return;
-    var box = $("curve"), r = box.getBoundingClientRect(), s = r.width / cv.W;
-    var px = (e.clientX - r.left) / s;
-    if(px < cv.L || px > cv.W - cv.R){ curveHide(); return; }
-    var ag = (px - cv.L) / (cv.W - cv.L - cv.R) * cv.maxAge, mul = ageMul(ag), py = cv.Y(mul);
-    cv.hLine.setAttribute("x1", px.toFixed(1)); cv.hLine.setAttribute("x2", px.toFixed(1));
-    cv.hDot.setAttribute("cx", px.toFixed(1)); cv.hDot.setAttribute("cy", py.toFixed(1));
-    cv.hover.setAttribute("opacity", "1");
-    curveSay(mul.toFixed(2)+"x", "at "+ag.toFixed(1)+" years", "");
-    curvePlace(px, py);
-  }
-  // hardcoded copy, but an attribute is an attribute
-  function attr(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); }
-
-  function render(){
-    var r = compute(), p = profile(), sc = scheme();
-
-    $("profNote").textContent = weld(p.note);
-    $("fleetMeta").textContent = fmt(r.totalDrives)+NB+"drives · "+p.mix.length+NB+"cohorts, "+profileSpan(p)+
-      ", mean age "+profileAge(p).toFixed(1)+NB+"yr · "+fmt(Math.round(r.totalDrives/r.group))+NB+"groups of "+r.group;
-    /* Both assumptions read the same way: where the number comes from, then what it does to
-       this fleet. The coverage lands as a count of canaries, the rate as a rebuild window. */
-    var canaries = r.totalFlag === 0 ? "no drives carry a canary"
-      : r.totalFlag === 1 ? "one drive carries a canary"
-      : fmt(r.totalFlag)+" drives carry a canary";
-    $("smartNote").textContent = weld("4.2 percent is the published fleet-wide baseline. In this fleet, "+canaries+".");
-    $("rebuildNote").textContent = weld("The effective rate against production traffic. At "+
-      state.rebuild+" MB/s a 16 TB drive rebuilds in "+fmt(16e6/state.rebuild/3600)+" hours.");
-
-    setBig(r.thisWeek, 0, r.thisWeek === 1 ? "drive" : "drives");
-    var evidence = r.totalFlag === 0
-      ? "No SMART canaries anywhere in it, so nothing separates one drive from its neighbour and the queue is ranked on age alone. "
-      : fmt(r.totalFlag)+" of them flagged by SMART. ";
-    $("outNote").textContent = r.queueDrives === 0
-      ? "Nothing in this fleet has earned a service trip."
-      : fmt(r.queueDrives)+" drives in the queue. "+evidence+
-        (r.thisWeek < r.queueDrives
-          ? "Your crew clears "+fmt(state.pulls)+" a week, so "+fmt(r.queueDrives-r.thisWeek)+" wait."
-          : "That clears the queue.");
-
-    renderBand(r);
-    renderQueue(r);
-    renderCurve();
-
-    var cells = [
-      ["Expected failures, 30 days", fmtSmall(r.totalFail30), "DRIVES"],
-      ["Data at risk, 30 days", fmtSmall(r.totalTb), "TB"],
-      ["Chance of actual data loss, this year", odds(r.pLossYear), ""],
-      ["Queue cleared in", r.backlogWeeks===Infinity ? "never" : fmt(Math.ceil(r.backlogWeeks)), r.backlogWeeks===Infinity ? "" : "WEEKS"]
-    ];
-    $("cells").innerHTML = cells.map(function(c){
-      return '<div class="cell"><div class="k">'+c[0]+'</div><div class="v">'+c[1]+(c[2]?'<small>'+c[2]+'</small>':'')+'</div></div>';
-    }).join("");
-
-    $("flagText").textContent = flagText(r);
-    announce(r);
-    writeUrl();
+    if(!r.queueDrives || !state.pulls){ bigCur = null; }
+    $("means").textContent = weld(flagText(r));
   }
 
   function largestRebuild(){
@@ -1384,349 +898,562 @@
     p.mix.forEach(function(c){ big = Math.max(big, model(c[0]).tb); });
     return big*1e6/state.rebuild/3600;
   }
-
   function flagText(r){
     var sc = r.sc;
     if(r.queueDrives === 0)
-      return "Nothing is flagged and nothing has aged into the queue. This is what a clean fleet looks like.";
+      return "This is what a clean fleet looks like. The right number of service trips this week is zero.";
     if(state.pulls === 0)
-      return "At zero pulls a week the queue is a list you are not working. "+fmt(r.arrivals,1)+" drives join it every week.";
+      return "At zero pulls a week the list is one you are not working, and "+fmt(r.arrivals,1)+" drives join it every week.";
     if(r.arrivals > state.pulls)
-      return "Drives join this queue faster than you clear it: "+fmtSmall(r.arrivals)+" a week against "+fmt(state.pulls)+
-             " pulls. The binding constraint is hands, not drives, and no amount of ranking fixes that.";
+      return "Drives join this list faster than you clear it: "+fmtSmall(r.arrivals)+" a week against "+fmt(state.pulls)+
+             " pulls. The constraint is hands, not drives, and no ranking fixes that.";
     if(sc.m <= 1)
       return "With "+(sc.m===0?"no parity at all":"a single parity unit")+", the rebuild is the risk, not the failure: "+
-             "the largest drive rebuilds in "+fmt(largestRebuild())+" hours, and the odds this fleet loses data inside a year are "+
+             "the largest drive rebuilds in "+fmt(largestRebuild())+" hours, and the odds of losing data this year are "+
              odds(r.pLossYear)+". A second parity unit is worth more than any pull schedule.";
     if(r.backlogWeeks <= 2)
-      return "You are ahead of this fleet: "+fmt(state.pulls)+" pulls a week clears the queue in "+fmt(Math.ceil(r.backlogWeeks))+
-             " week"+(Math.ceil(r.backlogWeeks)===1?"":"s")+", and actual data loss runs at "+odds(r.pLossYear)+
-             " a year. The real question is whether "+fmt(state.pulls)+" service trips a week is worth spending.";
+      return "You are ahead of this fleet: "+fmt(state.pulls)+" pulls a week clears the list in "+fmt(Math.ceil(r.backlogWeeks))+
+             " "+plural(Math.ceil(r.backlogWeeks), "week")+". The real question is whether that many service trips is worth spending.";
     var share = r.totalTb > 0 ? Math.round(100*r.tbCovered/r.totalTb) : 0;
-    return "The queue clears in "+fmt(Math.ceil(r.backlogWeeks))+" weeks at "+fmt(state.pulls)+" pulls a week. "+
-           "Worked top down, this week's "+fmt(r.thisWeek)+" pulls cover "+share+" percent of the exposure with "+
-           Math.round(100*r.thisWeek/r.queueDrives)+" percent of the drives.";
+    return "Worked top down, this week's "+fmt(r.thisWeek)+" pulls take "+share+" percent of the data at risk with "+
+           Math.round(100*r.thisWeek/r.queueDrives)+" percent of the drives on the list.";
   }
 
-  /* The whole result panel is rewritten on every keystroke and slider tick, which a screen
-     reader cannot see. Mirror the headline into a polite status region, debounced so dragging
-     a slider announces where it landed rather than every frame along the way. */
+  /* ---------- the four numbers, each remembering what it just was ---------- */
+  var lastKpi = null, kpiBase = null, dragging = false;
+  function renderKpis(r){
+    var weeks = r.backlogWeeks === Infinity ? ["never",""] : [fmt(Math.ceil(r.backlogWeeks)), plural(Math.ceil(r.backlogWeeks), "week")];
+    var k = [
+      ["On the list", fmt(r.queueDrives), plural(r.queueDrives, "drive")],
+      ["Clears in", weeks[0], weeks[1]],
+      ["At risk, next 30 days", fmtSmall(r.totalTb), "TB"],
+      ["Chance of losing data this year", odds(r.pLossYear), ""]
+    ];
+    var html = "";
+    k.forEach(function(c, i){
+      var now = c[1] + (c[2] ? " " + c[2] : "");
+      var was = kpiBase && kpiBase[i] !== now ? "was " + kpiBase[i] : "";
+      html += '<div class="kpi"><dt>'+c[0]+'</dt><dd class="v">'+c[1]+(c[2] ? '<small>'+c[2]+'</small>' : '')+'</dd>'+
+              '<dd class="was">'+was+'</dd></div>';
+    });
+    $("kpis").innerHTML = html;
+    lastKpi = k.map(function(c){ return c[1] + (c[2] ? " " + c[2] : ""); });
+  }
+
+  /* ---------- the wall ----------
+     One square per drive, grouped by what it needs (pull, schedule, watch, hold) and in
+     pull-list order inside each group, so the colours read as blocks with sizes rather than
+     as a pattern. The drives the crew takes this week are white wherever they sit. Past
+     3,000 drives each square stands for a few. */
+  var MAXCELLS = 3000;
+  var wall = { cells:[], cur:null, from:null, to:null, t:1, raf:0, hover:-1, hoverRow:-1, geo:null, r:null };
+  function hexRgb(h){ h = h.replace("#",""); return [parseInt(h.substr(0,2),16), parseInt(h.substr(2,2),16), parseInt(h.substr(4,2),16)]; }
+  var PAL = null;
+  function palette(){
+    if(!PAL) PAL = { week:hexRgb(cssVar("--r-week")), pull:hexRgb(cssVar("--r-pull")), sched:hexRgb(cssVar("--r-sched")),
+                     watch:hexRgb(cssVar("--r-watch")), hold:hexRgb(cssVar("--r-hold")), bg:hexRgb(cssVar("--bg")) };
+    return PAL;
+  }
+
+  function buildWall(r){
+    /* seq is the pull list followed by the drives on hold, so a row's index matches the
+       table. Each row also knows where its drives start in the list, which sets their week. */
+    var seq = r.queue.concat(r.rows.filter(function(x){ return x.band === "hold"; }));
+    var at = 0; seq.forEach(function(x){ x.listStart = at; at += x.n; });
+    // the drawing order: the same rows, grouped by band, list order kept inside each group
+    var order = [];
+    ["pull","sched","watch","hold"].forEach(function(b){ seq.forEach(function(x, i){ if(x.band === b) order.push(i); }); });
+    var N = at, unit = Math.max(1, Math.ceil(N / MAXCELLS)), count = Math.ceil(N / unit);
+    var cells = new Array(count), oi = 0, start = 0;
+    for(var c = 0; c < count; c++){
+      var pos = c * unit;
+      while(oi < order.length - 1 && pos >= start + seq[order[oi]].n){ start += seq[order[oi]].n; oi++; }
+      var ri = order[oi], row = seq[ri], d = row.listStart + (pos - start);   // this drive's place in the list
+      cells[c] = { d:d, row:ri, band: row.band !== "hold" && d < r.thisWeek ? "week" : row.band };
+    }
+    return { seq:seq, cells:cells, unit:unit, N:N };
+  }
+
+  function layoutWall(count){
+    var cv = $("wall"), W = cv.parentNode.clientWidth || 600;
+    var Hmax = Math.max(220, Math.min(420, W * 0.5));
+    var pitch = Math.floor(Math.sqrt(W * Hmax / Math.max(count, 1)));
+    pitch = Math.max(4, Math.min(28, pitch));
+    var cols = Math.max(1, Math.floor(W / pitch)), rows = Math.ceil(count / cols);
+    var gap = pitch >= 9 ? 2 : 1;
+    return { W:W, H:rows * pitch, pitch:pitch, cols:cols, rows:rows, gap:gap, count:count };
+  }
+
+  function sizeCanvas(geo){
+    var cv = $("wall"), dpr = window.devicePixelRatio || 1;
+    cv.style.height = geo.H + "px";
+    cv.width = Math.round(geo.W * dpr); cv.height = Math.round(geo.H * dpr);
+    var ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function drawWall(){
+    var geo = wall.geo; if(!geo) return;
+    var ctx = $("wall").getContext("2d"), P = palette(), k = wall.t, e = 1 - Math.pow(1 - k, 3);
+    ctx.clearRect(0, 0, geo.W, geo.H);
+    var s = geo.pitch - geo.gap, hr = wall.hoverRow;
+    for(var c = 0; c < geo.count; c++){
+      var to = wall.to[c], from = wall.from ? wall.from[c] || to : to;
+      var col = k >= 1 ? to : [from[0] + (to[0]-from[0])*e, from[1] + (to[1]-from[1])*e, from[2] + (to[2]-from[2])*e];
+      var dim = hr >= 0 && wall.cells[c].row !== hr;
+      if(dim) col = [col[0]*.3 + P.bg[0]*.7, col[1]*.3 + P.bg[1]*.7, col[2]*.3 + P.bg[2]*.7];
+      ctx.fillStyle = "rgb(" + (col[0]|0) + "," + (col[1]|0) + "," + (col[2]|0) + ")";
+      ctx.fillRect((c % geo.cols) * geo.pitch, Math.floor(c / geo.cols) * geo.pitch, s, s);
+    }
+  }
+
+  function renderWall(r){
+    var built = buildWall(r), P = palette();
+    var geo = layoutWall(built.cells.length);
+    var sameShape = wall.geo && wall.geo.count === geo.count && wall.geo.cols === geo.cols && wall.geo.W === geo.W;
+    var to = built.cells.map(function(c){ return P[c.band]; });
+    // the colours glide when the fleet keeps its shape; a new shape simply redraws
+    wall.from = sameShape && !reduce.matches ? currentColors() : null;
+    wall.to = to; wall.cells = built.cells; wall.seq = built.seq; wall.unit = built.unit; wall.r = r;
+    if(!sameShape){ wall.geo = geo; sizeCanvas(geo); }
+    cancelAnimationFrame(wall.raf);
+    if(wall.from){
+      wall.t = 0; var t0 = null;
+      (function tick(ts){
+        if(t0 === null) t0 = ts;
+        wall.t = Math.min(1, (ts - t0) / 320);
+        drawWall();
+        if(wall.t < 1) wall.raf = requestAnimationFrame(tick);
+      })(performance.now());
+    } else { wall.t = 1; drawWall(); }
+
+    // title, legend counts and the note
+    // each band's count is what is left of it once this week's pulls, taken in list order, are out
+    var counts = { week:r.thisWeek, pull:0, sched:0, watch:0, hold:0 }, before = 0;
+    r.rows.forEach(function(x){ if(x.band === "hold") counts.hold += x.n; });
+    r.queue.forEach(function(x){ counts[x.band] += x.n - Math.max(0, Math.min(x.n, r.thisWeek - before)); before += x.n; });
+    $("wallTitle").textContent = "Your " + fmt(r.totalDrives) + " " + plural(r.totalDrives, "drive") + ", by what each one needs";
+    var items = [["week","This week"],["pull","Pull"],["sched","Schedule"],["watch","Watch"],["hold","Hold"]];
+    $("legend").innerHTML = items.filter(function(it){ return counts[it[0]] > 0 || it[0] === "hold"; }).map(function(it){
+      return '<li><span class="sw '+it[0]+'" aria-hidden="true"></span>'+it[1]+' <b>'+fmt(counts[it[0]])+'</b></li>';
+    }).join("");
+    $("wallNote").textContent = built.unit === 1 ? "Each square is one drive. Point at one to see which batch it belongs to and the week it comes out."
+      : "Each square stands for about " + fmt(built.unit) + " drives. Point at one to see its batch and the week it comes out.";
+    $("wall").setAttribute("aria-label", "Fleet of " + fmt(r.totalDrives) + " drives: " + fmt(counts.week) + " pulled this week, " +
+      fmt(counts.pull) + " more to pull, " + fmt(counts.sched) + " to schedule, " + fmt(counts.watch) + " to watch, " +
+      fmt(counts.hold) + " on hold. The pull list below has every batch.");
+  }
+  function currentColors(){
+    if(!wall.to) return null;
+    var k = wall.t, e = 1 - Math.pow(1 - k, 3);
+    if(k >= 1 || !wall.from) return wall.to.slice();
+    return wall.to.map(function(to, c){ var f = wall.from[c] || to;
+      return [f[0] + (to[0]-f[0])*e, f[1] + (to[1]-f[1])*e, f[2] + (to[2]-f[2])*e]; });
+  }
+
+  function wallAt(ev){
+    var g = wall.geo; if(!g) return -1;
+    var rect = $("wall").getBoundingClientRect(), x = ev.clientX - rect.left, y = ev.clientY - rect.top;
+    var col = Math.floor(x / g.pitch), row = Math.floor(y / g.pitch), c = row * g.cols + col;
+    return col >= 0 && col < g.cols && c >= 0 && c < g.count ? c : -1;
+  }
+  function showTip(c, ev){
+    var tip = $("wallTip"), cell = wall.cells[c], row = wall.seq[cell.row], r = wall.r;
+    var d = cell.d, wk = row.band === "hold" ? null : weekOf(d, r);
+    tip.textContent = "";
+    var b = document.createElement("b");
+    b.textContent = fmt(row.n) + " × " + row.md.brand + " " + row.md.model;
+    tip.appendChild(b);
+    tip.appendChild(document.createTextNode(weld(row.md.tb + " TB · " + row.age.toFixed(1) + " yr · " +
+      (row.flagged ? "flagged by SMART" : "no SMART warning") + " · " + (row.rate*100).toFixed(1) + "% a year")));
+    var k = document.createElement("span"); k.className = "k";
+    var dot = document.createElement("span"); dot.className = "dot " + row.band; k.appendChild(dot);
+    k.appendChild(document.createTextNode(row.band === "hold" ? "Hold: no action" :
+      BAND[row.band] + (wk === Infinity ? ", not at this pace" : wk === 1 ? ", this week" : ", week " + wk)));
+    tip.appendChild(k);
+    tip.hidden = false;
+    var box = tip.parentNode.getBoundingClientRect(), x = ev.clientX - box.left, y = ev.clientY - box.top;
+    var w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = Math.max(0, Math.min(box.width - w, x + 14)) + "px";
+    tip.style.top = (y - h - 12 < 0 ? y + 18 : y - h - 12) + "px";
+  }
+  function hideTip(){ $("wallTip").hidden = true; }
+  function setHoverRow(i){
+    if(wall.hoverRow === i) return;
+    wall.hoverRow = i; drawWall();
+    var trs = document.querySelectorAll("#queue tr.qr");
+    for(var j = 0; j < trs.length; j++) trs[j].classList.toggle("lit", +trs[j].getAttribute("data-i") === i);
+  }
+
+  /* ---------- the pull list ---------- */
+  var openRows = {};
+  function rowKey(x){ return x.md.id + (x.flagged ? ":f" : ":c"); }
+  function renderQueue(r){
+    var tb = $("queue");
+    if(r.queue.length === 0){
+      tb.innerHTML = '<tr class="hold"><td></td><td colspan="4">Nothing on the list. Every drive is on hold: no SMART flag, and nothing old enough to matter.</td></tr>';
+      return;
+    }
+    var html = "", before = 0;
+    r.queue.forEach(function(x, i){
+      var a = weekOf(before, r), b = weekOf(before + x.n - 1, r), key = rowKey(x), open = !!openRows[key];
+      var past = a > 1;
+      html += '<tr class="qr'+(past ? ' past' : '')+'" data-i="'+i+'">'+
+        '<td class="rk">'+(i+1)+'</td>'+
+        '<td class="who"><button class="exp" type="button" aria-expanded="'+open+'" aria-controls="qd'+i+'" data-k="'+key+'">'+
+          '<span class="nm">'+fmt(x.n)+' × '+x.md.brand+' '+x.md.model+'</span>'+
+          '<span class="sub">'+weld(x.md.tb+' TB · '+x.age.toFixed(1)+' years · '+(x.flagged ? 'flagged by SMART' : 'no SMART warning, age only'))+'</span>'+
+        '</button></td>'+
+        '<td class="num rate" data-k="Annual rate">'+(x.rate*100).toFixed(1)+'%</td>'+
+        '<td class="num risk" data-k="At risk, 30 days">'+fmtSmall(x.tb)+NB+'TB</td>'+
+        '<td class="when"><span class="wk">'+weekText(a, b)+'</span><span class="bd"><span class="dot '+x.band+'" aria-hidden="true"></span>'+BAND[x.band]+'</span></td>'+
+      '</tr>'+
+      '<tr class="qd" id="qd'+i+'"'+(open ? '' : ' hidden')+'><td></td><td colspan="4"><ol class="chain">'+chain(x, r)+'</ol><p class="note">'+x.md.note+'</p></td></tr>';
+      before += x.n;
+    });
+    var held = 0; r.rows.forEach(function(x){ if(x.band === "hold") held += x.n; });
+    if(held) html += '<tr class="hold"><td></td><td colspan="4">'+weld('Plus '+fmt(held)+' '+plural(held, 'drive')+' on hold: no SMART flag and under 1.5 percent a year at their age.')+'</td></tr>';
+    tb.innerHTML = html;
+  }
+
+  /* the arithmetic for one batch, shared by the pull list and the worked example */
+  function chain(x, r){
+    var sc = r.sc, L = [];
+    L.push('Published lifetime rate: <b>'+x.md.afr.toFixed(1)+'%</b> a year');
+    L.push('× <b>'+x.ageMul.toFixed(2)+'</b> for drives '+x.age.toFixed(1)+' years old = '+(x.md.afr*x.ageMul).toFixed(2)+'%');
+    L.push('× <b>'+x.lr.toFixed(x.flagged ? 1 : 2)+'</b> '+(x.flagged ? 'because SMART flagged them' : 'because SMART shows nothing')+' = <b>'+(x.rate*100).toFixed(1)+'%</b> a year');
+    L.push('Over the next 30 days, '+(x.p30*100).toFixed(2)+'% each, so <b>'+fmtSmall(x.expFail)+'</b> of these '+fmt(x.n)+' are expected to fail');
+    if(sc.m === 0) L.push('No parity: each failure loses its '+x.md.tb+' TB outright');
+    else L.push('Each failure rebuilds for '+fmt(x.rebuildH,1)+' hours across a '+sc.short+' group holding '+fmt(x.blastTb)+' TB');
+    L.push('<b>'+fmtSmall(x.tb)+' TB</b> drops a level of protection in the next 30 days. That is the sort key.');
+    L.push('Chance a failure here turns into lost data: <b>'+odds(x.pLoss)+'</b>');
+    return L.map(function(s){ return '<li><span>'+weld(s)+'</span></li>'; }).join("");
+  }
+
+  function renderWorked(r){
+    var x = r.queue[0];
+    if(!x){ $("wxQ").textContent = "Your list is empty, so there is no top row to work through. Try the stale estate."; $("wx").innerHTML = ""; return; }
+    $("wxQ").textContent = weld("Why are "+fmt(x.n)+" "+x.md.brand+" "+x.md.model+" at the top?");
+    $("wx").innerHTML = chain(x, r);
+  }
+
+  /* ---------- the wear curve ----------
+     Drawn at the box's real width, one unit per CSS pixel, so its 12px labels sit on the
+     page's type scale. Each batch is a ring at its age; with Look ahead set, a faint ring
+     marks where it is today and a line shows how far it has climbed. */
+  var cv = null;
+  function renderCurve(){
+    var p = profile(), box = $("curve"), W = Math.max(280, box.parentNode.clientWidth || 720);
+    var H = Math.round(Math.max(240, Math.min(360, W * 0.34)));
+    var narrow = W < 520, L = narrow ? 30 : 40, R = 12, T = 22, B = 44;
+    var maxAge = 15, maxMul = 4.4;
+    var INK = cssVar("--tx3"), GRN = cssVar("--grn"), SURF = cssVar("--bg"), RULE = cssVar("--line"), RULE2 = cssVar("--line2"), TX2 = cssVar("--tx2");
+    box.setAttribute("viewBox", "0 0 " + W + " " + H);
+    box.setAttribute("height", H);
+    function X(a){ return L + (a / maxAge) * (W - L - R); }
+    function Y(m){ return T + (1 - m / maxMul) * (H - T - B); }
+    var out = [], i;
+    for(i = 1; i <= 4; i++){
+      out.push('<line x1="'+L+'" y1="'+Y(i).toFixed(1)+'" x2="'+(W-R)+'" y2="'+Y(i).toFixed(1)+'" stroke="'+(i === 1 ? RULE2 : RULE)+'" stroke-width="1"/>');
+      out.push('<text x="'+(L-8)+'" y="'+(Y(i)+4).toFixed(1)+'" text-anchor="end" fill="'+INK+'" font-size="12" font-family="Archivo, sans-serif">'+i+'×</text>');
+    }
+    out.push('<text x="'+(W-R)+'" y="'+(Y(1)-7).toFixed(1)+'" text-anchor="end" fill="'+INK+'" font-size="12" font-family="Archivo, sans-serif">lifetime average</text>');
+    out.push('<line x1="'+L+'" y1="'+Y(0).toFixed(1)+'" x2="'+(W-R)+'" y2="'+Y(0).toFixed(1)+'" stroke="'+RULE2+'" stroke-width="1"/>');
+    for(i = 0; i <= 14; i += 2) out.push('<text x="'+X(i).toFixed(1)+'" y="'+(Y(0)+18).toFixed(1)+'" text-anchor="middle" fill="'+INK+'" font-size="12" font-family="Archivo, sans-serif">'+i+'</text>');
+    out.push('<text x="'+L+'" y="'+(H-4)+'" fill="'+INK+'" font-size="12" font-family="Archivo, sans-serif">Drive age, years</text>');
+    var d = "";
+    for(var a = 0; a <= maxAge + 1e-9; a += 0.1) d += (d ? "L" : "M") + X(a).toFixed(1) + " " + Y(ageMul(a)).toFixed(1) + " ";
+    out.push('<path d="'+d+'L '+X(maxAge).toFixed(1)+' '+Y(0).toFixed(1)+' L '+X(0).toFixed(1)+' '+Y(0).toFixed(1)+' Z" fill="'+GRN+'" fill-opacity=".08"/>');
+    out.push('<path d="'+d+'" fill="none" stroke="'+GRN+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>');
+    out.push('<g id="cvHover" opacity="0" pointer-events="none"><line y1="'+T+'" y2="'+Y(0).toFixed(1)+'" stroke="'+RULE2+'" stroke-width="1"/><circle r="4.5" fill="'+SURF+'" stroke="'+GRN+'" stroke-width="2"/></g>');
+
+    var shareSum = 0, marks = [], yrs = state.years || 0;
+    p.mix.forEach(function(c){ shareSum += c[1]; });
+    p.mix.forEach(function(c){
+      var md = model(c[0]), n = Math.round(state.drives * (c[1] / shareSum));
+      var age = Math.min(c[2] + yrs, maxAge), mul = ageMul(c[2] + yrs), x = X(age), y = Y(mul);
+      var rr = Math.max(5, Math.min(14, Math.sqrt(n) / 3.2));
+      if(yrs > 0){
+        var x0 = X(c[2]), y0 = Y(ageMul(c[2]));
+        out.push('<line x1="'+x0.toFixed(1)+'" y1="'+y0.toFixed(1)+'" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="'+TX2+'" stroke-opacity=".35" stroke-width="1"/>');
+        out.push('<circle cx="'+x0.toFixed(1)+'" cy="'+y0.toFixed(1)+'" r="3" fill="'+TX2+'" fill-opacity=".4"/>');
+      }
+      marks.push({ x:x, y:y, r:rr, md:md, n:n, age:c[2] + yrs, mul:mul });
+      out.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+rr.toFixed(1)+'" fill="'+SURF+'" stroke="'+SURF+'" stroke-width="3"/>');
+      out.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+rr.toFixed(1)+'" fill="none" stroke="'+GRN+'" stroke-width="1.6"/>');
+      if(!narrow) out.push('<text x="'+x.toFixed(1)+'" y="'+(y - rr - 7).toFixed(1)+'" text-anchor="middle" fill="'+TX2+'" font-size="12" font-family="Archivo, sans-serif">'+md.tb+' TB</text>');
+    });
+    marks.forEach(function(m, idx){
+      out.push('<circle class="hit" data-i="'+idx+'" cx="'+m.x.toFixed(1)+'" cy="'+m.y.toFixed(1)+'" r="'+Math.max(m.r + 9, 14).toFixed(1)+'" fill="transparent" tabindex="0" role="img" aria-label="'+
+        (m.md.brand+' '+m.md.model+', '+m.md.tb+' TB, '+m.age.toFixed(1)+' years, '+fmt(m.n)+' drives, multiplier '+m.mul.toFixed(2)).replace(/"/g,"&quot;")+'"/>');
+    });
+    box.innerHTML = '<title id="curveTitle">Failure rate multiplier against drive age</title>' + $("curveDesc").outerHTML + out.join("");
+    cv = { W:W, L:L, R:R, Y:Y, maxAge:maxAge, marks:marks, hover:box.querySelector("#cvHover") };
+    box.querySelectorAll(".hit").forEach(function(el){
+      var idx = +el.getAttribute("data-i");
+      el.addEventListener("pointerenter", function(){ curveMark(idx); });
+      el.addEventListener("focus", function(){ curveMark(idx); });
+      el.addEventListener("pointerleave", curveHide);
+      el.addEventListener("blur", curveHide);
+    });
+  }
+  function curvePlace(px, py){
+    var box = $("curve"), tip = $("curveTip"), rect = box.getBoundingClientRect(), wr = box.parentNode.getBoundingClientRect();
+    var s = rect.width / cv.W; tip.hidden = false;
+    var x = rect.left - wr.left + px * s, y = rect.top - wr.top + py * s, half = tip.offsetWidth / 2;
+    tip.style.left = Math.max(0, Math.min(wr.width - tip.offsetWidth, x - half)) + "px";
+    tip.style.top = (y - 14 - tip.offsetHeight >= 0 ? y - 14 - tip.offsetHeight : y + 20) + "px";
+  }
+  function curveSay(a, b){ var tip = $("curveTip"); tip.textContent = ""; var s = document.createElement("b"); s.textContent = a; tip.appendChild(s); tip.appendChild(document.createTextNode(b)); }
+  function curveHide(){ $("curveTip").hidden = true; if(cv) cv.hover.setAttribute("opacity","0"); }
+  function curveMark(idx){
+    var m = cv.marks[idx]; cv.hover.setAttribute("opacity","0");
+    curveSay(m.mul.toFixed(2) + "× at " + m.age.toFixed(1) + " years", m.md.brand + " " + m.md.model + ", " + fmt(m.n) + " drives");
+    curvePlace(m.x, m.y - m.r);
+  }
+  function curveTrack(e){
+    if(!cv || (e.target.classList && e.target.classList.contains("hit"))) return;
+    var box = $("curve"), rect = box.getBoundingClientRect(), s = rect.width / cv.W, px = (e.clientX - rect.left) / s;
+    if(px < cv.L || px > cv.W - cv.R){ curveHide(); return; }
+    var ag = (px - cv.L) / (cv.W - cv.L - cv.R) * cv.maxAge, mul = ageMul(ag), py = cv.Y(mul);
+    var line = cv.hover.firstChild, dot = cv.hover.lastChild;
+    line.setAttribute("x1", px.toFixed(1)); line.setAttribute("x2", px.toFixed(1));
+    dot.setAttribute("cx", px.toFixed(1)); dot.setAttribute("cy", py.toFixed(1));
+    cv.hover.setAttribute("opacity","1");
+    curveSay(mul.toFixed(2) + "× the lifetime rate", "at " + ag.toFixed(1) + " years");
+    curvePlace(px, py);
+  }
+
+  /* ---------- controls ---------- */
+  // fleet size on a log scale: 100 to 100,000 across the track, rounded to a sensible step
+  function sizeFromPos(t){ var v = Math.pow(10, 2 + 3 * t / 1000); var step = v < 1000 ? 10 : v < 10000 ? 100 : 1000; return Math.round(v / step) * step; }
+  function posFromSize(n){ return Math.round(1000 * (Math.log(Math.max(100, Math.min(100000, n))) / Math.LN10 - 2) / 3); }
+  function setFill(el){ var mn = +el.min, mx = +el.max; el.style.setProperty("--fill", (100 * (el.value - mn) / (mx - mn)) + "%"); }
+
+  function syncControls(){
+    var p = profile(), sc = scheme();
+    var pr = document.querySelector('#profChips input[value="'+state.profile+'"]'); if(pr) pr.checked = true;
+    var sr = document.querySelector('#schemeChips input[value="'+state.scheme+'"]'); if(sr) sr.checked = true;
+    // the slider being dragged keeps its own position; rounding it back would make the thumb jump
+    var held = document.activeElement;
+    function put(id, v){ if($(id) !== held) $(id).value = v; }
+    put("drives", posFromSize(state.drives));
+    put("pulls", Math.min(100, state.pulls));
+    put("years", state.years);
+    put("smart", Math.min(15, state.smart));
+    put("rebuild", Math.max(50, Math.min(500, state.rebuild)));
+    ["drives","pulls","years","smart","rebuild"].forEach(function(id){ setFill($(id)); });
+    $("drivesOut").textContent = fmt(state.drives) + " drives";
+    $("drives").setAttribute("aria-valuetext", fmt(state.drives) + " drives");
+    $("pullsOut").textContent = fmt(state.pulls) + " a week";
+    $("pulls").setAttribute("aria-valuetext", fmt(state.pulls) + " pulls a week");
+    var y = state.years; $("yearsOut").textContent = y === 0 ? "Today" : "In " + (y % 1 ? y.toFixed(1) : y) + " " + plural(y, "year");
+    $("years").setAttribute("aria-valuetext", $("yearsOut").textContent);
+    $("smartOut").textContent = state.smart.toFixed(1) + "%";
+    $("smart").setAttribute("aria-valuetext", state.smart.toFixed(1) + " percent of healthy drives");
+    $("rebuildOut").textContent = fmt(state.rebuild) + " MB/s";
+    $("rebuild").setAttribute("aria-valuetext", fmt(state.rebuild) + " megabytes a second");
+    var mean = profileAge(p) + (state.years || 0);
+    $("profNote").textContent = weld(p.mix.length + " batches, " + profileSpan(p) + ", mean age " + mean.toFixed(1) + " years" + (state.years ? " by then." : "."));
+    $("fleetNote").textContent = weld(p.note);
+    $("schemeNote").textContent = weld(sc.note);
+  }
+
+  function render(){
+    var r = compute();
+    syncControls();
+    var canaries = r.totalFlag === 0 ? "no drive carries a warning" : r.totalFlag === 1 ? "one drive carries a warning" : fmt(r.totalFlag) + " drives carry a warning";
+    $("smartNote").textContent = weld("Share of healthy drives showing one of five SMART warnings. 4.2 percent is the published baseline; in this fleet, " + canaries + ".");
+    $("rebuildNote").textContent = weld("The effective rate against production traffic. At " + fmt(state.rebuild) + " MB/s a 16 TB drive rebuilds in " + fmt(16e6/state.rebuild/3600) + " hours.");
+    renderAnswer(r);
+    renderKpis(r);
+    renderWall(r);
+    renderQueue(r);
+    renderWorked(r);
+    renderCurve();
+    renderTry();
+    renderMini(r);
+    announce(r);
+    writeUrl();
+  }
+  /* A user change. The four numbers then say what they were before it, and a slider drag
+     counts as one change from where it started, not one per tick along the way. */
+  function change(fn, drag){
+    if(!(drag && dragging)) kpiBase = lastKpi;
+    dragging = !!drag;
+    fn(); render();
+  }
+
+  function renderTry(){
+    var b = document.querySelectorAll(".try button");
+    for(var i = 0; i < b.length; i++){
+      var t = b[i].getAttribute("data-try");
+      b[i].disabled = (t === "raid5" && state.scheme === "raid5") || (t === "nosmart" && state.smart === 0) ||
+        (t === "age" && state.years >= 5) || (t === "reset" && isDefault()) || (t === "crew" && state.pulls >= 100);
+    }
+  }
+  function isDefault(){ for(var k in DEFAULTS) if(state[k] !== DEFAULTS[k]) return false; return true; }
+
+  function renderMini(r){
+    $("miniN").textContent = state.pulls === 0 ? "No pulls this week" : "Pull " + fmt(r.thisWeek) + " this week";
+    $("miniW").textContent = r.backlogWeeks === Infinity ? "List never clears" : "Clears in " + fmt(Math.ceil(r.backlogWeeks)) + " " + plural(Math.ceil(r.backlogWeeks), "week");
+  }
+
+  /* the result is rewritten on every slider tick; a polite status says where it landed */
   var srTimer;
   function announce(r){
     clearTimeout(srTimer);
     srTimer = setTimeout(function(){
-      var top = r.queue.length ? " Top of the queue: "+fmt(r.queue[0].n)+" "+r.queue[0].md.model+
-                ", "+(r.queue[0].flagged?"flagged by SMART":"clean")+", "+fmtSmall(r.queue[0].tb)+" terabytes at risk." : "";
-      // outNote already ends in a full stop, so the sentences are joined rather than punctuated again
-      $("srStatus").textContent = "Pull this week: "+fmt(r.thisWeek)+" drives. "+$("outNote").textContent+top;
-    }, 500);
+      $("srStatus").textContent = $("hl").textContent + " " + $("hlSub").textContent + " " + fmt(r.queueDrives) + " on the list, " +
+        (r.backlogWeeks === Infinity ? "never clears" : "clears in " + fmt(Math.ceil(r.backlogWeeks)) + " weeks") +
+        ". Chance of losing data this year " + odds(r.pLossYear) + ".";
+    }, 600);
   }
 
-  /* The hero counts the record rather than quoting it, so the two can never disagree:
-     add a model to the table and the number in the hero moves with it. */
   function buildProv(){
-    var days = 0;
-    MODELS.forEach(function(m){ days += m.days; });
-    $("heroMeta").textContent = "Backblaze Drive Stats · "+MODELS.length+NB+"drive models · "+
-      fmt(days)+"M"+NB+"drive days · quarterly since"+NB+"2013";
+    var days = 0; MODELS.forEach(function(m){ days += m.days; });
+    $("prov").textContent = "Backblaze Drive Stats · " + MODELS.length + NB + "drive models · " + fmt(days) + "M" + NB + "drive days · quarterly since" + NB + "2013";
   }
-
   function buildRef(){
-    var maxAfr = 0;
-    MODELS.forEach(function(m){ maxAfr = Math.max(maxAfr, m.afr); });
+    $("refSum").textContent = "Show all " + MODELS.length + " drive models";
     $("refBody").innerHTML = MODELS.map(function(m){
       var iv = interval(m.afr, m.days);
-      return '<tr>'+
-        '<th scope="row" class="name">'+m.model+'<br><span class="ci">'+m.brand+'</span></th>'+
-        '<td class="m">'+m.tb+' TB</td>'+
-        '<td class="m">'+m.afr.toFixed(1)+'%<span class="afrbar" style="width:'+(100*m.afr/maxAfr).toFixed(1)+'%"></span></td>'+
-        '<td class="m">'+ivText(iv)+'</td>'+
-        '<td class="m">'+fmt(m.days)+'M<br><span class="ci">'+fmt(iv[2])+' failures</span></td>'+
-        '<td>'+m.note+'</td></tr>';
+      return '<tr><th scope="row">'+m.model+'<span class="ci">'+m.brand+'</span></th>'+
+        '<td class="m">'+m.tb+NB+'TB</td><td class="m">'+m.afr.toFixed(1)+'%</td><td class="m">'+ivText(iv)+'</td>'+
+        '<td class="m">'+fmt(m.days)+'M<span class="ci">'+fmt(iv[2])+' failures</span></td><td>'+m.note+'</td></tr>';
+    }).join("");
+  }
+  function buildChips(){
+    $("profChips").innerHTML = PROFILES.map(function(p){
+      return '<label class="chip"><input type="radio" name="profile" value="'+p.id+'"><span>'+p.name.charAt(0).toUpperCase()+p.name.slice(1)+'</span></label>';
+    }).join("");
+    $("schemeChips").innerHTML = SCHEMES.map(function(s){
+      return '<label class="chip"><input type="radio" name="scheme" value="'+s.id+'"><span>'+s.short+'</span></label>';
     }).join("");
   }
 
-  /* ---------- picker ----------
-     The OS draws native select popups in the system appearance, so the open list could never
-     carry the instrument's palette. This is the ARIA select-only combobox: DOM focus stays on
-     the trigger, aria-activedescendant moves, and the bindings are the ones a <select> already
-     taught everyone. Names stay sentence case in the DOM and are uppercased in CSS, so screen
-     readers say "Mixed estate" instead of spelling out capitals. */
-  function makePicker(btnId, listId, labelId, items, trailing){
-    var btn, list, wrap, opts, value = null, open = false, active = -1, onPick = null,
-        holding = false, down = null, buf = "", bufAt = 0;
-
-    function idx(id){ for(var i=0;i<items.length;i++){ if(items[i].id===id) return i; } return 0; }
-    function row(ev){ return ev.target.closest ? ev.target.closest(".sel-opt") : null; }
-    function pos(li){ return Array.prototype.indexOf.call(opts, li); }
-    function here(){ return active>=0 ? active : idx(value); }
-
-    function set(id){
-      value = id;
-      var it = items[idx(id)];
-      $(btnId+"Name").textContent = it.name;
-      for(var i=0;i<opts.length;i++) opts[i].setAttribute("aria-selected", items[i].id===id);
-    }
-    function mark(i){
-      if(i<0 || i>=opts.length) return;
-      if(active>=0) opts[active].classList.remove("act");
-      active = i;
-      opts[i].classList.add("act");
-      btn.setAttribute("aria-activedescendant", opts[i].id);
-      if(opts[i].scrollIntoView) opts[i].scrollIntoView({block:"nearest"});
-    }
-    function show(i){
-      if(!open){ open = true; list.hidden = false; btn.setAttribute("aria-expanded","true"); }
-      mark(i);
-    }
-    function close(){
-      if(!open) return;
-      open = false; list.hidden = true; buf = "";
-      btn.setAttribute("aria-expanded","false");
-      btn.removeAttribute("aria-activedescendant");
-      if(active>=0) opts[active].classList.remove("act");
-      active = -1;
-    }
-    // a pointer pick sends focus back to the trigger, the way closing a native popup does
-    function commit(i){
-      var pick = i>=0 && i<items.length ? items[i].id : value, changed = pick!==value;
-      close();
-      btn.focus({ preventScroll: true });
-      if(changed){ set(pick); onPick(pick); }
-    }
-    // typing jumps to a name, and a repeated letter cycles the names starting with it
-    function search(ch){
-      var now = Date.now(), start;
-      buf = (now - bufAt > 700) ? ch : buf + ch;
-      bufAt = now;
-      var same = /^(.)\1*$/.test(buf), probe = same ? buf.charAt(0) : buf;
-      start = same ? here()+1 : 0;
-      for(var n=0;n<items.length;n++){
-        var i = (start+n) % items.length;
-        if(items[i].name.toLowerCase().indexOf(probe)===0){ if(open) mark(i); else commit(i); return; }
-      }
-    }
-    function key(ev){
-      var k = ev.key, cur = here(), last = items.length-1;
-      if(k==="Escape"){ if(open){ ev.preventDefault(); close(); } return; }
-      if(k==="Tab"){ if(open) commit(active); return; }       // Tab takes the highlighted row with it
-      if(k==="Enter" || k===" "){ ev.preventDefault(); if(open) commit(active); else show(cur); return; }
-      if(k==="ArrowDown"){ ev.preventDefault(); show(ev.altKey && !open ? cur : Math.min(cur+1,last)); return; }
-      if(k==="ArrowUp"){ ev.preventDefault(); show(Math.max(cur-1,0)); return; }
-      if(k==="PageDown"){ ev.preventDefault(); show(Math.min(cur+5,last)); return; }
-      if(k==="PageUp"){ ev.preventDefault(); show(Math.max(cur-5,0)); return; }
-      if(k==="Home"){ ev.preventDefault(); show(0); return; }
-      if(k==="End"){ ev.preventDefault(); show(last); return; }
-      if(k.length===1 && !ev.metaKey && !ev.ctrlKey && !ev.altKey){ ev.preventDefault(); search(k.toLowerCase()); }
-    }
-
-    return {
-      init: function(cb){
-        btn = $(btnId); list = $(listId); wrap = btn.parentNode; onPick = cb;
-        list.innerHTML = items.map(function(it,i){
-          return '<li class="sel-opt" id="'+btnId+'Opt'+i+'" role="option" aria-selected="false">'+
-                 '<span class="mk" aria-hidden="true"></span><span class="nm">'+it.name+'</span>'+
-                 '<span class="kw">'+trailing(it)+'</span></li>';
-        }).join("");
-        opts = list.children;
-        btn.addEventListener("keydown", key);
-        btn.addEventListener("click", function(){ if(open) close(); else show(here()); });
-        // blur closes the list, unless a pointer is mid-press on an option
-        btn.addEventListener("blur", function(){ if(!holding) close(); });
-        // the pick lands on pointerup, the way a native popup does. A tap carries its own blur,
-        // and waiting for the click would let that blur close the list out from under it.
-        list.addEventListener("pointerdown", function(ev){ holding = true; down = row(ev); });
-        // a mouse may release on a row it did not press, the way dragging out of a native popup
-        // picks. A finger may not: that gesture is a scroll that outran its pointercancel.
-        list.addEventListener("pointerup", function(ev){
-          var li = row(ev);
-          if(li && (li===down || ev.pointerType==="mouse")) commit(pos(li));
-        });
-        list.addEventListener("pointercancel", function(){ down = null; });   // a pan, not a pick
-        list.addEventListener("mouseover", function(ev){ var li = row(ev); if(li) mark(pos(li)); });
-        document.addEventListener("pointerup", function(){
-          holding = false; down = null;
-          // a press that ended elsewhere must not leave an open list with focus on the body
-          if(open && document.activeElement!==btn) btn.focus({ preventScroll: true });
-        });
-        document.addEventListener("pointerdown", function(ev){ if(open && !wrap.contains(ev.target)) close(); });
-        $(labelId).addEventListener("click", function(){ btn.focus(); });
-      },
-      set: set
-    };
-  }
-
-  var profPicker = makePicker("prof", "profList", "profLabel", PROFILES,
-    function(it){ return profileAge(it).toFixed(1) + " yr"; });
-  var schemePicker = makePicker("scheme", "schemeList", "schemeLabel", SCHEMES,
-    function(it){ return it.m===0 ? "0 parity" : it.m + " parity"; });
-
+  /* ---------- link, sheet, url ---------- */
   function writeUrl(){
     var q = new URLSearchParams();
-    q.set("f", state.profile);
-    q.set("n", state.drives);
-    q.set("s", state.scheme);
-    q.set("c", state.smart);
-    q.set("rb", state.rebuild);
-    q.set("p", state.pulls);
-    // sandboxed previews (srcdoc iframes) forbid history writes; degrade to no-op there
-    try{ history.replaceState(null,"","#"+q.toString()); }
+    q.set("f", state.profile); q.set("n", state.drives); q.set("s", state.scheme);
+    q.set("c", state.smart); q.set("rb", state.rebuild); q.set("p", state.pulls);
+    if(state.years) q.set("y", state.years);
+    try{ history.replaceState(null, "", "#" + q.toString()); }
     catch(e){ try{ location.hash = q.toString(); }catch(e2){} }
   }
   function readUrl(){
-    if(!location.hash || location.hash.length<2) return false;
+    if(!location.hash || location.hash.length < 2) return false;
     var h = location.hash.slice(1);
-    if(h.indexOf("=")===-1) return false;     // plain anchor link, not state
-    var q = new URLSearchParams(h);
-    if(q.get("f")) state.profile = q.get("f");
-    if(q.get("n")) state.drives = parseInt(q.get("n"),10)||3000;
-    if(q.get("s")) state.scheme = q.get("s");
-    if(q.get("c")!==null && q.get("c")!==undefined && q.get("c")!=="") state.smart = parseFloat(q.get("c"))||0;
-    if(q.get("rb")) state.rebuild = parseFloat(q.get("rb"))||150;
-    if(q.get("p")!==null && q.get("p")!==undefined && q.get("p")!=="") state.pulls = parseInt(q.get("p"),10)||0;
+    if(h.indexOf("=") === -1) return false;     // plain anchor link, not state
+    var q = new URLSearchParams(h), v;
+    if(q.get("f")) state.profile = byId(PROFILES, q.get("f")).id;
+    if(q.get("n")) state.drives = Math.max(20, Math.min(500000, parseInt(q.get("n"),10) || 3000));
+    if(q.get("s")) state.scheme = byId(SCHEMES, q.get("s")).id;
+    if((v = q.get("c")) !== null && v !== "") state.smart = Math.max(0, Math.min(40, parseFloat(v) || 0));
+    if(q.get("rb")) state.rebuild = Math.max(10, Math.min(1000, parseFloat(q.get("rb")) || 150));
+    if((v = q.get("p")) !== null && v !== "") state.pulls = Math.max(0, Math.min(2000, parseInt(v,10) || 0));
+    if((v = q.get("y")) !== null && v !== "") state.years = Math.max(0, Math.min(5, Math.round((parseFloat(v) || 0) * 2) / 2));
     return true;
   }
-  // the inputs sit inline in a sentence, so each is sized to its own value
-  function fit(n){ n.style.width = Math.max(2, String(n.value || "").length + 1) + "ch"; }
-
-  function syncInputs(){
-    $("drives").value = state.drives;
-    $("smart").value = state.smart;
-    $("rebuild").value = state.rebuild;
-    $("pulls").value = state.pulls;
-    ["drives","smart","rebuild","pulls"].forEach(function(id){ fit($(id)); });
-    profPicker.set(state.profile);
-    schemePicker.set(state.scheme);
-  }
-
-  function bindNum(numId, key, min, max, isInt){
-    var n = $(numId);
-    function clamp(v){
-      v = parseFloat(v); if(isNaN(v)) return null;
-      v = Math.max(min, Math.min(max, v));
-      return isInt ? Math.round(v) : v;
-    }
-    /* While typing, recompute whenever the partial entry is usable but never rewrite the
-       field out from under the person typing it; the snap to the clamped value waits for
-       the change event, when they are done. */
-    n.addEventListener("input", function(){
-      var v = clamp(n.value);
-      if(v !== null){ state[key] = v; render(); }
-      fit(n);
-    });
-    n.addEventListener("change", function(){
-      var v = clamp(n.value);
-      if(v === null) v = state[key];
-      state[key] = v; n.value = v;
-      fit(n); render();
-    });
-  }
-
-  function toast(msg){
-    var t = $("toast"); t.textContent = msg; t.classList.add("on");
-    setTimeout(function(){ t.classList.remove("on"); }, 1600);
-  }
+  function toast(msg){ var t = $("toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(function(){ t.classList.remove("on"); }, 1600); }
   function copy(text, msg){
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(text).then(function(){ toast(msg); }, function(){ fallback(text,msg); });
-    } else { fallback(text,msg); }
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function(){ toast(msg); }, function(){ fallback(text, msg); });
+    else fallback(text, msg);
   }
-  function fallback(text,msg){
-    var ta = document.createElement("textarea");
-    ta.value = text; ta.style.position="fixed"; ta.style.opacity="0";
+  function fallback(text, msg){
+    var ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
     document.body.appendChild(ta); ta.select();
     try{ document.execCommand("copy"); toast(msg); }catch(e){ toast("Copy failed"); }
     document.body.removeChild(ta);
   }
-  function summary(){
-    var r = compute(), sc = scheme();
-    var L = [];
-    L.push("PULL SHEET  ·  "+fmt(r.totalDrives)+" drives  ·  "+profile().name);
-    L.push(sc.name+", groups of "+r.group+"  ·  rebuild "+state.rebuild+" MB/s  ·  SMART canaries "+state.smart+"%");
+  function sheet(){
+    var r = compute(), sc = scheme(), L = [], before = 0;
+    L.push("PULL SHEET  ·  " + fmt(r.totalDrives) + " drives  ·  " + profile().name + (state.years ? "  ·  in " + state.years + " years" : ""));
+    L.push(sc.name + ", groups of " + r.group + "  ·  rebuild " + state.rebuild + " MB/s  ·  SMART coverage " + state.smart + "%");
     L.push("");
-    L.push("Pull this week: "+fmt(r.thisWeek)+" of "+fmt(r.queueDrives)+" in the queue, at "+fmt(state.pulls)+" pulls a week.");
-    L.push("Expected failures next 30 days: "+fmtSmall(r.totalFail30)+
-           "   Data at risk: "+fmtSmall(r.totalTb)+" TB"+
-           "   Chance of actual data loss this year: "+odds(r.pLossYear));
+    L.push("Pull this week: " + fmt(r.thisWeek) + " of " + fmt(r.queueDrives) + " on the list, at " + fmt(state.pulls) + " pulls a week.");
+    L.push("Expected failures next 30 days: " + fmtSmall(r.totalFail30) + "   At risk: " + fmtSmall(r.totalTb) + " TB   Chance of losing data this year: " + odds(r.pLossYear));
     L.push("");
     L.push("Ranked by risk times blast radius:");
-    var spent = 0;
-    r.queue.forEach(function(row,i){
-      var cut = spent >= state.pulls ? "  (waits)" : "";
-      spent += row.n;
-      L.push("  "+(i+1)+". "+fmt(row.n)+" x "+row.md.model+"  "+row.md.tb+"TB  "+row.age.toFixed(1)+"y  "+
-             (row.flagged?"SMART flagged":"clean")+"  "+(row.rate*100).toFixed(1)+"%/yr  "+
-             fmtSmall(row.tb)+" TB at risk"+cut);
+    r.queue.forEach(function(x, i){
+      var a = weekOf(before, r), b = weekOf(before + x.n - 1, r); before += x.n;
+      L.push("  " + (i+1) + ". " + fmt(x.n) + " x " + x.md.model + "  " + x.md.tb + "TB  " + x.age.toFixed(1) + "y  " +
+        (x.flagged ? "SMART flagged" : "clean") + "  " + (x.rate*100).toFixed(1) + "%/yr  " + fmtSmall(x.tb) + " TB at risk  " + weekText(a, b));
     });
-    L.push("");
-    L.push(flagText(r));
-    L.push("");
-    L.push("Run your own: "+location.href);
+    L.push(""); L.push(flagText(r)); L.push(""); L.push("Run your own: " + location.href);
     return L.join("\n");
   }
 
+  /* ---------- wiring ---------- */
   document.addEventListener("DOMContentLoaded", function(){
-    var shared = readUrl();   // arrived on a shared configuration link
-    buildProv();
-    buildRef();
-    profPicker.init(function(id){ state.profile = id; render(); });
-    schemePicker.init(function(id){ state.scheme = id; render(); });
-    syncInputs();
+    var shared = readUrl();
+    buildProv(); buildRef(); buildChips();
 
-    bindNum("drives","drives",20,500000,true);
-    bindNum("smart","smart",0,40,false);
-    bindNum("rebuild","rebuild",10,1000,false);
-    bindNum("pulls","pulls",0,2000,true);
+    $("profChips").addEventListener("change", function(e){ change(function(){ state.profile = e.target.value; }); });
+    $("schemeChips").addEventListener("change", function(e){ change(function(){ state.scheme = e.target.value; }); });
+    $("drives").addEventListener("input", function(){ var el = this; change(function(){ state.drives = sizeFromPos(+el.value); }, true); });
+    $("drives").addEventListener("change", function(){ dragging = false; });
+    $("pulls").addEventListener("input", function(){ var el = this; change(function(){ state.pulls = +el.value; }, true); });
+    $("pulls").addEventListener("change", function(){ dragging = false; });
+    $("years").addEventListener("input", function(){ var el = this; change(function(){ state.years = +el.value; }, true); });
+    $("years").addEventListener("change", function(){ dragging = false; });
+    $("smart").addEventListener("input", function(){ var el = this; change(function(){ state.smart = Math.round(+el.value * 10) / 10; }, true); });
+    $("smart").addEventListener("change", function(){ dragging = false; });
+    $("rebuild").addEventListener("input", function(){ var el = this; change(function(){ state.rebuild = +el.value; }, true); });
+    $("rebuild").addEventListener("change", function(){ dragging = false; });
+
+    document.querySelector(".try").addEventListener("click", function(e){
+      var b = e.target.closest("button"); if(!b || b.disabled) return;
+      var t = b.getAttribute("data-try");
+      change(function(){
+        if(t === "crew") state.pulls = Math.min(100, Math.max(1, state.pulls * 2));
+        if(t === "raid5") state.scheme = "raid5";
+        if(t === "nosmart") state.smart = 0;
+        if(t === "age") state.years = 5;
+        if(t === "reset") for(var k in DEFAULTS) state[k] = DEFAULTS[k];
+      });
+    });
+
+    var cvs = $("wall");
+    cvs.addEventListener("pointermove", function(e){
+      var c = wallAt(e); if(c < 0){ hideTip(); setHoverRow(-1); return; }
+      setHoverRow(wall.cells[c].row < wall.r.queue.length ? wall.cells[c].row : -1);
+      showTip(c, e);
+    });
+    cvs.addEventListener("pointerleave", function(){ hideTip(); setHoverRow(-1); });
+
+    $("queue").addEventListener("click", function(e){
+      var b = e.target.closest(".exp"); if(!b) return;
+      var open = b.getAttribute("aria-expanded") !== "true", key = b.getAttribute("data-k");
+      b.setAttribute("aria-expanded", open); openRows[key] = open;
+      $(b.getAttribute("aria-controls")).hidden = !open;
+    });
+    $("queue").addEventListener("pointerover", function(e){ var tr = e.target.closest("tr.qr"); setHoverRow(tr ? +tr.getAttribute("data-i") : -1); });
+    $("queue").addEventListener("pointerleave", function(){ setHoverRow(-1); });
 
     $("copyLink").addEventListener("click", function(){ copy(location.href, "Link copied"); });
-    $("copySummary").addEventListener("click", function(){ copy(summary(), "Pull sheet copied"); });
-    window.addEventListener("beforeprint", function(){
-      $("printUrl").textContent = "Reproduce this queue: " + location.href;
-    });
+    $("copySheet").addEventListener("click", function(){ copy(sheet(), "Pull sheet copied"); });
+    window.addEventListener("beforeprint", function(){ $("printUrl").textContent = "Reproduce this list: " + location.href; });
 
     render();
 
-    // the curve sits in a collapsed details, where it has no measurable width;
-    // redraw it when the section opens and when the viewport changes
-    var curveDetails = $("curve").closest("details");
-    if(curveDetails) curveDetails.addEventListener("toggle", renderCurve);
-    var curveResizeT;
-    window.addEventListener("resize", function(){
-      clearTimeout(curveResizeT); curveResizeT = setTimeout(renderCurve, 120);
-    });
-    // wired to the box, not to its contents, so a redraw never stacks a second copy
+    var rt; window.addEventListener("resize", function(){ clearTimeout(rt); rt = setTimeout(function(){ wall.geo = null; render(); }, 120); });
     $("curve").addEventListener("pointermove", curveTrack);
     $("curve").addEventListener("pointerleave", curveHide);
 
-    // a shared link should land on the numbers, not on the sales pitch
+    // phone: the one-line answer rides along while the controls are on screen and the answer is not
+    if("IntersectionObserver" in window){
+      var ansVis = true, conVis = false;
+      var upd = function(){ $("mini").classList.toggle("on", !ansVis && conVis); };
+      new IntersectionObserver(function(es){ ansVis = es[0].isIntersecting; upd(); }).observe($("answer"));
+      new IntersectionObserver(function(es){ conVis = es[0].isIntersecting; upd(); }).observe(document.querySelector(".ctl"));
+    }
+
+    // a shared link should land on the tool, not the introduction
     if(shared){
-      var html = document.documentElement;
-      html.style.scrollBehavior = "auto";
-      var top = $("console").getBoundingClientRect().top + window.pageYOffset - 60;
-      window.scrollTo(0, top);
+      var html = document.documentElement; html.style.scrollBehavior = "auto";
+      window.scrollTo(0, $("console").getBoundingClientRect().top + window.pageYOffset);
       setTimeout(function(){ html.style.scrollBehavior = ""; }, 60);
     }
-  });
-})();
-</script>
-<script>
-/* Scroll reveals. Content is visible by default; motion is opted into only when
-   the browser is happy to move things. */
-(function(){
-  "use strict";
-  if(!("IntersectionObserver" in window)) return;
-  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  var els = document.querySelectorAll(".rv");
-  var io = new IntersectionObserver(function(es){
-    es.forEach(function(en){
-      if(en.isIntersecting){ en.target.classList.add("rvIn"); io.unobserve(en.target); }
-    });
-  }, { rootMargin: "0px 0px -70px 0px" });
-  els.forEach(function(e){
-    var r = e.getBoundingClientRect();
-    if(r.top < window.innerHeight && r.bottom > 0) return;
-    e.classList.add("rv0");
-    io.observe(e);
   });
 })();
 </script>
