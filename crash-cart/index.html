@@ -55,7 +55,7 @@
     --r-week:#EEF1F3;      /* the week being looked at */
     --r-done:#2BA678;      /* already pulled by then */
     --c-drives:#8B949E;    /* the second line on the plan, dE 15.9 from green under deutan */
-    --better:#3FE0A0; --worse:#FF8A7A;   /* change chips, always with an arrow and a number */
+    --better:#3FE0A0; --worse:#FF9A8C;   /* change chips, always with an arrow and a number */
     --action-bg:#EEF1F3; --action-bg-hover:#FFFFFF; --action-fg:#0A0C0E;
     --control-border:#2A3037; --control-border-hover:#7B838D;
     --link-underline:rgba(168,176,184,.45);
@@ -339,7 +339,8 @@
   /* below about 840px of its own width the table's five columns squeeze the names; the
      rows stack instead, wherever the panel happens to be that narrow */
   @container list (max-width:839px){
-    .pl thead{display:none}
+    /* the headers leave the screen but stay in the table, so each value keeps its column name for screen readers */
+    .pl thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
     .pl tr.qr{position:relative;display:flex;flex-wrap:wrap;align-items:center;column-gap:16px;row-gap:6px;
       padding:12px var(--pad) 14px calc(var(--pad) + 2em);border-top:1px solid var(--line)}
     .pl tr.qr td{border:0;padding:0}
@@ -397,7 +398,7 @@
   .ref-t tbody th{color:var(--tx)}
   .ref-t .m{font-variant-numeric:tabular-nums;white-space:nowrap}
   .ref-t .ci{display:block;color:var(--tx3);font-size:var(--fs-caption)}
-  .ref-t td:last-child{max-width:40ch;text-wrap:pretty}
+  .ref-t .nt{display:block;max-width:40ch;text-wrap:pretty}   /* on the text, since table cells ignore max-width */
   .profs{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1px;margin:48px 0 0;background:var(--line);border:1px solid var(--line)}
   .profs div{background:var(--bg2);padding:18px 20px}
   .profs dt{font-size:var(--fs-ui);font-weight:500;color:var(--tx)}
@@ -557,7 +558,7 @@
         <button type="button" data-try="crew">Double the crew</button>
         <button type="button" data-try="raid5">Drop to RAID 5</button>
         <button type="button" data-try="nosmart">Turn off SMART</button>
-        <button type="button" data-try="age">Five years on</button>
+        <button type="button" data-try="age">Look five years ahead</button>
         <button type="button" data-try="reset">Start over</button>
       </div>
     </div>
@@ -1504,7 +1505,7 @@
     var b = $("play"), atEnd = view.v >= view.max && view.max > 1;
     b.classList.toggle("playing", playing);
     b.querySelector(".pl").textContent = playing ? "Pause" : atEnd ? "Replay" : "Play";
-    b.setAttribute("aria-label", playing ? "Pause the plan" : "Play the plan week by week");
+    b.setAttribute("aria-label", playing ? "Pause the plan" : (atEnd ? "Replay" : "Play") + " the plan week by week");
   }
   function stepMs(){ return clamp(3600 / view.max, 70, 420); }
   function stopPlay(){ if(!playing) return; playing = false; clearTimeout(playT); setPlayBtn(); }
@@ -1827,7 +1828,7 @@
       var iv = interval(m.afr, m.days);
       return '<tr><th scope="row">'+m.model+'<span class="ci">'+m.brand+'</span></th>'+
         '<td class="m">'+m.tb+NB+'TB</td><td class="m">'+m.afr.toFixed(1)+'%</td><td class="m">'+ivText(iv)+'</td>'+
-        '<td class="m">'+fmt(m.days)+'M<span class="ci">'+fmt(iv[2])+' failures</span></td><td>'+m.note+'</td></tr>';
+        '<td class="m">'+fmt(m.days)+'M<span class="ci">'+fmt(iv[2])+' failures</span></td><td>'+'<span class="nt">'+m.note+'</span></td></tr>';
     }).join("");
     $("profs").innerHTML = PROFILES.map(function(p){
       return '<div><dt>'+p.name.charAt(0).toUpperCase()+p.name.slice(1)+'</dt><dd class="f">'+
