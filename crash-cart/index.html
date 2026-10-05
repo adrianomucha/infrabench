@@ -59,14 +59,14 @@
     --action-bg:#EEF1F3; --action-bg-hover:#FFFFFF; --action-fg:#0A0C0E;
     --control-border:#2A3037; --control-border-hover:#7B838D;
     --link-underline:rgba(168,176,184,.45);
-    --fs-caption:13px; --fs-small:14px; --fs-ui:15px; --fs-body:16px; --fs-lead:18px;
+    --fs-micro:12px; --fs-caption:13px; --fs-small:14px; --fs-ui:15px; --fs-body:16px; --fs-lead:18px;
     --fs-sub:20px; --fs-heading:22px; --fs-title:28px; --fs-kpi:30px; --fs-hero:40px;
     --col-gap:80px; --gap:16px; --rail:296px; --pad:18px;
     --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
     --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
   @media(max-width:700px){:root{--fs-lead:17px;--fs-kpi:26px;--fs-hero:34px;--pad:16px}}
-  @media(min-width:1680px){:root{--fs-caption:14px;--fs-small:15px;--fs-ui:16px;--fs-body:17px;--fs-lead:20px;
+  @media(min-width:1680px){:root{--fs-micro:13px;--fs-caption:14px;--fs-small:15px;--fs-ui:16px;--fs-body:17px;--fs-lead:20px;
     --fs-sub:23px;--fs-heading:26px;--fs-title:34px;--fs-kpi:36px;--fs-hero:48px;--col-gap:112px;--gap:20px;--rail:336px;--pad:22px}}
   @media(min-width:2200px){:root{--fs-small:16px;--fs-body:18px;--fs-lead:21px;--fs-sub:24px;--fs-title:36px;--fs-kpi:40px;--fs-hero:52px;--col-gap:136px;--rail:360px}}
 
@@ -88,7 +88,9 @@
   .glyph{color:var(--grn);flex:none;display:block}
   h2{font-size:var(--fs-heading);font-weight:500;letter-spacing:-.02em;line-height:1.2;margin:0}
   h3{font-size:var(--fs-ui);font-weight:500;line-height:1.3;margin:0}
-  .num,.tn{font-variant-numeric:tabular-nums}
+  .num,.tn,.dash,.mini{font-variant-numeric:tabular-nums}
+  /* chart labels are drawn at 12px in the markup; the scale owns their size */
+  #plan text,#curve text{font-size:var(--fs-micro);font-variant-numeric:tabular-nums}
 
   /* ---------- header ---------- */
   .top{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:68px}
@@ -105,7 +107,7 @@
 
   /* ---------- title bar: one line of what this is, and the share button ---------- */
   .tbar{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-block:20px 22px}
-  .tbar h1{font-size:var(--fs-title);font-weight:500;letter-spacing:-.025em;line-height:1.15;margin:0}
+  .tbar h1{font-size:var(--fs-title);font-weight:500;letter-spacing:-.025em;line-height:1.15;margin:0;text-wrap:balance}
   .tbar h1 span{color:var(--tx2)}
   .tbar .src{font-size:var(--fs-caption);color:var(--tx3);margin:6px 0 0}
   .tbar .acts{display:flex;gap:10px}
@@ -169,7 +171,7 @@
   input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 2px var(--grn)}
   input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 2px var(--grn)}
   input[type=range]:disabled{opacity:.4;cursor:default}
-  .scale{display:flex;justify-content:space-between;font-size:12px;color:var(--tx3);margin-top:1px;font-variant-numeric:tabular-nums}
+  .scale{display:flex;justify-content:space-between;font-size:var(--fs-micro);color:var(--tx3);margin-top:1px;font-variant-numeric:tabular-nums}
 
   details.more{border-top:1px solid var(--line)}
   details.more > summary{cursor:pointer;list-style:none;padding:11px var(--pad);font-size:var(--fs-small);font-weight:500;color:var(--tx2)}
@@ -200,7 +202,7 @@
   .kpi.main .v b{color:var(--grn)}
   .kpi .d{display:flex;align-items:center;gap:5px;min-height:1.5em;margin-top:6px;font-size:var(--fs-caption);font-weight:500;color:var(--tx3);font-variant-numeric:tabular-nums;white-space:nowrap}
   .kpi .d.good{color:var(--better)} .kpi .d.bad{color:var(--worse)}
-  .kpi .d i{font-style:normal;font-size:10px}
+  .kpi .d i{font-style:normal;font-size:.75em}
   .kpi .s{margin-top:2px;font-size:var(--fs-caption);color:var(--tx3);line-height:1.45;text-wrap:pretty}
   .kpi.hit{animation:kflash .7s ease-out}
   @keyframes kflash{from{background:#1A2026}to{background:var(--bg2)}}
@@ -209,8 +211,8 @@
   .gauge .mk,.gauge .was{position:absolute;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;left:var(--p,0%)}
   .gauge .mk{background:var(--tx);border:2px solid var(--bg2);box-shadow:0 0 0 1px var(--tx)}
   .gauge .was{border:1.5px dashed var(--tx3);background:transparent}
-  .gscale{display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--tx3)}
-  .alert{display:flex;align-items:center;gap:10px;margin:0;padding:10px var(--pad);background:var(--bg2);border:1px solid var(--line);border-top:0;font-size:var(--fs-small);line-height:1.45;color:var(--tx)}
+  .gscale{display:flex;justify-content:space-between;margin-top:6px;font-size:var(--fs-micro);color:var(--tx3)}
+  .alert{display:flex;align-items:center;gap:10px;margin:0;padding:10px var(--pad);background:var(--bg2);border:1px solid var(--line);border-top:0;font-size:var(--fs-small);line-height:1.45;color:var(--tx);text-wrap:pretty}
   .alert .ic{width:10px;height:10px;flex:none}
   .alert.warn .ic{background:var(--r-sched)} .alert.bad .ic{background:var(--r-pull)} .alert.ok .ic{background:var(--grn)}
   @container (max-width:860px){
@@ -278,7 +280,7 @@
   .pl .exp[aria-expanded="true"] .nm::after{content:"\2212"}
   .pl .exp:hover .nm{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
   .pl .mt{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;font-size:var(--fs-caption);color:var(--tx3);margin-top:1px}
-  .flag{display:inline-block;padding:0 5px;border:1px solid var(--r-sched);color:var(--tx);font-size:11px;line-height:16px;letter-spacing:.03em}
+  .flag{display:inline-block;padding:0 5px;border:1px solid var(--r-sched);color:var(--tx);font-size:var(--fs-micro);line-height:1.35}
   /* magnitudes as thin bars, each against the largest in the list */
   .bar{display:inline-block;width:56px;height:4px;margin-inline-end:10px;background:var(--line2);vertical-align:middle}
   .bar i{display:block;height:100%;background:var(--tx3)}
@@ -311,10 +313,10 @@
   .calc + .calc{margin-top:6px}
   .calc .c{display:inline-flex;flex-direction:column;padding:5px 10px;border:1px solid var(--line2);background:var(--bg);line-height:1.3}
   .calc .c b{font-weight:500;color:var(--tx);font-variant-numeric:tabular-nums;font-size:var(--fs-small)}
-  .calc .c span{font-size:12px;color:var(--tx3)}
+  .calc .c span{font-size:var(--fs-micro);color:var(--tx3)}
   .calc .c.out{border-color:var(--tx3)}
   .calc .op{color:var(--tx3);font-family:var(--mono);font-size:var(--fs-small);padding:0 2px}
-  .qd .note{margin:10px 0 0;color:var(--tx3);font-size:var(--fs-caption);max-width:72ch;text-wrap:pretty}
+  .qd .note{margin:10px 0 0;color:var(--tx3);font-size:var(--fs-caption);max-width:54ch;text-wrap:pretty}
 
   @media(max-width:700px){
     .pl thead{display:none}
@@ -346,15 +348,15 @@
   [role=tabpanel]:focus-visible{outline-offset:8px}
   .two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);column-gap:var(--col-gap);row-gap:48px}
   @media(max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
-  .lead{margin:0 0 28px;color:var(--tx2);max-width:60ch;text-wrap:pretty}
+  .lead{margin:0 0 28px;color:var(--tx2);max-width:50ch;text-wrap:pretty}
   .steps{margin:0;padding:0;list-style:none;counter-reset:s}
   .steps li{counter-increment:s;display:grid;grid-template-columns:2em minmax(0,1fr);padding:0 0 22px}
   .steps li::before{content:counter(s);font-family:var(--mono);color:var(--tx3);font-size:var(--fs-small);padding-top:2px}
   .steps h3{font-size:var(--fs-body);margin-bottom:4px}
-  .steps p{margin:0;color:var(--tx2);font-size:var(--fs-ui);text-wrap:pretty}
+  .steps p{margin:0;color:var(--tx2);font-size:var(--fs-ui);max-width:46ch;text-wrap:pretty}
   .ex{margin:0;align-self:start;background:var(--bg2);border:1px solid var(--line);padding:22px 26px}
   .ex figcaption{font-size:var(--fs-caption);color:var(--tx3);margin:0 0 12px}
-  .ex .q{font-size:var(--fs-body);color:var(--tx);margin:0 0 12px}
+  .ex .q{font-size:var(--fs-body);color:var(--tx);margin:0 0 12px;text-wrap:balance}
   .chain{margin:0;padding:0;list-style:none;font-size:var(--fs-small);line-height:1.55;color:var(--tx2)}
   .chain li{display:grid;grid-template-columns:1.6em minmax(0,1fr);padding:3px 0}
   .chain li::before{content:"\2192";color:var(--tx3);font-family:var(--mono)}
@@ -362,7 +364,7 @@
   .chain b{color:var(--tx);font-weight:500;font-variant-numeric:tabular-nums}
   .curve{margin-top:56px}
   .curve-hd{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 24px;margin-bottom:12px}
-  .curve-hd p{margin:0;color:var(--tx2);font-size:var(--fs-small);max-width:64ch}
+  .curve-hd p{margin:0;color:var(--tx2);font-size:var(--fs-small);max-width:54ch;text-wrap:pretty}
   #curve{display:block;width:100%;height:auto;overflow:visible}
   .ctip{position:absolute;z-index:5;pointer-events:none;padding:8px 10px;background:var(--bg3);border:1px solid var(--line2);font-size:var(--fs-small);line-height:1.4;color:var(--tx2);white-space:nowrap}
   .ctip b{display:block;color:var(--tx);font-weight:500}
@@ -387,8 +389,9 @@
   dl.eq dt{color:var(--tx);font-size:var(--fs-small)}
   dl.eq dd{margin:0;color:var(--tx2);font-size:var(--fs-small);font-family:var(--mono);line-height:1.6}
   dl.eq dd i{font-family:var(--sans);font-style:normal;color:var(--tx3)}
+  dl.eq var{font-style:normal;color:var(--tx)}
   @media(max-width:560px){dl.eq div{grid-template-columns:minmax(0,1fr)}}
-  .calls p{margin:0 0 16px;color:var(--tx2);text-wrap:pretty}
+  .calls p{margin:0 0 16px;color:var(--tx2);max-width:50ch;text-wrap:pretty}
   .calls p b{color:var(--tx);font-weight:500}
 
   /* about and footer, as on the home page */
@@ -401,7 +404,7 @@
   .lnk:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
   footer{padding:0 0 56px;font-size:var(--fs-small);color:var(--tx3)}
   footer .wrap::before{content:"";display:block;border-top:1px solid var(--line);margin-bottom:36px}
-  footer p{margin:0;max-width:72ch;text-wrap:pretty}
+  footer p{margin:0;max-width:58ch;text-wrap:pretty}
   footer .fine{color:var(--tx2)}
   footer .meta{margin-top:14px}
   footer a{color:var(--tx2);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em;text-decoration-color:var(--link-underline)}
@@ -660,7 +663,7 @@
         <div><dt>Data actually lost</dt><dd>the same &times; chance the group loses data <i>the fleet total</i></dd></div>
       </dl>
       <div class="calls">
-        <p><b>SMART is evidence, not a threshold.</b> Flagged drives carry an 18&times; likelihood ratio and clean ones 0.24&times;, renormalized to the coverage you set so the fleet's total expected failures are preserved.</p>
+        <p><b>SMART is evidence, not a threshold.</b> Flagged drives carry an 18&times; likelihood ratio and clean ones 0.24&times;, renormalized to the coverage you set so the fleet’s total expected failures are preserved.</p>
         <p><b>The age multiplier</b> follows the published bathtub shape, normalized so a mixed-age fleet averages 1.0. <b>Look ahead</b> adds the same years to every batch and reads the curve at the new age: no replacements, no new drives, no change in rates beyond the curve.</p>
         <p><b>Rebuild rate is the effective rate on a live system,</b> not the spec sheet; 150 MB/s is an honest default. Unrecoverable read errors count only where no parity is left.</p>
         <p><b>The list holds drives with a reason.</b> The bands sit at 1.5 percent a year (watch), 5 (schedule) and 15 (pull). The crew works the list top down; weeks after the first assume it also absorbs the drives that newly earn a place each week, which is what the plan chart and the week scrubber show.</p>
@@ -691,7 +694,7 @@
 
 <footer>
   <div class="wrap">
-    <p class="fine">Drive models, lifetime failure rates and drive days from <a href="https://www.backblaze.com/cloud-storage/resources/hard-drive-test-data" target="_blank" rel="noopener">Backblaze Drive Stats</a>, published quarterly since 2013 under a permissive licence with attribution. The five predictive SMART attributes and their prevalence come from Backblaze's <a href="https://www.backblaze.com/blog/what-smart-stats-indicate-hard-drive-failures/" target="_blank" rel="noopener">analysis of SMART stats against real failures</a>. Unrecoverable read error rates are the manufacturer specification on current enterprise nearline datasheets. Figures are rounded; re-pull the table before you spend money against a decimal in here.</p>
+    <p class="fine">Drive models, lifetime failure rates and drive days from <a href="https://www.backblaze.com/cloud-storage/resources/hard-drive-test-data" target="_blank" rel="noopener">Backblaze Drive Stats</a>, published quarterly since 2013 under a permissive licence with attribution. The five predictive SMART attributes and their prevalence come from Backblaze’s <a href="https://www.backblaze.com/blog/what-smart-stats-indicate-hard-drive-failures/" target="_blank" rel="noopener">analysis of SMART stats against real failures</a>. Unrecoverable read error rates are the manufacturer specification on current enterprise nearline datasheets. Figures are rounded; re-pull the table before you spend money against a decimal in here.</p>
     <p class="meta">Crash Cart is part of <a href="/">Infrabench</a> by <a href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">Adrian Mucha</a> / FruitBat Design, Los Angeles &middot; MIT licensed &middot; <a href="https://github.com/adrianomucha/infrabench" target="_blank" rel="noopener">Source on GitHub</a></p>
   </div>
 </footer>
@@ -717,7 +720,7 @@
     {id:"st12a",   brand:"Seagate", model:"ST12000NM0007",    tb:12, afr:1.4, days:62,  note:"The one with a bad stretch mid-life. Rate is a lifetime average over it."},
     {id:"st12b",   brand:"Seagate", model:"ST12000NM0008",    tb:12, afr:1.0, days:29,  note:"The revision that fixed it."},
     {id:"hgst12",  brand:"HGST",    model:"HUH721212ALE604",  tb:12, afr:0.9, days:24,  note:"Large deployment, unremarkable in the way you want."},
-    {id:"tosh14",  brand:"Toshiba", model:"MG07ACA14TA",      tb:14, afr:1.0, days:69,  note:"Toshiba's volume 14 TB. Ordinary rate, awkward age by now."},
+    {id:"tosh14",  brand:"Toshiba", model:"MG07ACA14TA",      tb:14, afr:1.0, days:69,  note:"Toshiba’s volume 14 TB. Ordinary rate, awkward age by now."},
     {id:"st14",    brand:"Seagate", model:"ST14000NM001G",    tb:14, afr:1.2, days:15,  note:"Exos 14 TB, mid-pack."},
     {id:"wdc14",   brand:"WDC",     model:"WUH721414ALE6L4",  tb:14, afr:0.4, days:14,  note:"One of the lowest sustained rates in the whole table."},
     {id:"st16",    brand:"Seagate", model:"ST16000NM001G",    tb:16, afr:0.8, days:19,  note:"Exos 16 TB, the volume 16 TB Seagate."},
@@ -1141,7 +1144,7 @@
       return "You are ahead of this fleet: "+fmt(state.pulls)+" pulls a week clears the list in "+lw+
              " "+plural(lw, "week")+". The real question is whether that many service trips is worth spending.";
     var share = r.totalTb > 0 ? Math.round(100*r.tbCovered/r.totalTb) : 0;
-    return "Worked top down, this week's "+fmt(r.thisWeek)+" pulls take "+share+" percent of the data at risk with "+
+    return "Worked top down, this week’s "+fmt(r.thisWeek)+" pulls take "+share+" percent of the data at risk with "+
            Math.round(100*r.thisWeek/r.queueDrives)+" percent of the drives on the list.";
   }
 
@@ -1461,7 +1464,7 @@
     el.max = view.max; el.value = v; el.disabled = view.max <= 1; setFill(el);
     $("play").disabled = view.max <= 1;
     $("wkOut").textContent = !Q ? "Nothing to plan" : v === 1 ? "Week 1, this week" : "Week " + v + " of " + fmt(lastWeek(r));
-    $("wkStat").textContent = !Q ? "" : fmt(D) + " of " + fmt(Q) + " pulled · " + Math.round(riskShare(r, D) * 100) + "% of the list's risk";
+    $("wkStat").textContent = !Q ? "" : fmt(D) + " of " + fmt(Q) + " pulled · " + Math.round(riskShare(r, D) * 100) + "% of the list’s risk";
     el.setAttribute("aria-valuetext", $("wkOut").textContent + (Q ? ", " + $("wkStat").textContent : ""));
     setPlayBtn();
   }
