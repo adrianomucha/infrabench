@@ -49,7 +49,7 @@
   html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:16px;line-height:1.6;
     -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-  .wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+  .wrap{max-width:1260px;margin:0 auto;padding:0 32px}
   @media(max-width:640px){.wrap{padding:0 20px}}
   a{color:inherit}
   :focus-visible{outline:2px solid var(--grn);outline-offset:3px}
@@ -90,7 +90,7 @@
   .t-q{font-size:20px;line-height:1.35;letter-spacing:-.015em;color:var(--tx);margin:22px 0 0}
   .t-q span{display:block;color:var(--tx2)}
   .t-d{font-size:15px;color:var(--tx2);margin:10px 0 0;max-width:46ch;text-wrap:pretty}
-  .t-src{font-size:13px;line-height:1.5;color:var(--tx3);margin:18px 0 0;max-width:46ch}
+  .t-src{font-size:13px;line-height:1.5;color:var(--tx3);margin:18px 0 0;max-width:46ch;text-wrap:pretty}
   .go{grid-area:go;align-self:end;justify-self:start;display:inline-flex;align-items:baseline;gap:6px;padding-top:28px;
     font-size:15px;font-weight:500;color:var(--tx);text-decoration:none}
   .go .arr{color:var(--grn)}
@@ -141,6 +141,48 @@
   footer .meta span{white-space:nowrap}
   footer a{color:var(--tx2);text-decoration:none;white-space:nowrap}
   footer a:hover{color:var(--tx);text-decoration:underline;text-underline-offset:4px}
+
+  /* ---------- large screens ----------
+     The container steps match the tool pages (1260, 1520, 1720) so the wordmark holds
+     its place as you move between them. Type steps up with it; a wider frame with the
+     laptop sizes inside reads as a small page with big margins. */
+  @media(min-width:1680px){
+    .wrap{max-width:1520px}
+    .top{height:84px}
+    .brand{font-size:14px;gap:12px}
+    .brand .glyph{width:22px;height:22px}
+    .top nav a{font-size:16px}
+    .intro{padding-block:112px 120px}
+    h1{font-size:76px}
+    .lede{font-size:20px;margin-top:32px}
+    .tool{column-gap:112px;padding:64px 0}
+    .t-name{font-size:34px;gap:16px}
+    .t-name .glyph{width:30px;height:30px}
+    .t-q{font-size:23px;margin-top:26px}
+    .t-d{font-size:17px;margin-top:12px}
+    .t-src{font-size:14px;margin-top:20px}
+    .go{font-size:16px;padding-top:32px}
+    .ex{padding:28px 32px 26px}
+    .ex figcaption{font-size:14px;margin-bottom:12px}
+    .ex dl div{padding:8px 0}
+    .ex dt,.ex dd{font-size:16px}
+    .ex .ans dd{font-size:19px}
+    .about{column-gap:128px;padding-block:136px 144px}
+    .about h2{font-size:26px;margin-bottom:24px}
+    .about p{font-size:18px}
+    .btn,.lnk{font-size:16px}
+    .btn{padding:15px 26px}
+    footer{font-size:15px;padding:44px 0 72px}
+  }
+  @media(min-width:2200px){
+    .wrap{max-width:1720px}
+    h1{font-size:84px}
+    .lede{font-size:21px}
+    .tool{column-gap:136px}
+    .t-name{font-size:36px}
+    .t-q{font-size:24px}
+    .t-d{font-size:18px}
+  }
 </style>
 </head>
 <body>
