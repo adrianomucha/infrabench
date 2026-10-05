@@ -6,7 +6,7 @@
 <title>Crash Cart · Infrabench</title>
 <meta name="description" content="Drive failure triage on thirteen years of public fleet telemetry. Describe your fleet, get a ranked pull queue: which drives to swap this week, ordered by risk times blast radius, with the evidence that flagged each one.">
 <meta property="og:title" content="Crash Cart · Which drives to pull this week">
-<meta property="og:description" content="Not a dashboard, a work queue. Public drive telemetry, a Bayesian read of SMART, and the rebuild math that decides what a failure actually costs you.">
+<meta property="og:description" content="A live pull list for your fleet: public drive telemetry, a Bayesian read of SMART, and the rebuild math that decides what a failure actually costs you.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="/crash-cart/og.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -28,52 +28,58 @@
   gtag('config', 'G-B4K7J0G5X6');
 </script>
 <style>
-  /* Crash Cart on the suite's home-page system: the same tokens, type scale and column
-     rules as /index.html. The tool leads; explanation follows it. Mono is for numbers
-     and the wordmark. Green is the brand and focus; the four band colours are status
-     (pull, schedule, watch, hold) and always travel with their name in words. */
+  /* Crash Cart as a working console, on the suite's home-page tokens and type scale.
+     Inputs sit in a rail on the left; everything to the right of it redraws as they move:
+     five figures, the fleet as a wall, the plan as a chart and the pull list. Explanation
+     lives in tabs below the console, not on top of it. Green is the brand, focus and
+     "cleared"; the band colours are status and always travel with their name. */
   :root{
     color-scheme:dark;
     --bg:#0A0C0E;          /* page surface */
-    --bg2:#0E1114;         /* raised, one step */
+    --bg2:#0E1114;         /* panels, one step up */
+    --bg3:#14181C;         /* floating readouts */
     --line:#1C2126;        /* hairline */
     --line2:#2A3037;       /* stronger rule */
     --tx:#EEF1F3;          /* primary text */
     --tx2:#C4CDD5;         /* secondary text, APCA Lc 75 */
     --tx3:#AAB3BD;         /* fine print, APCA Lc 60 */
-    --grn:#3FE0A0;         /* the brand glyph and focus */
-    /* Status bands, least to most urgent. The three warm steps were searched for colour
-       vision separation (validator: worst all-pairs dE 10.3 under deutan, 15.3 normal) and
-       hold is a recessive neutral, since most of any fleet is on hold and should read as
-       context. Fills only; never text. */
+    --grn:#3FE0A0;         /* the brand glyph, focus, and risk cleared */
+    /* Status, least to most urgent, plus "pulled". Searched for colour vision separation
+       on #0E1114 with every pair checked: worst dE 9.0 under deutan, 15.3 normal. Hold is a
+       recessive neutral, since most of any fleet is on hold and should read as context.
+       Fills only; never text. */
     --r-pull:#FF5B5B;
     --r-sched:#FF9802;
     --r-watch:#FFEA6B;
     --r-hold:#2C333B;
-    --r-week:#EEF1F3;      /* drives the crew pulls this week */
+    --r-week:#EEF1F3;      /* the week being looked at */
+    --r-done:#2BA678;      /* already pulled by then */
+    --c-drives:#8B949E;    /* the second line on the plan, dE 15.9 from green under deutan */
+    --better:#3FE0A0; --worse:#FF8A7A;   /* change chips, always with an arrow and a number */
     --action-bg:#EEF1F3; --action-bg-hover:#FFFFFF; --action-fg:#0A0C0E;
     --control-border:#2A3037; --control-border-hover:#7B838D;
     --link-underline:rgba(168,176,184,.45);
     --fs-caption:13px; --fs-small:14px; --fs-ui:15px; --fs-body:16px; --fs-lead:18px;
-    --fs-sub:20px; --fs-heading:22px; --fs-title:28px; --fs-display:clamp(30px,3.1vw,44px);
-    --col-gap:80px;
+    --fs-sub:20px; --fs-heading:22px; --fs-title:28px; --fs-kpi:30px; --fs-hero:40px;
+    --col-gap:80px; --gap:16px; --rail:296px; --pad:18px;
     --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
     --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
-  @media(max-width:700px){:root{--fs-lead:17px;--fs-display:clamp(28px,8vw,34px)}}
+  @media(max-width:700px){:root{--fs-lead:17px;--fs-kpi:26px;--fs-hero:34px;--pad:16px}}
   @media(min-width:1680px){:root{--fs-caption:14px;--fs-small:15px;--fs-ui:16px;--fs-body:17px;--fs-lead:20px;
-    --fs-sub:23px;--fs-heading:26px;--fs-title:34px;--fs-display:52px;--col-gap:112px}}
-  @media(min-width:2200px){:root{--fs-small:16px;--fs-body:18px;--fs-lead:21px;--fs-sub:24px;--fs-title:36px;--fs-display:56px;--col-gap:136px}}
+    --fs-sub:23px;--fs-heading:26px;--fs-title:34px;--fs-kpi:36px;--fs-hero:48px;--col-gap:112px;--gap:20px;--rail:336px;--pad:22px}}
+  @media(min-width:2200px){:root{--fs-small:16px;--fs-body:18px;--fs-lead:21px;--fs-sub:24px;--fs-title:36px;--fs-kpi:40px;--fs-hero:52px;--col-gap:136px;--rail:360px}}
 
   *{box-sizing:border-box}
   [hidden]{display:none !important}
   html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:var(--fs-body);line-height:1.6;
     -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-  .wrap{max-width:1260px;margin:0 auto;padding:0 32px}
-  @media(max-width:640px){.wrap{padding:0 20px}}
-  @media(min-width:1680px){.wrap{max-width:1520px}}
-  @media(min-width:2200px){.wrap{max-width:1720px}}
+  /* a console wants the width: wider than the home page's reading column */
+  .wrap{max-width:1440px;margin:0 auto;padding:0 32px}
+  @media(max-width:640px){.wrap{padding:0 16px}}
+  @media(min-width:1680px){.wrap{max-width:1640px}}
+  @media(min-width:2200px){.wrap{max-width:1840px}}
   a{color:inherit}
   :focus-visible{outline:2px solid var(--grn);outline-offset:3px}
   .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
@@ -82,9 +88,10 @@
   .glyph{color:var(--grn);flex:none;display:block}
   h2{font-size:var(--fs-heading);font-weight:500;letter-spacing:-.02em;line-height:1.2;margin:0}
   h3{font-size:var(--fs-ui);font-weight:500;line-height:1.3;margin:0}
+  .num,.tn{font-variant-numeric:tabular-nums}
 
   /* ---------- header ---------- */
-  .top{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:76px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:68px}
   .crumb{display:flex;align-items:center;gap:12px;min-width:0}
   .brand{display:inline-flex;align-items:center;gap:11px;text-decoration:none;
     font-family:var(--mono);font-size:var(--fs-caption);font-weight:600;letter-spacing:.12em;text-transform:uppercase}
@@ -94,195 +101,286 @@
   .top nav{display:flex;gap:28px}
   .top nav a{font-size:var(--fs-ui);color:var(--tx2);text-decoration:none;padding:12px 0;white-space:nowrap}
   .top nav a:hover{color:var(--tx)}
-  @media(max-width:560px){.top nav{display:none}}
+  @media(max-width:600px){.top nav{display:none}}
 
-  /* ---------- intro: short, so the tool is on the first screen ---------- */
-  .intro{padding-block:40px 44px}
-  .intro h1{display:flex;flex-wrap:wrap;gap:0 .3em;font-size:var(--fs-display);font-weight:500;line-height:1.08;letter-spacing:-.03em;margin:0;text-wrap:balance}
-  .intro h1 span{color:var(--tx2)}
-  .intro .lede{font-size:var(--fs-lead);color:var(--tx2);max-width:60ch;margin:16px 0 0;text-wrap:pretty}
-  .intro .src{font-size:var(--fs-caption);color:var(--tx3);margin:12px 0 0}
+  /* ---------- title bar: one line of what this is, and the share button ---------- */
+  .tbar{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-block:20px 22px}
+  .tbar h1{font-size:var(--fs-title);font-weight:500;letter-spacing:-.025em;line-height:1.15;margin:0}
+  .tbar h1 span{color:var(--tx2)}
+  .tbar .src{font-size:var(--fs-caption);color:var(--tx3);margin:6px 0 0}
+  .tbar .acts{display:flex;gap:10px}
 
-  /* ---------- the console: controls on the left, the answer on the right ---------- */
-  .console{display:grid;grid-template-columns:minmax(290px,4fr) minmax(0,8fr);column-gap:var(--col-gap);
-    padding-block:8px 104px;border-top:1px solid var(--line)}
-  @media(max-width:960px){.console{grid-template-columns:minmax(0,1fr);row-gap:40px;padding-bottom:72px}}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;background:var(--action-bg);color:var(--action-fg);
+    font:inherit;font-size:var(--fs-small);font-weight:500;line-height:1.3;text-decoration:none;border:1px solid var(--action-bg);cursor:pointer;white-space:nowrap}
+  .btn:hover{background:var(--action-bg-hover);border-color:var(--action-bg-hover)}
+  .btn.ghost{background:none;color:var(--tx);border-color:var(--control-border)}
+  .btn.ghost:hover{border-color:var(--control-border-hover)}
+  .btn svg{width:14px;height:14px;flex:none}
+  .btn:disabled{opacity:.45;cursor:default}
 
-  /* controls stay in reach while the results scroll beside them */
-  .ctl{align-self:start;position:sticky;top:0;max-height:100vh;overflow-y:auto;scrollbar-width:thin;padding-block:32px 8px;padding-inline-end:6px}
-  @media(max-width:960px){.ctl{position:static;max-height:none;overflow:visible}}
-  .grp{border:0;margin:0 0 30px;padding:0;min-width:0}
+  /* ---------- the console ---------- */
+  .pn{background:var(--bg2);border:1px solid var(--line);min-width:0}
+  .pn-hd{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 16px}
+  .pn-hd h2{font-size:var(--fs-ui);font-weight:500;letter-spacing:0;line-height:1.3}
+  .pn-hd .meta{font-size:var(--fs-caption);color:var(--tx3)}
+
+  /* The rail spans every row; the empty last row takes whatever height it has over the
+     panels, so a short pull list never stretches the rows above it. */
+  .dash{display:grid;grid-template-columns:var(--rail) minmax(0,1fr);grid-template-rows:auto auto auto 1fr;
+    grid-template-areas:"rail kpi" "rail viz" "rail list" "rail .";gap:var(--gap);padding-bottom:88px}
+  .rail{grid-area:rail;align-self:start;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto;scrollbar-width:thin}
+  .kpiw{grid-area:kpi;container-type:inline-size;min-width:0}
+  .vizw{grid-area:viz;container-type:inline-size;min-width:0}
+  .listw{grid-area:list;min-width:0}
+  @media(max-width:1180px){:root{--rail:264px}}
+  @media(max-width:900px){
+    .dash{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"kpi" "rail" "viz" "list";padding-bottom:64px}
+    .rail{position:static;max-height:none;overflow:visible}
+  }
+
+  /* ---------- inputs ---------- */
+  .rail .grp{border:0;margin:0;padding:14px var(--pad) 14px;min-width:0;border-top:1px solid var(--line)}
+  .rail .grp:first-child{border-top:0}
   .grp > legend,.grp-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;width:100%;
-    padding:0;margin:0 0 12px;font-size:var(--fs-ui);font-weight:500;color:var(--tx)}
+    padding:0;margin:0 0 8px;font-size:var(--fs-small);font-weight:500;color:var(--tx)}
+  .rail fieldset.grp > legend{float:left}
+  .rail fieldset.grp > legend + *{clear:both}
   .grp-h label{cursor:pointer}
-  .grp output,.grp-h .val{font-size:var(--fs-ui);font-weight:500;color:var(--tx);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .hint{font-size:var(--fs-small);line-height:1.5;color:var(--tx2);margin:10px 0 0;text-wrap:pretty}
+  .grp output{font-size:var(--fs-small);font-weight:500;color:var(--tx);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .hint{font-size:var(--fs-caption);line-height:1.45;color:var(--tx3);margin:8px 0 0}
 
-  /* chips: native radios, so arrows move the choice and the group reads as one control */
-  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
   .chip{position:relative;display:inline-flex}
   .chip input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
-  .chip span{display:inline-block;padding:7px 12px;border:1px solid var(--control-border);font-size:var(--fs-small);line-height:1.4;
+  .chip span{display:inline-block;padding:5px 10px;border:1px solid var(--control-border);font-size:var(--fs-small);line-height:1.4;
     color:var(--tx2);white-space:nowrap;cursor:pointer}
   .chip input:hover + span{border-color:var(--control-border-hover);color:var(--tx)}
-  .chip input:checked + span{border-color:var(--tx);color:var(--tx);background:var(--bg2)}
+  .chip input:checked + span{border-color:var(--tx);color:var(--action-fg);background:var(--tx)}
   .chip input:focus-visible + span{outline:2px solid var(--grn);outline-offset:2px}
 
-  /* sliders: a hairline track that fills to the value, and a white thumb */
-  input[type=range]{-webkit-appearance:none;appearance:none;display:block;width:100%;height:28px;margin:0;background:transparent;cursor:pointer;
-    --fill:50%}
-  input[type=range]::-webkit-slider-runnable-track{height:2px;background:linear-gradient(to right,var(--tx2) var(--fill),var(--line2) var(--fill))}
-  input[type=range]::-moz-range-track{height:2px;background:var(--line2)}
-  input[type=range]::-moz-range-progress{height:2px;background:var(--tx2)}
-  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-8px;border-radius:50%;background:var(--tx);border:3px solid var(--bg)}
-  input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--tx);border:3px solid var(--bg)}
+  input[type=range]{-webkit-appearance:none;appearance:none;display:block;width:100%;height:26px;margin:0;background:transparent;cursor:pointer;--fill:50%}
+  input[type=range]::-webkit-slider-runnable-track{height:3px;background:linear-gradient(to right,var(--tx) var(--fill),var(--line2) var(--fill))}
+  input[type=range]::-moz-range-track{height:3px;background:var(--line2)}
+  input[type=range]::-moz-range-progress{height:3px;background:var(--tx)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-7.5px;border-radius:50%;background:var(--tx);border:3px solid var(--bg2);transition:transform .12s ease}
+  input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--tx);border:3px solid var(--bg2)}
+  input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
   input[type=range]:focus-visible{outline:none}
   input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 2px var(--grn)}
   input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 2px var(--grn)}
-  .scale{display:flex;justify-content:space-between;font-size:var(--fs-caption);color:var(--tx3);margin-top:2px;font-variant-numeric:tabular-nums}
+  input[type=range]:disabled{opacity:.4;cursor:default}
+  .scale{display:flex;justify-content:space-between;font-size:12px;color:var(--tx3);margin-top:1px;font-variant-numeric:tabular-nums}
 
-  details.more{margin-top:4px;border-top:1px solid var(--line)}
-  details.more > summary{cursor:pointer;list-style:none;padding:14px 0;font-size:var(--fs-ui);font-weight:500;color:var(--tx2)}
+  details.more{border-top:1px solid var(--line)}
+  details.more > summary{cursor:pointer;list-style:none;padding:11px var(--pad);font-size:var(--fs-small);font-weight:500;color:var(--tx2)}
   details.more > summary::-webkit-details-marker{display:none}
-  details.more > summary::before{content:"+";display:inline-block;width:1.1em;color:var(--tx3);font-family:var(--mono)}
+  details.more > summary::before{content:"+";display:inline-block;width:1.2em;color:var(--tx3);font-family:var(--mono)}
   details.more[open] > summary::before{content:"\2212"}
   details.more > summary:hover{color:var(--tx)}
-  details.more .grp{margin-top:8px}
+  details.more .grp{border-top:0;padding-top:4px}
 
-  /* ---------- results ---------- */
-  .res{min-width:0;padding-top:32px}
-  .hl{font-size:clamp(32px,3.4vw,48px);font-weight:500;letter-spacing:-.03em;line-height:1.05;margin:0}
-  .hl .n{color:var(--grn)}
-  .hl-sub{font-size:var(--fs-lead);color:var(--tx);margin:16px 0 0;max-width:60ch;text-wrap:pretty}
-  .means{font-size:var(--fs-body);color:var(--tx2);margin:10px 0 0;max-width:62ch;text-wrap:pretty}
+  .whatif{padding:14px var(--pad) 16px;border-top:1px solid var(--line)}
+  .whatif h2{font-size:var(--fs-small);font-weight:500;margin:0 0 8px}
+  .whatif div{display:flex;flex-wrap:wrap;gap:6px}
+  .whatif button{font:inherit;font-size:var(--fs-small);line-height:1.4;color:var(--tx);background:none;border:1px dashed var(--control-border-hover);padding:5px 10px;cursor:pointer;white-space:nowrap}
+  .whatif button:hover{border-style:solid;border-color:var(--tx)}
+  .whatif button:disabled{color:var(--tx3);border-color:var(--line2);cursor:default;border-style:dashed}
 
-  /* the four numbers that move with every change, each with what it was before */
-  .kpis{display:flex;flex-wrap:wrap;justify-content:space-between;gap:18px 32px;margin:28px 0 0;padding:20px 0 0;border-top:1px solid var(--line)}
-  .kpi{margin:0;min-width:0;flex:0 1 auto}
-  .kpi dd{margin:0}
-  /* phone: two by two, with the odds, the longest figure, across the full width */
-  @media(max-width:620px){.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
-    .kpi:last-child{grid-column:1 / -1} .kpi .v{white-space:normal}}
+  /* ---------- the five figures ---------- */
+  .kpis{display:grid;grid-template-columns:1.25fr 1fr 1fr 1fr 1.45fr;gap:1px;margin:0;background:var(--line)}
+  /* each tile spans four rows of the strip, so labels, values, changes and notes line up across it */
+  .kpi{position:relative;display:grid;grid-row:span 4;grid-template-rows:subgrid;row-gap:0;margin:0;padding:14px var(--pad) 16px;background:var(--bg2);min-width:0}
+  .kpi .v{align-self:end}
   .kpi dt{font-size:var(--fs-small);color:var(--tx2);line-height:1.35}
-  .kpi .v{display:block;margin-top:6px;font-size:var(--fs-title);font-weight:500;letter-spacing:-.02em;line-height:1.1;white-space:nowrap}
-  .kpi .v small{font-size:var(--fs-ui);font-weight:400;color:var(--tx2);letter-spacing:0;margin-inline-start:.3em}
-  .kpi .was{display:block;min-height:1.5em;margin-top:4px;font-size:var(--fs-caption);color:var(--tx3)}
-
-  /* try: one press each, so the first thing to do with the tool is obvious */
-  .try{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:28px 0 0}
-  .try > span{font-size:var(--fs-small);color:var(--tx3);margin-inline-end:4px}
-  .try button{font:inherit;font-size:var(--fs-small);color:var(--tx);background:none;border:1px solid var(--control-border);padding:7px 12px;cursor:pointer;white-space:nowrap}
-  .try button:hover{border-color:var(--control-border-hover)}
-  .try button:disabled{color:var(--tx3);cursor:default;border-color:var(--line)}
-
-  /* ---------- the wall: one square per drive, most urgent first ---------- */
-  .wall{margin:32px 0 0}
-  .wall-hd{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px 24px;margin-bottom:14px}
-  .legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin:0;padding:0;list-style:none;font-size:var(--fs-small);color:var(--tx2)}
-  .legend li{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
-  .legend b{font-weight:500;color:var(--tx);font-variant-numeric:tabular-nums}
-  .sw{width:10px;height:10px;flex:none;border-radius:1px}
-  .sw.week{background:var(--r-week)} .sw.pull{background:var(--r-pull)} .sw.sched{background:var(--r-sched)}
-  .sw.watch{background:var(--r-watch)} .sw.hold{background:var(--r-hold)}
-  .wall-sub{font-size:var(--fs-small);color:var(--tx2);margin:-4px 0 14px;max-width:72ch;text-wrap:pretty}
-  .wall-box{position:relative}
-  #wall{display:block;width:100%;touch-action:pan-y}
-  .wall-note{font-size:var(--fs-caption);color:var(--tx3);margin:12px 0 0}
-  .tip{position:absolute;z-index:5;pointer-events:none;min-width:200px;max-width:280px;padding:10px 12px;background:#14181C;border:1px solid var(--line2);
-    font-size:var(--fs-small);line-height:1.45;color:var(--tx2);box-shadow:0 8px 24px rgba(0,0,0,.45)}
-  .tip b{display:block;color:var(--tx);font-weight:500}
-  .tip .k{display:flex;align-items:center;gap:7px;margin-top:6px;color:var(--tx)}
-
-  /* ---------- the pull list ---------- */
-  .list{margin:44px 0 0}
-  .list-hd{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 24px;margin-bottom:10px}
-  .list-hd p{margin:0;font-size:var(--fs-small);color:var(--tx3)}
-  table.pl{width:100%;border-collapse:collapse;font-size:var(--fs-ui)}
-  .pl th{font-size:var(--fs-caption);font-weight:400;color:var(--tx3);text-align:start;padding:8px 10px 10px 0;border-bottom:1px solid var(--line2)}
-  .pl th.num,.pl td.num{text-align:end;padding-inline-end:20px}
-  .pl td{padding:12px 10px 12px 0;border-bottom:1px solid var(--line);vertical-align:top}
-  .pl td.rk{width:2.2em;color:var(--tx3);font-variant-numeric:tabular-nums}
-  .pl td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
-  .pl .who{min-width:0}
-  .pl .exp{display:block;width:100%;padding:0;margin:0;background:none;border:0;font:inherit;color:inherit;text-align:start;cursor:pointer}
-  .pl .exp .nm{display:block;color:var(--tx)}
-  .pl .exp .nm::after{content:"+";font-family:var(--mono);color:var(--tx3);margin-inline-start:.5em}
-  .pl .exp[aria-expanded="true"] .nm::after{content:"\2212"}
-  .pl .exp:hover .nm{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
-  .pl .sub{display:block;font-size:var(--fs-small);color:var(--tx2);margin-top:2px}
-  .pl .when{white-space:nowrap}
-  .pl .when .bd{display:flex;align-items:center;gap:7px;font-size:var(--fs-small);color:var(--tx2);margin-top:2px}
-  .pl tr.qr.past td{color:var(--tx2)}
-  .pl tr.qr.lit td{background:var(--bg2)}
-  .pl tr.qd td{padding:4px 0 20px 0;border-bottom:1px solid var(--line)}
-  .pl tr.hold td{color:var(--tx3);font-size:var(--fs-small)}
-  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none}
-  .dot.pull{background:var(--r-pull)} .dot.sched{background:var(--r-sched)} .dot.watch{background:var(--r-watch)} .dot.hold{background:var(--r-hold)}
-  @media(max-width:640px){
-    .pl thead{display:none}
-    /* the rank hangs in the margin, so every wrapped line of the row starts under the name */
-    .pl tr.qr{position:relative;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:14px;row-gap:4px;
-      padding:14px 0 14px calc(1.6em + 10px);border-bottom:1px solid var(--line)}
-    .pl tr.qr td{border:0;padding:0;font-size:var(--fs-small)}
-    .pl td.rk{position:absolute;inset-inline-start:0;top:14px;font-size:var(--fs-ui)} .pl td.who{flex:1 1 100%;font-size:var(--fs-ui)}
-    .pl td.num{padding:0;text-align:start}
-    .pl td.num.rate::after{content:" a year";color:var(--tx3)}
-    .pl td.num.risk::after{content:" at risk";color:var(--tx3)}
-    .pl td.when,.pl td.when .bd{display:inline-flex;align-items:center;gap:7px;margin:0}
-    .pl tr.qd{display:block} .pl tr.qd td{display:block;padding:0 0 18px calc(1.6em + 10px)}
-    .pl tr.hold{display:block;padding:14px 0} .pl tr.hold td{display:inline;border:0;padding:0}
+  .kpi dd{margin:0}
+  .kpi .v{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:.3em;margin-top:6px;font-size:var(--fs-kpi);font-weight:500;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+  .kpi .v b{font-weight:500;white-space:nowrap}
+  .kpi .v small{font-size:var(--fs-small);font-weight:400;color:var(--tx2);letter-spacing:0}
+  .kpi.main .v{font-size:var(--fs-hero)}
+  .kpi.main .v b{color:var(--grn)}
+  .kpi .d{display:flex;align-items:center;gap:5px;min-height:1.5em;margin-top:6px;font-size:var(--fs-caption);font-weight:500;color:var(--tx3);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .kpi .d.good{color:var(--better)} .kpi .d.bad{color:var(--worse)}
+  .kpi .d i{font-style:normal;font-size:10px}
+  .kpi .s{margin-top:2px;font-size:var(--fs-caption);color:var(--tx3);line-height:1.45;text-wrap:pretty}
+  .kpi.hit{animation:kflash .7s ease-out}
+  @keyframes kflash{from{background:#1A2026}to{background:var(--bg2)}}
+  /* where the odds sit between one in a trillion and certain */
+  .gauge{position:relative;height:6px;margin:12px 0 0;background:linear-gradient(90deg,#2A3037 0%,#3A3434 45%,#FF5B5B 100%)}
+  .gauge .mk,.gauge .was{position:absolute;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;left:var(--p,0%)}
+  .gauge .mk{background:var(--tx);border:2px solid var(--bg2);box-shadow:0 0 0 1px var(--tx)}
+  .gauge .was{border:1.5px dashed var(--tx3);background:transparent}
+  .gscale{display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--tx3)}
+  .alert{display:flex;align-items:center;gap:10px;margin:0;padding:10px var(--pad);background:var(--bg2);border:1px solid var(--line);border-top:0;font-size:var(--fs-small);line-height:1.45;color:var(--tx)}
+  .alert .ic{width:10px;height:10px;flex:none}
+  .alert.warn .ic{background:var(--r-sched)} .alert.bad .ic{background:var(--r-pull)} .alert.ok .ic{background:var(--grn)}
+  @container (max-width:860px){
+    .kpis{grid-template-columns:repeat(6,minmax(0,1fr))}
+    .kpi{grid-column:span 2} .kpi.risk,.kpi.odds{grid-column:span 3}
+  }
+  @container (max-width:520px){
+    /* two by two, with the odds, the longest figure, across the bottom */
+    .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .kpi,.kpi.risk,.kpi.main{grid-column:span 1} .kpi.odds{grid-column:1 / -1}
   }
 
-  /* the arithmetic behind a row, one step per line */
+  /* ---------- the wall and the plan, driven by one week scrubber ---------- */
+  .viz{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
+  .viz > figure{margin:0;padding:14px var(--pad) 16px;min-width:0}
+  .viz > figure + figure{border-inline-start:1px solid var(--line)}
+  @container (max-width:820px){
+    .viz{grid-template-columns:minmax(0,1fr)}
+    .viz > figure + figure{border-inline-start:0;border-top:1px solid var(--line)}
+  }
+  .legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin:10px 0 12px;padding:0;list-style:none;font-size:var(--fs-caption);color:var(--tx2)}
+  .legend li{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;cursor:default}
+  .legend b{font-weight:500;color:var(--tx);font-variant-numeric:tabular-nums}
+  .sw{width:10px;height:10px;flex:none;border-radius:1px}
+  .sw.done{background:var(--r-done)} .sw.week{background:var(--r-week)} .sw.pull{background:var(--r-pull)} .sw.sched{background:var(--r-sched)}
+  .sw.watch{background:var(--r-watch)} .sw.hold{background:var(--r-hold);box-shadow:inset 0 0 0 1px #3A424B}
+  .ln{width:16px;height:0;flex:none;border-top:2px solid}
+  .ln.risk{border-color:var(--grn)} .ln.drv{border-color:var(--c-drives)} .ln.was{border-top:2px dashed var(--tx3)}
+  .box{position:relative}
+  #wall{display:block;width:100%;touch-action:pan-y;cursor:pointer}
+  #plan{display:block;width:100%;overflow:visible;touch-action:pan-y;cursor:crosshair}
+  .tip{position:absolute;z-index:5;pointer-events:none;min-width:190px;max-width:280px;padding:9px 12px;background:var(--bg3);border:1px solid var(--line2);
+    font-size:var(--fs-caption);line-height:1.45;color:var(--tx2);box-shadow:0 8px 24px rgba(0,0,0,.45)}
+  .tip b{display:block;color:var(--tx);font-weight:500;font-size:var(--fs-small)}
+  .tip .k{display:flex;align-items:center;gap:7px;margin-top:5px;color:var(--tx)}
+  .tip .row{display:flex;justify-content:space-between;gap:16px;margin-top:3px}
+  .tip .row span:last-child{color:var(--tx);font-variant-numeric:tabular-nums}
+
+  .player{grid-column:1 / -1;display:flex;align-items:center;gap:10px 16px;padding:10px var(--pad);border-top:1px solid var(--line)}
+  .player .btn{padding:7px 14px 7px 12px;min-width:92px;justify-content:center}
+  .player > *{flex:none}
+  .player input[type=range]{flex:1 1 0;width:auto;min-width:100px}
+  .player output{font-size:var(--fs-small);font-weight:500;white-space:nowrap;font-variant-numeric:tabular-nums;min-width:8.5em}
+  .player .st{font-size:var(--fs-caption);color:var(--tx3);white-space:nowrap;font-variant-numeric:tabular-nums;min-width:14em;text-align:end}
+  @container (max-width:640px){
+    .player{flex-wrap:wrap}
+    .player input[type=range]{order:3;flex-basis:100%}
+    .player .st{order:4;text-align:start;min-width:0}
+  }
+
+  /* ---------- the pull list ---------- */
+  .listw .pn-hd{padding:14px var(--pad) 12px}
+  .listw .pn-hd .r{display:flex;align-items:center;gap:16px}
+  table.pl{width:100%;border-collapse:collapse;font-size:var(--fs-small)}
+  .pl th{font-size:var(--fs-caption);font-weight:400;color:var(--tx3);text-align:start;padding:8px 12px;border-top:1px solid var(--line);white-space:nowrap}
+  .pl td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:middle}
+  .pl th:first-child,.pl td:first-child{padding-inline-start:var(--pad)}
+  .pl th:last-child,.pl td:last-child{padding-inline-end:var(--pad)}
+  .pl .rk{width:2.6em;color:var(--tx3);font-variant-numeric:tabular-nums}
+  .pl th.n,.pl td.n{text-align:end}
+  .pl td.n{white-space:nowrap;font-variant-numeric:tabular-nums}
+  .pl .exp{display:block;padding:0;margin:0;background:none;border:0;font:inherit;color:inherit;text-align:start;cursor:pointer}
+  .pl .nm{display:block;color:var(--tx);font-size:var(--fs-ui)}
+  .pl .nm::after{content:"+";font-family:var(--mono);color:var(--tx3);margin-inline-start:.5em}
+  .pl .exp[aria-expanded="true"] .nm::after{content:"\2212"}
+  .pl .exp:hover .nm{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
+  .pl .mt{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;font-size:var(--fs-caption);color:var(--tx3);margin-top:1px}
+  .flag{display:inline-block;padding:0 5px;border:1px solid var(--r-sched);color:var(--tx);font-size:11px;line-height:16px;letter-spacing:.03em}
+  /* magnitudes as thin bars, each against the largest in the list */
+  .bar{display:inline-block;width:56px;height:4px;margin-inline-end:10px;background:var(--line2);vertical-align:middle}
+  .bar i{display:block;height:100%;background:var(--tx3)}
+  .pl .when{width:32%;min-width:180px}
+  .gantt{position:relative;height:10px;background:rgba(238,241,243,.035);cursor:pointer}
+  .gantt .nw{position:absolute;top:-5px;bottom:-5px;background:rgba(238,241,243,.09);pointer-events:none}
+  .gantt .g{position:absolute;top:0;bottom:0;min-width:3px;overflow:hidden}
+  .gantt .g.pull{background:var(--r-pull)} .gantt .g.sched{background:var(--r-sched)} .gantt .g.watch{background:var(--r-watch)}
+  .gantt .g i{position:absolute;inset:0 auto 0 0;background:var(--r-done)}
+  .gl{display:flex;justify-content:space-between;gap:12px;margin-top:5px;font-size:var(--fs-caption);color:var(--tx3);white-space:nowrap}
+  .gl .bd{display:inline-flex;align-items:center;gap:6px;color:var(--tx2)}
+  @media (prefers-reduced-motion: no-preference){
+    .bar i{transition:width .3s ease}
+    .gantt .g{transition:left .3s ease,width .3s ease}
+    .gantt .g i{transition:width .2s linear}
+    .gantt .nw{transition:left .2s linear,width .3s ease}
+    .gauge .mk,.gauge .was{transition:left .35s cubic-bezier(.2,.7,.2,1)}
+  }
+  .pl tr.qr.lit td{background:#12161A}
+  .pl tr.qr.cur td.rk{color:var(--tx);font-weight:600}
+  .pl tr.qr.past .nm,.pl tr.qr.past td.n{color:var(--tx3)}
+  .pl tr.qd td{padding:2px 12px 18px;border-top:0}
+  .pl tr.hold td{color:var(--tx3);font-size:var(--fs-caption);padding-block:12px}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none}
+  .dot.pull{background:var(--r-pull)} .dot.sched{background:var(--r-sched)} .dot.watch{background:var(--r-watch)} .dot.hold{background:var(--r-hold)}
+  .dot.done{background:var(--r-done)} .dot.week{background:var(--r-week)}
+
+  /* a row's arithmetic, as the numbers that multiply into it */
+  .calc{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0}
+  .calc + .calc{margin-top:6px}
+  .calc .c{display:inline-flex;flex-direction:column;padding:5px 10px;border:1px solid var(--line2);background:var(--bg);line-height:1.3}
+  .calc .c b{font-weight:500;color:var(--tx);font-variant-numeric:tabular-nums;font-size:var(--fs-small)}
+  .calc .c span{font-size:12px;color:var(--tx3)}
+  .calc .c.out{border-color:var(--tx3)}
+  .calc .op{color:var(--tx3);font-family:var(--mono);font-size:var(--fs-small);padding:0 2px}
+  .qd .note{margin:10px 0 0;color:var(--tx3);font-size:var(--fs-caption);max-width:72ch;text-wrap:pretty}
+
+  @media(max-width:700px){
+    .pl thead{display:none}
+    .pl tr.qr{position:relative;display:flex;flex-wrap:wrap;align-items:center;column-gap:16px;row-gap:6px;
+      padding:12px var(--pad) 14px calc(var(--pad) + 2em);border-top:1px solid var(--line)}
+    .pl tr.qr td{border:0;padding:0}
+    .pl td.rk{position:absolute;inset-inline-start:var(--pad);top:13px;width:auto}
+    .pl td.who{flex:1 1 100%}
+    .pl td.n{text-align:start}
+    .pl td.n .bar{display:none}
+    .pl td.n.rate::after{content:" a year";color:var(--tx3)}
+    .pl td.n.risk::after{content:" at risk";color:var(--tx3)}
+    .pl td.when{flex:1 1 100%;width:auto;min-width:0;padding:0}
+    .pl tr.qd{display:block} .pl tr.qd td{display:block;padding:0 var(--pad) 16px calc(var(--pad) + 2em)}
+    .pl tr.qd td:first-child{display:none}
+    .pl tr.hold{display:block} .pl tr.hold td{display:block;padding:12px var(--pad);border-top:1px solid var(--line)}
+    .pl tr.hold td:first-child{display:none}
+  }
+
+  /* ---------- under the hood: one tab at a time ---------- */
+  .ref{padding-block:72px 88px;border-top:1px solid var(--line)}
+  .ref-hd{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 40px;border-bottom:1px solid var(--line);margin-bottom:40px}
+  .ref-hd h2{padding-bottom:14px}
+  .tabs{display:flex;gap:28px;overflow-x:auto;scrollbar-width:none}
+  .tabs button{background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:12px 0;font:inherit;font-size:var(--fs-ui);color:var(--tx2);cursor:pointer;white-space:nowrap}
+  .tabs button:hover{color:var(--tx)}
+  .tabs button[aria-selected="true"]{color:var(--tx);border-bottom-color:var(--tx)}
+  .tabs button:focus-visible{outline-offset:-2px}
+  [role=tabpanel]:focus-visible{outline-offset:8px}
+  .two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);column-gap:var(--col-gap);row-gap:48px}
+  @media(max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
+  .lead{margin:0 0 28px;color:var(--tx2);max-width:60ch;text-wrap:pretty}
+  .steps{margin:0;padding:0;list-style:none;counter-reset:s}
+  .steps li{counter-increment:s;display:grid;grid-template-columns:2em minmax(0,1fr);padding:0 0 22px}
+  .steps li::before{content:counter(s);font-family:var(--mono);color:var(--tx3);font-size:var(--fs-small);padding-top:2px}
+  .steps h3{font-size:var(--fs-body);margin-bottom:4px}
+  .steps p{margin:0;color:var(--tx2);font-size:var(--fs-ui);text-wrap:pretty}
+  .ex{margin:0;align-self:start;background:var(--bg2);border:1px solid var(--line);padding:22px 26px}
+  .ex figcaption{font-size:var(--fs-caption);color:var(--tx3);margin:0 0 12px}
+  .ex .q{font-size:var(--fs-body);color:var(--tx);margin:0 0 12px}
   .chain{margin:0;padding:0;list-style:none;font-size:var(--fs-small);line-height:1.55;color:var(--tx2)}
   .chain li{display:grid;grid-template-columns:1.6em minmax(0,1fr);padding:3px 0}
   .chain li::before{content:"\2192";color:var(--tx3);font-family:var(--mono)}
   .chain li:first-child::before{content:""}
   .chain b{color:var(--tx);font-weight:500;font-variant-numeric:tabular-nums}
-  .qd .note{margin:10px 0 0 1.6em;color:var(--tx3);font-size:var(--fs-small);max-width:60ch;text-wrap:pretty}
-
-  .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
-  .btn{display:inline-flex;align-items:center;padding:12px 20px;background:var(--action-bg);color:var(--action-fg);
-    font:inherit;font-size:var(--fs-ui);font-weight:500;text-decoration:none;border:1px solid var(--action-bg);cursor:pointer}
-  .btn:hover{background:var(--action-bg-hover);border-color:var(--action-bg-hover)}
-  .btn.ghost{background:none;color:var(--tx);border-color:var(--control-border)}
-  .btn.ghost:hover{border-color:var(--control-border-hover)}
-
-  /* ---------- sections below the tool ---------- */
-  .sec{padding-block:96px;border-top:1px solid var(--line)}
-  @media(max-width:700px){.sec{padding-block:64px}}
-  .sec-hd{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);column-gap:var(--col-gap);row-gap:12px;align-items:baseline;margin-bottom:40px}
-  .sec-hd p{margin:0;color:var(--tx2);max-width:54ch;text-wrap:pretty}
-  @media(max-width:900px){.sec-hd{grid-template-columns:minmax(0,1fr)}}
-  .two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);column-gap:var(--col-gap);row-gap:48px}
-  @media(max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
-  .steps{margin:0;padding:0;list-style:none;counter-reset:s}
-  .steps li{counter-increment:s;display:grid;grid-template-columns:2em minmax(0,1fr);padding:0 0 22px}
-  .steps li::before{content:counter(s);font-family:var(--mono);color:var(--tx3);font-size:var(--fs-small);padding-top:2px}
-  .steps h3{font-size:var(--fs-body);margin-bottom:4px}
-  .steps p{margin:0;color:var(--tx2);font-size:var(--fs-body);text-wrap:pretty}
-  .ex{margin:0;align-self:start;background:var(--bg2);border:1px solid var(--line);padding:22px 26px 22px}
-  .ex figcaption{font-size:var(--fs-caption);color:var(--tx3);margin:0 0 12px}
-  .ex .q{font-size:var(--fs-body);color:var(--tx);margin:0 0 12px}
   .curve{margin-top:56px}
   .curve-hd{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 24px;margin-bottom:12px}
   .curve-hd p{margin:0;color:var(--tx2);font-size:var(--fs-small);max-width:64ch}
-  .curve-box{position:relative}
   #curve{display:block;width:100%;height:auto;overflow:visible}
-  .ctip{position:absolute;z-index:5;pointer-events:none;padding:8px 10px;background:#14181C;border:1px solid var(--line2);font-size:var(--fs-small);line-height:1.4;color:var(--tx2);white-space:nowrap}
+  .ctip{position:absolute;z-index:5;pointer-events:none;padding:8px 10px;background:var(--bg3);border:1px solid var(--line2);font-size:var(--fs-small);line-height:1.4;color:var(--tx2);white-space:nowrap}
   .ctip b{display:block;color:var(--tx);font-weight:500}
 
-  /* drive data */
   .tscroll{overflow-x:auto}
-  table.ref{width:100%;border-collapse:collapse;font-size:var(--fs-small);min-width:720px}
-  .ref th{font-weight:400;color:var(--tx3);text-align:start;padding:8px 16px 10px 0;border-bottom:1px solid var(--line2);font-size:var(--fs-caption)}
-  .ref td,.ref tbody th{padding:12px 16px 12px 0;border-bottom:1px solid var(--line);vertical-align:top;text-align:start;font-weight:400;color:var(--tx2)}
-  .ref tbody th{color:var(--tx)}
-  .ref .m{font-variant-numeric:tabular-nums;white-space:nowrap}
-  .ref .ci{display:block;color:var(--tx3);font-size:var(--fs-caption)}
-  .ref td:last-child{max-width:40ch;text-wrap:pretty}
+  table.ref-t{width:100%;border-collapse:collapse;font-size:var(--fs-small);min-width:720px}
+  .ref-t th{font-weight:400;color:var(--tx3);text-align:start;padding:8px 16px 10px 0;border-bottom:1px solid var(--line2);font-size:var(--fs-caption)}
+  .ref-t td,.ref-t tbody th{padding:12px 16px 12px 0;border-bottom:1px solid var(--line);vertical-align:top;text-align:start;font-weight:400;color:var(--tx2)}
+  .ref-t tbody th{color:var(--tx)}
+  .ref-t .m{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .ref-t .ci{display:block;color:var(--tx3);font-size:var(--fs-caption)}
+  .ref-t td:last-child{max-width:40ch;text-wrap:pretty}
+  .profs{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1px;margin:48px 0 0;background:var(--line);border:1px solid var(--line)}
+  .profs div{background:var(--bg2);padding:18px 20px}
+  .profs dt{font-size:var(--fs-ui);font-weight:500;color:var(--tx)}
+  .profs dd{margin:6px 0 0;font-size:var(--fs-small);color:var(--tx2);text-wrap:pretty}
+  .profs dd.f{font-size:var(--fs-caption);color:var(--tx3)}
 
-  /* method */
   dl.eq{margin:0}
   dl.eq div{display:grid;grid-template-columns:minmax(0,11em) minmax(0,1fr);gap:4px 24px;padding:12px 0;border-bottom:1px solid var(--line)}
   dl.eq div:first-child{border-top:1px solid var(--line)}
@@ -294,8 +392,11 @@
   .calls p b{color:var(--tx);font-weight:500}
 
   /* about and footer, as on the home page */
+  .sec{padding-block:96px;border-top:1px solid var(--line)}
+  @media(max-width:700px){.sec{padding-block:64px}.ref{padding-block:56px 64px}}
   .about .two p{color:var(--tx2);margin:12px 0 0;max-width:54ch;text-wrap:pretty}
-  .acts{display:flex;flex-wrap:wrap;align-items:center;gap:12px 28px;margin-top:24px}
+  .about .acts{display:flex;flex-wrap:wrap;align-items:center;gap:12px 28px;margin-top:24px}
+  .about .btn{padding:12px 20px;font-size:var(--fs-ui)}
   .lnk{font-size:var(--fs-ui);font-weight:500;color:var(--tx);text-decoration:none;padding:12px 0}
   .lnk:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
   footer{padding:0 0 56px;font-size:var(--fs-small);color:var(--tx3)}
@@ -306,12 +407,12 @@
   footer a{color:var(--tx2);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em;text-decoration-color:var(--link-underline)}
   footer a:hover{color:var(--tx);text-decoration-color:currentColor}
 
-  /* phone: when the answer scrolls away under the controls, a one-line copy rides along */
+  /* phone: when the figures scroll away under the inputs, a one-line copy rides along */
   .mini{position:fixed;inset-inline:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:15;display:none;align-items:center;justify-content:space-between;gap:12px;
-    padding:12px 16px;background:#14181C;border:1px solid var(--line2);box-shadow:0 10px 30px rgba(0,0,0,.5);font-size:var(--fs-small);color:var(--tx2)}
+    padding:12px 16px;background:var(--bg3);border:1px solid var(--line2);box-shadow:0 10px 30px rgba(0,0,0,.5);font-size:var(--fs-small);color:var(--tx2)}
   .mini b{color:var(--tx);font-weight:500;font-size:var(--fs-ui)}
   .mini.on{display:flex}
-  @media(min-width:961px){.mini.on{display:none}}
+  @media(min-width:901px){.mini.on{display:none}}
 
   .toast{position:fixed;bottom:24px;inset-inline-start:50%;transform:translate(-50%,8px);z-index:30;padding:10px 16px;background:var(--action-bg);color:var(--action-fg);
     font-size:var(--fs-small);font-weight:500;opacity:0;pointer-events:none}
@@ -319,13 +420,13 @@
   @media (prefers-reduced-motion: no-preference){
     html{scroll-behavior:smooth}
     .toast{transition:opacity .2s ease,transform .2s ease}
-    .kpi .was{transition:opacity .3s ease}
   }
+  @media (prefers-reduced-motion: reduce){ .kpi.hit{animation:none} }
 
   @media print{
-    :root{--bg:#fff;--bg2:#fff;--line:#c7cdd5;--line2:#a8b1bc;--tx:#12161b;--tx2:#39424d;--tx3:#5b6470}
-    .top nav,.ctl,.try,.actions,.mini,.toast,.wall,.skip,.sec,.about{display:none}
-    .console{display:block;border:0;padding:0}
+    :root{--bg:#fff;--bg2:#fff;--bg3:#fff;--line:#c7cdd5;--line2:#a8b1bc;--tx:#12161b;--tx2:#39424d;--tx3:#5b6470}
+    .top nav,.tbar .acts,.rail,.vizw,.mini,.toast,.skip,.ref,.sec,.listw .pn-hd .btn,.gauge,.gscale{display:none}
+    .dash{display:block;padding:0} .kpiw{margin-bottom:16px}
     .print-url{display:block;margin-top:14px;font-family:var(--mono);font-size:11px;word-break:break-all}
   }
   .print-url{display:none}
@@ -337,6 +438,9 @@
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="g-infrabench" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="9" width="14" height="10" fill="currentColor"/></symbol>
+  <symbol id="i-play" viewBox="0 0 14 14"><path d="M3 1.8v10.4L12 7z" fill="currentColor"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 14 14"><path d="M3 2h3v10H3zM8 2h3v10H8z" fill="currentColor"/></symbol>
+  <symbol id="i-link" viewBox="0 0 14 14"><path d="M6 8a2.5 2.5 0 0 0 3.5 0l2-2A2.5 2.5 0 0 0 8 2.5l-.8.8M8 6a2.5 2.5 0 0 0-3.5 0l-2 2A2.5 2.5 0 0 0 6 11.5l.8-.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
 </svg>
 
 <header class="wrap top">
@@ -346,26 +450,31 @@
     <span class="here">Crash Cart</span>
   </div>
   <nav aria-label="Page">
-    <a href="#how">How it works</a>
-    <a href="#data">Drive data</a>
-    <a href="#method">Method</a>
+    <a href="#how" data-tab="how">How it works</a>
+    <a href="#data" data-tab="data">Drive data</a>
+    <a href="#method" data-tab="method">Method</a>
   </nav>
 </header>
 
 <main id="main">
 
-<div class="wrap intro">
-  <h1><span>You cannot pull them all.</span> Which ones this week?</h1>
-  <p class="lede">A failure rate says how many drives will die this year, not which ones. Describe your fleet and Crash Cart ranks the drives worth a service trip this week, on thirteen years of public failure data.</p>
-  <!-- counted off the drive table below, so it cannot drift from what the tool queues -->
-  <p class="src" id="prov"></p>
+<div class="wrap tbar">
+  <div>
+    <h1>Crash Cart <span>· which drives to pull this week</span></h1>
+    <!-- counted off the drive table, so it cannot drift from what the tool queues -->
+    <p class="src" id="prov"></p>
+  </div>
+  <div class="acts">
+    <button class="btn ghost" type="button" id="copyLink"><svg aria-hidden="true"><use href="#i-link"/></svg>Copy link to this setup</button>
+  </div>
 </div>
 
-<!-- ================= THE TOOL ================= -->
-<section class="wrap console" id="console" aria-label="Crash Cart">
+<!-- ================= THE CONSOLE ================= -->
+<section class="wrap dash" id="console" aria-label="Crash Cart">
   <p class="sr-only" id="srStatus" role="status"></p>
 
-  <div class="ctl">
+  <!-- inputs -->
+  <div class="rail pn" role="group" aria-label="Your fleet">
     <fieldset class="grp">
       <legend>Fleet</legend>
       <div class="chips" id="profChips"></div>
@@ -374,8 +483,8 @@
 
     <div class="grp">
       <div class="grp-h"><label for="drives">Fleet size</label><output id="drivesOut" for="drives"></output></div>
-      <input type="range" id="drives" min="0" max="1000" step="1" aria-valuetext="">
-      <div class="scale" aria-hidden="true"><span>100</span><span>1,000</span><span>10,000</span><span>100,000</span></div>
+      <input type="range" id="drives" min="0" max="1000" step="1">
+      <div class="scale" aria-hidden="true"><span>100</span><span>1K</span><span>10K</span><span>100K</span></div>
     </div>
 
     <div class="grp">
@@ -393,7 +502,7 @@
     <div class="grp">
       <div class="grp-h"><label for="years">Look ahead</label><output id="yearsOut" for="years"></output></div>
       <input type="range" id="years" min="0" max="5" step="0.5">
-      <p class="hint">Ages every drive in the fleet, with no refresh, along the published wear curve.</p>
+      <div class="scale" aria-hidden="true"><span>Today</span><span>+5 years, no refresh</span></div>
     </div>
 
     <details class="more">
@@ -409,68 +518,96 @@
         <p class="hint" id="rebuildNote"></p>
       </div>
     </details>
+
+    <div class="whatif" role="group" aria-labelledby="wiH">
+      <h2 id="wiH">What if</h2>
+      <div class="try">
+        <button type="button" data-try="crew">Double the crew</button>
+        <button type="button" data-try="raid5">Drop to RAID 5</button>
+        <button type="button" data-try="nosmart">Turn off SMART</button>
+        <button type="button" data-try="age">Five years on</button>
+        <button type="button" data-try="reset">Start over</button>
+      </div>
+    </div>
   </div>
 
-  <div class="res">
-    <div id="answer">
-      <p class="hl" id="hl"></p>
-      <p class="hl-sub" id="hlSub"></p>
-      <p class="means" id="means"></p>
-    </div>
+  <!-- the five figures -->
+  <div class="kpiw" id="answer">
+    <dl class="kpis pn" id="kpis">
+      <div class="kpi main"><dt>Pull this week</dt><dd class="v"><b id="kv0"></b><small id="ku0"></small></dd><dd class="d" id="kd0"></dd><dd class="s" id="ks0"></dd></div>
+      <div class="kpi"><dt>On the list</dt><dd class="v"><b id="kv1"></b><small id="ku1"></small></dd><dd class="d" id="kd1"></dd><dd class="s" id="ks1"></dd></div>
+      <div class="kpi"><dt>Clears in</dt><dd class="v"><b id="kv2"></b><small id="ku2"></small></dd><dd class="d" id="kd2"></dd><dd class="s" id="ks2"></dd></div>
+      <div class="kpi risk"><dt>At risk, next 30 days</dt><dd class="v"><b id="kv3"></b><small id="ku3"></small></dd><dd class="d" id="kd3"></dd><dd class="s" id="ks3"></dd></div>
+      <div class="kpi odds"><dt>Chance of losing data this year</dt><dd class="v"><b id="kv4"></b></dd><dd class="d" id="kd4"></dd>
+        <dd class="gw"><div class="gauge" id="gauge" role="img"><span class="was" id="gWas" hidden></span><span class="mk" id="gMk"></span></div>
+          <div class="gscale" aria-hidden="true"><span>1 in a trillion</span><span>1 in a million</span><span>certain</span></div></dd></div>
+    </dl>
+    <p class="alert" id="alert" hidden><span class="ic" aria-hidden="true"></span><span id="alertT"></span></p>
+  </div>
 
-    <figure class="wall" aria-labelledby="wallTitle">
-      <div class="wall-hd">
-        <h3 id="wallTitle"></h3>
-        <ul class="legend" id="legend"></ul>
-      </div>
-      <p class="wall-sub" id="fleetNote"></p>
+  <!-- the fleet and the plan -->
+  <div class="vizw">
+    <div class="viz pn">
       <!-- The wall is a picture of the pull list below, which carries every value in it;
            the hover readout adds the drive's place in the plan, never a number the table lacks. -->
-      <div class="wall-box">
-        <canvas id="wall" role="img"></canvas>
-        <div class="tip" id="wallTip" hidden aria-hidden="true"></div>
+      <figure aria-labelledby="wallTitle">
+        <div class="pn-hd"><h2 id="wallTitle">Fleet</h2><span class="meta" id="wallMeta"></span></div>
+        <ul class="legend" id="legend"></ul>
+        <div class="box">
+          <canvas id="wall" role="img"></canvas>
+          <div class="tip" id="wallTip" hidden aria-hidden="true"></div>
+        </div>
+      </figure>
+      <figure aria-labelledby="planTitle">
+        <div class="pn-hd"><h2 id="planTitle">Cleared, week by week</h2><span class="meta" id="planMeta"></span></div>
+        <ul class="legend" id="planKey">
+          <li><span class="ln risk" aria-hidden="true"></span>Risk</li>
+          <li><span class="ln drv" aria-hidden="true"></span>Drives</li>
+          <li id="planWas" hidden><span class="ln was" aria-hidden="true"></span>Before your change</li>
+        </ul>
+        <div class="box">
+          <svg id="plan" role="img"></svg>
+          <div class="tip" id="planTip" hidden aria-hidden="true"></div>
+        </div>
+      </figure>
+      <div class="player">
+        <button class="btn" type="button" id="play"><svg aria-hidden="true"><use href="#i-play"/></svg><span>Play</span></button>
+        <label class="sr-only" for="wk">Week to show</label>
+        <input type="range" id="wk" min="1" max="1" step="1" value="1">
+        <output id="wkOut" for="wk"></output>
+        <span class="st" id="wkStat"></span>
       </div>
-      <p class="wall-note" id="wallNote"></p>
-    </figure>
-    <dl class="kpis" id="kpis"></dl>
-
-    <div class="try" role="group" aria-label="Try a change">
-      <span>Try</span>
-      <button type="button" data-try="crew">Double the crew</button>
-      <button type="button" data-try="raid5">Drop to RAID 5</button>
-      <button type="button" data-try="nosmart">Turn off SMART</button>
-      <button type="button" data-try="age">Five years on</button>
-      <button type="button" data-try="reset">Start over</button>
     </div>
+  </div>
 
-
-    <div class="list">
-      <div class="list-hd">
-        <h3>The pull list</h3>
-        <p>Ranked by data at risk. Open a row for its arithmetic.</p>
-      </div>
-      <table class="pl">
-        <caption class="sr-only">Drive groups in the queue, most urgent first, with annual failure rate, data at risk in the next 30 days and the week each group is pulled</caption>
-        <thead><tr><th scope="col"><span class="sr-only">Rank</span></th><th scope="col">Drives</th><th scope="col" class="num">Annual rate</th><th scope="col" class="num">At risk, 30 days</th><th scope="col">When</th></tr></thead>
-        <tbody id="queue"></tbody>
-      </table>
+  <!-- the pull list -->
+  <div class="listw pn">
+    <div class="pn-hd">
+      <h2>Pull list <span class="meta" id="listMeta"></span></h2>
+      <div class="r"><button class="btn ghost" type="button" id="copySheet">Copy pull sheet</button></div>
     </div>
-
-    <div class="actions">
-      <button class="btn" type="button" id="copyLink">Copy link to this setup</button>
-      <button class="btn ghost" type="button" id="copySheet">Copy pull sheet</button>
-    </div>
+    <table class="pl">
+      <caption class="sr-only">Drive groups in the queue, most urgent first, with annual failure rate, data at risk in the next 30 days and the weeks each group is pulled</caption>
+      <thead><tr><th scope="col"><span class="sr-only">Rank</span></th><th scope="col">Batch</th><th scope="col" class="n">Annual rate</th><th scope="col" class="n">At risk, 30 days</th><th scope="col">When</th></tr></thead>
+      <tbody id="queue"></tbody>
+    </table>
     <div class="print-url" id="printUrl"></div>
   </div>
 </section>
 
-<!-- ================= HOW IT WORKS ================= -->
-<section class="sec" id="how">
-  <div class="wrap">
-    <div class="sec-hd">
-      <h2>How it works</h2>
-      <p>Each row of the pull list is one batch of drives carried through the same four steps. The example on the right follows whatever is at the top of your list.</p>
+<!-- ================= UNDER THE HOOD ================= -->
+<section class="wrap ref" id="ref" aria-labelledby="refH">
+  <div class="ref-hd">
+    <h2 id="refH">Under the hood</h2>
+    <div class="tabs" role="tablist" aria-labelledby="refH">
+      <button type="button" role="tab" id="t-how" aria-controls="how" aria-selected="true">How it works</button>
+      <button type="button" role="tab" id="t-data" aria-controls="data" aria-selected="false" tabindex="-1">Drive data</button>
+      <button type="button" role="tab" id="t-method" aria-controls="method" aria-selected="false" tabindex="-1">Method</button>
     </div>
+  </div>
+
+  <div role="tabpanel" id="how" aria-labelledby="t-how" tabindex="0">
+    <p class="lead">Each row of the pull list is one batch of drives carried through the same four steps. The example follows whatever is at the top of your list.</p>
     <div class="two">
       <ol class="steps">
         <li><div><h3>Start from the published rate</h3><p>Every model begins at its lifetime failure rate from Backblaze Drive Stats, with the drive days behind it, so a thin record shows as a wide interval rather than false certainty.</p></div></li>
@@ -484,47 +621,32 @@
         <ol class="chain" id="wx"></ol>
       </figure>
     </div>
-
     <div class="curve">
       <div class="curve-hd">
         <h3>The wear curve, with your fleet on it</h3>
-        <p>The age multiplier from step two. Each ring is one batch in the fleet you picked, sized by drive count; move Look ahead and watch them climb. A fleet on the right-hand climb is not a maintenance problem, it is a refresh decision.</p>
+        <p>The age multiplier from step two. Each ring is one batch in your fleet, sized by drive count; move Look ahead and watch them climb.</p>
       </div>
-      <div class="curve-box">
+      <div class="box">
         <svg id="curve" role="img" aria-labelledby="curveTitle curveDesc"><title id="curveTitle">Failure rate multiplier against drive age</title><desc id="curveDesc">A shallow bathtub: about 1.45 times the lifetime average in the first months, 0.8 at year two, then rising past year five to about 3.9 by year ten. The batches in your fleet are plotted along it.</desc></svg>
         <div class="ctip" id="curveTip" hidden aria-hidden="true"></div>
       </div>
     </div>
   </div>
-</section>
 
-<!-- ================= DRIVE DATA ================= -->
-<section class="sec" id="data">
-  <div class="wrap">
-    <div class="sec-hd">
-      <h2>The drive data</h2>
-      <p>Every model the tool can queue, with its published lifetime failure rate, the 95 percent interval on it, and the record behind it.</p>
-    </div>
-    <details class="more">
-    <summary id="refSum">Show all drive models</summary>
+  <div role="tabpanel" id="data" aria-labelledby="t-data" tabindex="0" hidden>
+    <p class="lead" id="refSum">Every model the tool can queue, with its published lifetime failure rate, the 95 percent interval on it, and the record behind it.</p>
     <div class="tscroll" tabindex="0" role="region" aria-label="Drive models, scrolls sideways on narrow screens">
-      <table class="ref">
+      <table class="ref-t">
         <caption class="sr-only">Drive models with published lifetime annualized failure rates, 95 percent intervals and drive days observed, from Backblaze Drive Stats</caption>
         <thead><tr><th scope="col">Model</th><th scope="col">Capacity</th><th scope="col">Lifetime rate</th><th scope="col">95% interval</th><th scope="col">Drive days</th><th scope="col">Notes</th></tr></thead>
         <tbody id="refBody"></tbody>
       </table>
     </div>
-    </details>
+    <dl class="profs" id="profs" aria-label="The five fleet profiles"></dl>
   </div>
-</section>
 
-<!-- ================= METHOD ================= -->
-<section class="sec" id="method">
-  <div class="wrap">
-    <div class="sec-hd">
-      <h2>Method</h2>
-      <p>This is the whole model. If you disagree with a constant, you know exactly which one to argue with.</p>
-    </div>
+  <div role="tabpanel" id="method" aria-labelledby="t-method" tabindex="0" hidden>
+    <p class="lead">This is the whole model. If you disagree with a constant, you know exactly which one to argue with.</p>
     <div class="two">
       <dl class="eq">
         <div><dt>Annual rate</dt><dd>lifetime rate &times; age multiplier &times; evidence ratio</dd></div>
@@ -541,7 +663,7 @@
         <p><b>SMART is evidence, not a threshold.</b> Flagged drives carry an 18&times; likelihood ratio and clean ones 0.24&times;, renormalized to the coverage you set so the fleet's total expected failures are preserved.</p>
         <p><b>The age multiplier</b> follows the published bathtub shape, normalized so a mixed-age fleet averages 1.0. <b>Look ahead</b> adds the same years to every batch and reads the curve at the new age: no replacements, no new drives, no change in rates beyond the curve.</p>
         <p><b>Rebuild rate is the effective rate on a live system,</b> not the spec sheet; 150 MB/s is an honest default. Unrecoverable read errors count only where no parity is left.</p>
-        <p><b>The list holds drives with a reason.</b> The bands sit at 1.5 percent a year (watch), 5 (schedule) and 15 (pull). Weeks after the first assume the crew also absorbs the drives that newly earn a place each week.</p>
+        <p><b>The list holds drives with a reason.</b> The bands sit at 1.5 percent a year (watch), 5 (schedule) and 15 (pull). The crew works the list top down; weeks after the first assume it also absorbs the drives that newly earn a place each week, which is what the plan chart and the week scrubber show.</p>
         <p><b>A triage heuristic, not a warranty model.</b> Figures are the published lifetime table, rounded; re-pull the current quarter before you spend money, and nothing here replaces watching your own fleet.</p>
       </div>
     </div>
@@ -832,16 +954,52 @@
   var reduce = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches:false };
   function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
   function plural(n, one, many){ return n === 1 ? one : (many || one + "s"); }
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+  function ease(k){ return 1 - Math.pow(1 - k, 3); }
+  function pct(f){ return (100 * clamp(f, 0, 1)).toFixed(3) + "%"; }
 
-  /* ---------- weeks ----------
-     The first week takes exactly the crew's capacity. After that the backlog shrinks by
-     capacity less the drives that newly earn a place each week, which is the same rate the
-     "clears in" figure uses, so the last row's week and that figure agree. */
+  /* compute() plus the two things the drawing needs from the moment it ran */
+  function run(){
+    var r = compute();
+    r.pulls = state.pulls;
+    r.queueTb = 0; r.queue.forEach(function(x){ r.queueTb += x.tb; });
+    return r;
+  }
+
+  /* ---------- the plan in time ----------
+     The crew works the list top down. The first week takes exactly its capacity; after that
+     the backlog shrinks by capacity less the drives that newly earn a place each week. Every
+     week on the page, from the figures to the wall to the list, comes from these. */
+  function effRate(r){ return r.pulls - r.arrivals; }
   function weekOf(d, r){
     if(d < r.thisWeek) return 1;
-    var eff = state.pulls - r.arrivals;
-    if(eff <= 0) return Infinity;
-    return 1 + Math.ceil((d + 1 - r.thisWeek) / eff);
+    var e = effRate(r);
+    if(e <= 0) return Infinity;
+    return 1 + Math.ceil((d + 1 - r.thisWeek) / e);
+  }
+  // drives off the list by the end of week w, counted the way weekOf assigns them
+  function doneBy(r, w){
+    if(w <= 0 || !r.queueDrives) return 0;
+    var e = effRate(r);
+    if(w <= 1 || e <= 0) return r.thisWeek;
+    return Math.min(r.queueDrives, Math.floor(r.thisWeek + (w - 1) * e + 1e-9));
+  }
+  // the same, continuous, for drawing
+  function dAt(r, w){
+    if(w <= 0 || !r.queueDrives) return 0;
+    if(w <= 1) return r.thisWeek * w;
+    var e = effRate(r);
+    return e <= 0 ? r.thisWeek : Math.min(r.queueDrives, r.thisWeek + (w - 1) * e);
+  }
+  function lastWeek(r){ return r.queueDrives ? weekOf(r.queueDrives - 1, r) : 0; }
+  // share of the list's data at risk taken off by the first D drives, worked top down
+  function riskShare(r, D){
+    var acc = 0, before = 0, q = r.queue;
+    for(var i = 0; i < q.length && before < D; i++){
+      acc += q[i].tb * Math.min(q[i].n, D - before) / q[i].n;
+      before += q[i].n;
+    }
+    return r.queueTb > 0 ? Math.min(1, acc / r.queueTb) : 0;
   }
   function weekText(a, b){
     if(!isFinite(a)) return "Not at this pace";
@@ -851,46 +1009,100 @@
     return "Weeks " + a + "–" + b;
   }
 
-  /* ---------- the headline number, tweened ---------- */
-  var bigCur = null, bigRaf = 0;
-  function setBig(target){
-    var el = $("bigNum"); if(!el) return;
-    if(bigCur === null || reduce.matches){ bigCur = target; el.textContent = fmt(target); return; }
-    cancelAnimationFrame(bigRaf);
-    var from = bigCur, t0 = null;
+  /* the scrubber and the chart look three years ahead at most; a list longer than that is
+     said in years, since it is a refresh decision rather than a schedule */
+  var CAP = 156, view = { v:1, max:1 }, playing = false, playT = 0;
+  function maxWeek(r){ var w = lastWeek(r); return isFinite(w) ? clamp(w, 1, CAP) : 1; }
+  function inYears(w){ var y = w / 52; return fmt(y, y < 10 ? 1 : 0) + " years"; }
+  function whenText(w){ return w <= 104 ? "week " + fmt(w) : inYears(w); }
+
+  /* ---------- numbers that count to their new value ---------- */
+  var tw = {};
+  function tweenText(id, to, f){
+    var el = $(id), st = tw[id];
+    if(!st || reduce.matches || !isFinite(to) || !isFinite(st.shown)){
+      if(st) cancelAnimationFrame(st.raf);
+      tw[id] = { shown:to, to:to, raf:0 }; el.textContent = f(to); return;
+    }
+    if(st.to === to) return;
+    cancelAnimationFrame(st.raf);
+    var from = st.shown, t0 = null; st.to = to;
     (function step(ts){
       if(t0 === null) t0 = ts;
-      var k = Math.min((ts - t0) / 260, 1); k = 1 - Math.pow(1 - k, 3);
-      el.textContent = fmt(from + (target - from) * k);
-      if(k < 1) bigRaf = requestAnimationFrame(step);
+      var k = Math.min((ts - t0) / 320, 1);
+      st.shown = k < 1 ? from + (to - from) * ease(k) : to;
+      el.textContent = f(st.shown);
+      if(k < 1) st.raf = requestAnimationFrame(step);
     })(performance.now());
-    bigCur = target;
   }
+  function setText(id, s){ if(tw[id]){ cancelAnimationFrame(tw[id].raf); delete tw[id]; } $(id).textContent = s; }
+  function flash(el){ if(reduce.matches) return; el.classList.remove("hit"); void el.offsetWidth; el.classList.add("hit"); }
 
-  /* ---------- the answer ---------- */
-  function renderAnswer(r){
-    var top = r.queue[0];
-    var hl = $("hl");
-    if(r.queueDrives === 0){
-      hl.textContent = "Nothing to pull this week.";
-      $("hlSub").textContent = "Nothing is flagged and nothing has aged past 1.5 percent a year.";
-    } else if(state.pulls === 0){
-      hl.textContent = "Your crew pulls nothing this week.";
-      $("hlSub").textContent = weld(fmt(r.queueDrives)+" drives are waiting, led by "+fmt(top.n)+" "+top.md.brand+" "+top.md.model+".");
-    } else {
-      if(!$("bigNum")){
-        hl.innerHTML = 'Pull <span class="n" id="bigNum"></span> <span id="bigUnit"></span> this week.';
-        bigCur = null;
-      }
-      setBig(r.thisWeek);
-      $("bigUnit").textContent = plural(r.thisWeek, "drive");
-      var first = Math.min(r.thisWeek, top.n);
-      $("hlSub").textContent = weld("Start with "+(first < top.n ? fmt(first)+" of the "+fmt(top.n) : "the "+fmt(top.n))+" "+
-        top.md.brand+" "+top.md.model+": "+top.md.tb+" TB, "+top.age.toFixed(1)+" years old, "+
-        (top.flagged ? "flagged by SMART." : "with no SMART warning, just age."));
+  /* ---------- the five figures, each saying how it moved ---------- */
+  var kpiBase = null, prevR = null, lastR = null, dragging = false, lastShown = null;
+  function vals(r){ return [r.thisWeek, r.queueDrives, lastWeek(r), r.totalTb, r.pLossYear]; }
+  function fmt0(n){ return fmt(Math.round(n)); }
+  function oddsPos(p){ return p > 0 ? clamp((Math.log(p) / Math.LN10 + 12) / 12, 0, 1) : 0; }
+  function ratioText(x){ return x < 10 ? x.toFixed(1) : x < 1e3 ? fmt(x) : x < 1e6 ? fmt(x / 1e3) + "K" : x < 1e9 ? fmt(x / 1e6) + "M" : "1B+"; }
+  function chip(id, dir, text, tone){
+    var el = $(id); el.className = "d" + (tone ? " " + tone : "");
+    el.innerHTML = text ? (dir ? '<i aria-hidden="true">' + (dir > 0 ? "▲" : "▼") + '</i>' : "") + text : "";
+  }
+  function countChip(id, now, was, lowerIsBetter, more, fewer){
+    if(was === null || fmt(now) === fmt(was)){ chip(id, 0, ""); return; }
+    var up = now > was, tone = lowerIsBetter === null ? "" : (up === !lowerIsBetter ? "good" : "bad");
+    chip(id, up ? 1 : -1, fmt(Math.abs(now - was)) + " " + (up ? more : fewer), tone);
+  }
+  function renderKpis(r){
+    var v = vals(r), b = kpiBase, top = r.queue[0];
+
+    tweenText("kv0", v[0], fmt0); $("ku0").textContent = plural(v[0], "drive");
+    $("ks0").textContent = !r.queueDrives ? "Nothing on the list" : !state.pulls ? "Crew capacity is set to zero" :
+      weld("Start with " + fmt(Math.min(r.thisWeek, top.n)) + " × " + top.md.brand + " " + top.md.model);
+    countChip("kd0", v[0], b && b[0], null, "more", "fewer");
+
+    tweenText("kv1", v[1], fmt0); $("ku1").textContent = plural(v[1], "drive");
+    $("ks1").textContent = "of " + fmt(r.totalDrives) + " in the fleet";
+    countChip("kd1", v[1], b && b[1], true, "more", "fewer");
+
+    var yrs = isFinite(v[2]) && v[2] > 104, unit = yrs ? "y" : "w";
+    if($("ku2").getAttribute("data-u") !== unit && tw.kv2){ cancelAnimationFrame(tw.kv2.raf); delete tw.kv2; }
+    $("ku2").setAttribute("data-u", unit);
+    if(!r.queueDrives){ setText("kv2", "None"); $("ku2").textContent = ""; }
+    else if(!isFinite(v[2])){ setText("kv2", "Never"); $("ku2").textContent = ""; }
+    else if(yrs){ tweenText("kv2", v[2] / 52, function(y){ return fmt(y, y < 10 ? 1 : 0); }); $("ku2").textContent = "years"; }
+    else { tweenText("kv2", v[2], fmt0); $("ku2").textContent = plural(v[2], "week"); }
+    $("ks2").textContent = !r.queueDrives ? "nothing waiting" : !state.pulls ? "no pulls planned" :
+      !isFinite(v[2]) ? "new drives outpace " + fmt(state.pulls) + " a week" : "at " + fmt(state.pulls) + " pulls a week";
+    if(!b || b[2] === v[2] || !r.queueDrives) chip("kd2", 0, "");
+    else if(!isFinite(b[2])) chip("kd2", 0, "was never", "good");
+    else if(!isFinite(v[2])) chip("kd2", 0, "was " + (b[2] > 104 ? inYears(b[2]) : fmt(b[2]) + " " + plural(b[2], "week")), "bad");
+    else { var dw = Math.abs(v[2] - b[2]);
+      chip("kd2", v[2] > b[2] ? 1 : -1, (dw > 104 ? fmt(dw / 52) + " yr" : fmt(dw) + (yrs ? " wk" : "")) + (v[2] > b[2] ? " later" : " sooner"), v[2] > b[2] ? "bad" : "good"); }
+
+    tweenText("kv3", v[3], fmtSmall); $("ku3").textContent = "TB";
+    $("ks3").textContent = fmtSmall(r.totalFail30) + " failures expected";
+    if(!b || fmtSmall(b[3]) === fmtSmall(v[3])) chip("kd3", 0, "");
+    else chip("kd3", v[3] > b[3] ? 1 : -1, fmtSmall(Math.abs(v[3] - b[3])) + NB + "TB " + (v[3] > b[3] ? "more" : "less"), v[3] > b[3] ? "bad" : "good");
+
+    setText("kv4", odds(v[4]));
+    var ratio = b && b[4] > 0 && v[4] > 0 ? v[4] / b[4] : 1;
+    if(ratio > 1.05) chip("kd4", 1, ratioText(ratio) + "× riskier", "bad");
+    else if(ratio < 1 / 1.05) chip("kd4", -1, ratioText(1 / ratio) + "× safer", "good");
+    else chip("kd4", 0, "");
+    $("gMk").style.setProperty("--p", pct(oddsPos(v[4])));
+    var showWas = b && Math.abs(oddsPos(b[4]) - oddsPos(v[4])) > 0.004;
+    $("gWas").hidden = !showWas;
+    if(showWas) $("gWas").style.setProperty("--p", pct(oddsPos(b[4])));
+    $("gauge").setAttribute("aria-label", odds(v[4]) + ", on a scale from one in a trillion to certain");
+
+    // a figure that lands on a new value lights up for a moment
+    var shown = [fmt(v[0]), fmt(v[1]), !r.queueDrives ? "none" : isFinite(v[2]) ? (yrs ? inYears(v[2]) : fmt(v[2])) : "never", fmtSmall(v[3]), odds(v[4])];
+    if(lastShown){
+      var tiles = document.querySelectorAll(".kpi");
+      for(var i = 0; i < 5; i++) if(lastShown[i] !== shown[i]) flash(tiles[i]);
     }
-    if(!r.queueDrives || !state.pulls){ bigCur = null; }
-    $("means").textContent = weld(flagText(r));
+    lastShown = shown;
   }
 
   function largestRebuild(){
@@ -898,8 +1110,22 @@
     p.mix.forEach(function(c){ big = Math.max(big, model(c[0]).tb); });
     return big*1e6/state.rebuild/3600;
   }
+  /* one line, only when something deserves saying */
+  function renderAlert(r){
+    var sc = r.sc, a = null, lw = lastWeek(r);
+    if(!r.queueDrives) a = ["ok", "A clean fleet: nothing is flagged and nothing has aged past 1.5 percent a year."];
+    else if(!state.pulls) a = ["bad", "No crew: " + fmtSmall(r.arrivals) + " drives join the list every week and none come off."];
+    else if(r.arrivals >= state.pulls) a = ["bad", "Drives join the list faster than you pull them: " + fmtSmall(r.arrivals) + " a week against " + fmt(state.pulls) + ". The fix is hands, not ranking."];
+    else if(sc.m === 0) a = ["bad", "No parity: every failure is data lost, whatever the pull order."];
+    else if(lw > 104) a = ["warn", "At " + fmt(state.pulls) + " pulls a week this list takes " + inYears(lw) + " to clear" +
+      (r.arrivals > state.pulls / 2 ? ", because new drives join it at " + fmtSmall(r.arrivals) + " a week" : "") + ". That is a refresh decision, not a pull schedule."];
+    else if(sc.m === 1) a = ["warn", "One parity unit: the largest drive rebuilds in " + fmt(largestRebuild()) + " hours, and a second failure or a bad sector in that window loses data."];
+    else if(lw <= 2) a = ["ok", "Ahead of this fleet: the list clears in " + lw + " " + plural(lw, "week") + "."];
+    $("alert").hidden = !a;
+    if(a){ $("alert").className = "alert " + a[0]; $("alertT").textContent = weld(a[1]); }
+  }
   function flagText(r){
-    var sc = r.sc;
+    var sc = r.sc, lw = lastWeek(r);
     if(r.queueDrives === 0)
       return "This is what a clean fleet looks like. The right number of service trips this week is zero.";
     if(state.pulls === 0)
@@ -911,56 +1137,32 @@
       return "With "+(sc.m===0?"no parity at all":"a single parity unit")+", the rebuild is the risk, not the failure: "+
              "the largest drive rebuilds in "+fmt(largestRebuild())+" hours, and the odds of losing data this year are "+
              odds(r.pLossYear)+". A second parity unit is worth more than any pull schedule.";
-    if(r.backlogWeeks <= 2)
-      return "You are ahead of this fleet: "+fmt(state.pulls)+" pulls a week clears the list in "+fmt(Math.ceil(r.backlogWeeks))+
-             " "+plural(Math.ceil(r.backlogWeeks), "week")+". The real question is whether that many service trips is worth spending.";
+    if(lw <= 2)
+      return "You are ahead of this fleet: "+fmt(state.pulls)+" pulls a week clears the list in "+lw+
+             " "+plural(lw, "week")+". The real question is whether that many service trips is worth spending.";
     var share = r.totalTb > 0 ? Math.round(100*r.tbCovered/r.totalTb) : 0;
     return "Worked top down, this week's "+fmt(r.thisWeek)+" pulls take "+share+" percent of the data at risk with "+
            Math.round(100*r.thisWeek/r.queueDrives)+" percent of the drives on the list.";
   }
 
-  /* ---------- the four numbers, each remembering what it just was ---------- */
-  var lastKpi = null, kpiBase = null, dragging = false;
-  function renderKpis(r){
-    var weeks = r.backlogWeeks === Infinity ? ["never",""] : [fmt(Math.ceil(r.backlogWeeks)), plural(Math.ceil(r.backlogWeeks), "week")];
-    var k = [
-      ["On the list", fmt(r.queueDrives), plural(r.queueDrives, "drive")],
-      ["Clears in", weeks[0], weeks[1]],
-      ["At risk, next 30 days", fmtSmall(r.totalTb), "TB"],
-      ["Chance of losing data this year", odds(r.pLossYear), ""]
-    ];
-    var html = "";
-    k.forEach(function(c, i){
-      var now = c[1] + (c[2] ? " " + c[2] : "");
-      var was = kpiBase && kpiBase[i] !== now ? "was " + kpiBase[i] : "";
-      html += '<div class="kpi"><dt>'+c[0]+'</dt><dd class="v">'+c[1]+(c[2] ? '<small>'+c[2]+'</small>' : '')+'</dd>'+
-              '<dd class="was">'+was+'</dd></div>';
-    });
-    $("kpis").innerHTML = html;
-    lastKpi = k.map(function(c){ return c[1] + (c[2] ? " " + c[2] : ""); });
-  }
-
   /* ---------- the wall ----------
      One square per drive, grouped by what it needs (pull, schedule, watch, hold) and in
-     pull-list order inside each group, so the colours read as blocks with sizes rather than
-     as a pattern. The drives the crew takes this week are white wherever they sit. Past
-     3,000 drives each square stands for a few. */
+     pull-list order inside each group. Squares the crew has pulled by the week being looked
+     at turn green; the week's own pulls are white. Past 3,000 drives a square stands for a
+     few. */
   var MAXCELLS = 3000;
-  var wall = { cells:[], cur:null, from:null, to:null, t:1, raf:0, hover:-1, hoverRow:-1, geo:null, r:null };
+  var wall = { cells:[], cats:[], from:null, to:null, t:1, raf:0, hoverRow:-1, hoverCat:null, geo:null, seq:[], unit:1 };
   function hexRgb(h){ h = h.replace("#",""); return [parseInt(h.substr(0,2),16), parseInt(h.substr(2,2),16), parseInt(h.substr(4,2),16)]; }
   var PAL = null;
   function palette(){
     if(!PAL) PAL = { week:hexRgb(cssVar("--r-week")), pull:hexRgb(cssVar("--r-pull")), sched:hexRgb(cssVar("--r-sched")),
-                     watch:hexRgb(cssVar("--r-watch")), hold:hexRgb(cssVar("--r-hold")), bg:hexRgb(cssVar("--bg")) };
+                     watch:hexRgb(cssVar("--r-watch")), hold:hexRgb(cssVar("--r-hold")), done:hexRgb(cssVar("--r-done")), bg:hexRgb(cssVar("--bg2")) };
     return PAL;
   }
-
   function buildWall(r){
-    /* seq is the pull list followed by the drives on hold, so a row's index matches the
-       table. Each row also knows where its drives start in the list, which sets their week. */
+    // seq is the pull list followed by the drives on hold, so a row's index matches the table
     var seq = r.queue.concat(r.rows.filter(function(x){ return x.band === "hold"; }));
     var at = 0; seq.forEach(function(x){ x.listStart = at; at += x.n; });
-    // the drawing order: the same rows, grouped by band, list order kept inside each group
     var order = [];
     ["pull","sched","watch","hold"].forEach(function(b){ seq.forEach(function(x, i){ if(x.band === b) order.push(i); }); });
     var N = at, unit = Math.max(1, Math.ceil(N / MAXCELLS)), count = Math.ceil(N / unit);
@@ -968,86 +1170,89 @@
     for(var c = 0; c < count; c++){
       var pos = c * unit;
       while(oi < order.length - 1 && pos >= start + seq[order[oi]].n){ start += seq[order[oi]].n; oi++; }
-      var ri = order[oi], row = seq[ri], d = row.listStart + (pos - start);   // this drive's place in the list
-      cells[c] = { d:d, row:ri, band: row.band !== "hold" && d < r.thisWeek ? "week" : row.band };
+      var ri = order[oi], row = seq[ri], d = row.listStart + (pos - start);
+      cells[c] = { d:d, row:ri, band:row.band, wk: row.band === "hold" ? 0 : weekOf(d, r) };
     }
     return { seq:seq, cells:cells, unit:unit, N:N };
   }
-
+  function catOf(c, v){ return c.band === "hold" ? "hold" : c.wk < v ? "done" : c.wk === v ? "week" : c.band; }
   function layoutWall(count){
     var cv = $("wall"), W = cv.parentNode.clientWidth || 600;
-    var Hmax = Math.max(220, Math.min(420, W * 0.5));
-    var pitch = Math.floor(Math.sqrt(W * Hmax / Math.max(count, 1)));
-    pitch = Math.max(4, Math.min(28, pitch));
+    var Hmax = clamp(W * 0.48, 200, 340);
+    var pitch = clamp(Math.floor(Math.sqrt(W * Hmax / Math.max(count, 1))), 4, 26);
     var cols = Math.max(1, Math.floor(W / pitch)), rows = Math.ceil(count / cols);
-    var gap = pitch >= 9 ? 2 : 1;
-    return { W:W, H:rows * pitch, pitch:pitch, cols:cols, rows:rows, gap:gap, count:count };
+    return { W:W, H:rows * pitch, pitch:pitch, cols:cols, rows:rows, gap:pitch >= 9 ? 2 : 1, count:count };
   }
-
   function sizeCanvas(geo){
     var cv = $("wall"), dpr = window.devicePixelRatio || 1;
     cv.style.height = geo.H + "px";
     cv.width = Math.round(geo.W * dpr); cv.height = Math.round(geo.H * dpr);
-    var ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cv.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
   }
-
+  function mix(a, b, t){ return [a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t, a[2] + (b[2]-a[2])*t]; }
   function drawWall(){
-    var geo = wall.geo; if(!geo) return;
-    var ctx = $("wall").getContext("2d"), P = palette(), k = wall.t, e = 1 - Math.pow(1 - k, 3);
+    var geo = wall.geo; if(!geo || !wall.to) return;
+    var ctx = $("wall").getContext("2d"), P = palette(), k = wall.t, e = ease(k);
     ctx.clearRect(0, 0, geo.W, geo.H);
-    var s = geo.pitch - geo.gap, hr = wall.hoverRow;
+    var s = geo.pitch - geo.gap, hr = wall.hoverRow, hc = wall.hoverCat, white = [255,255,255];
     for(var c = 0; c < geo.count; c++){
-      var to = wall.to[c], from = wall.from ? wall.from[c] || to : to;
-      var col = k >= 1 ? to : [from[0] + (to[0]-from[0])*e, from[1] + (to[1]-from[1])*e, from[2] + (to[2]-from[2])*e];
-      var dim = hr >= 0 && wall.cells[c].row !== hr;
-      if(dim) col = [col[0]*.3 + P.bg[0]*.7, col[1]*.3 + P.bg[1]*.7, col[2]*.3 + P.bg[2]*.7];
+      var to = wall.to[c], from = wall.from && k < 1 ? wall.from[c] : null, col = to;
+      if(from){
+        col = mix(from, to, e);
+        // a square that changed what it needs glints as it settles, so the eye finds it
+        if(from[0] !== to[0] || from[1] !== to[1] || from[2] !== to[2]) col = mix(col, white, (1 - e) * 0.5);
+      }
+      if((hr >= 0 && wall.cells[c].row !== hr) || (hc && wall.cats[c] !== hc)) col = mix(col, P.bg, 0.72);
       ctx.fillStyle = "rgb(" + (col[0]|0) + "," + (col[1]|0) + "," + (col[2]|0) + ")";
       ctx.fillRect((c % geo.cols) * geo.pitch, Math.floor(c / geo.cols) * geo.pitch, s, s);
     }
   }
-
-  function renderWall(r){
-    var built = buildWall(r), P = palette();
-    var geo = layoutWall(built.cells.length);
-    var sameShape = wall.geo && wall.geo.count === geo.count && wall.geo.cols === geo.cols && wall.geo.W === geo.W;
-    var to = built.cells.map(function(c){ return P[c.band]; });
-    // the colours glide when the fleet keeps its shape; a new shape simply redraws
-    wall.from = sameShape && !reduce.matches ? currentColors() : null;
-    wall.to = to; wall.cells = built.cells; wall.seq = built.seq; wall.unit = built.unit; wall.r = r;
-    if(!sameShape){ wall.geo = geo; sizeCanvas(geo); }
+  function currentColors(){
+    if(!wall.to) return null;
+    if(wall.t >= 1 || !wall.from) return wall.to.slice();
+    var e = ease(wall.t);
+    return wall.to.map(function(to, c){ return mix(wall.from[c] || to, to, e); });
+  }
+  function paintWall(dur){
+    var P = palette(), v = view.v;
+    wall.cats = wall.cells.map(function(c){ return catOf(c, v); });
+    var to = wall.cats.map(function(k){ return P[k]; });
+    wall.from = dur && !reduce.matches && wall.to && wall.to.length === to.length ? currentColors() : null;
+    wall.to = to;
     cancelAnimationFrame(wall.raf);
     if(wall.from){
       wall.t = 0; var t0 = null;
       (function tick(ts){
         if(t0 === null) t0 = ts;
-        wall.t = Math.min(1, (ts - t0) / 320);
+        wall.t = Math.min(1, (ts - t0) / dur);
         drawWall();
         if(wall.t < 1) wall.raf = requestAnimationFrame(tick);
       })(performance.now());
     } else { wall.t = 1; drawWall(); }
-
-    // title, legend counts and the note
-    // each band's count is what is left of it once this week's pulls, taken in list order, are out
-    var counts = { week:r.thisWeek, pull:0, sched:0, watch:0, hold:0 }, before = 0;
-    r.rows.forEach(function(x){ if(x.band === "hold") counts.hold += x.n; });
-    r.queue.forEach(function(x){ counts[x.band] += x.n - Math.max(0, Math.min(x.n, r.thisWeek - before)); before += x.n; });
-    $("wallTitle").textContent = "Your " + fmt(r.totalDrives) + " " + plural(r.totalDrives, "drive") + ", by what each one needs";
-    var items = [["week","This week"],["pull","Pull"],["sched","Schedule"],["watch","Watch"],["hold","Hold"]];
-    $("legend").innerHTML = items.filter(function(it){ return counts[it[0]] > 0 || it[0] === "hold"; }).map(function(it){
-      return '<li><span class="sw '+it[0]+'" aria-hidden="true"></span>'+it[1]+' <b>'+fmt(counts[it[0]])+'</b></li>';
-    }).join("");
-    $("wallNote").textContent = built.unit === 1 ? "Each square is one drive. Point at one to see which batch it belongs to and the week it comes out."
-      : "Each square stands for about " + fmt(built.unit) + " drives. Point at one to see its batch and the week it comes out.";
-    $("wall").setAttribute("aria-label", "Fleet of " + fmt(r.totalDrives) + " drives: " + fmt(counts.week) + " pulled this week, " +
-      fmt(counts.pull) + " more to pull, " + fmt(counts.sched) + " to schedule, " + fmt(counts.watch) + " to watch, " +
-      fmt(counts.hold) + " on hold. The pull list below has every batch.");
   }
-  function currentColors(){
-    if(!wall.to) return null;
-    var k = wall.t, e = 1 - Math.pow(1 - k, 3);
-    if(k >= 1 || !wall.from) return wall.to.slice();
-    return wall.to.map(function(to, c){ var f = wall.from[c] || to;
-      return [f[0] + (to[0]-f[0])*e, f[1] + (to[1]-f[1])*e, f[2] + (to[2]-f[2])*e]; });
+  function renderWall(r){
+    var built = buildWall(r), geo = layoutWall(built.cells.length);
+    var same = wall.geo && wall.geo.count === geo.count && wall.geo.cols === geo.cols && wall.geo.W === geo.W;
+    wall.cells = built.cells; wall.seq = built.seq; wall.unit = built.unit;
+    if(!same){ wall.geo = geo; sizeCanvas(geo); wall.to = null; }
+    paintWall(same ? 340 : 0);
+    $("wallMeta").textContent = fmt(r.totalDrives) + " " + plural(r.totalDrives, "drive") + (built.unit === 1 ? ", one square each" : ", about " + fmt(built.unit) + " to a square");
+  }
+  function countsAt(r, v){
+    var lo = doneBy(r, v - 1), hi = doneBy(r, v), c = { done:lo, week:hi - lo, pull:0, sched:0, watch:0, hold:0 }, before = 0;
+    r.rows.forEach(function(x){ if(x.band === "hold") c.hold += x.n; });
+    r.queue.forEach(function(x){ c[x.band] += x.n - Math.max(0, Math.min(before + x.n, hi) - before); before += x.n; });
+    return c;
+  }
+  function renderLegend(r){
+    var v = view.v, c = countsAt(r, v);
+    var items = [["done","Pulled"],["week", v === 1 ? "This week" : "Week " + v],["pull","Pull"],["sched","Schedule"],["watch","Watch"],["hold","Hold"]];
+    $("legend").innerHTML = items.filter(function(it){ return c[it[0]] > 0 || it[0] === "hold"; }).map(function(it){
+      return '<li data-k="'+it[0]+'"><span class="sw '+it[0]+'" aria-hidden="true"></span>'+it[1]+' <b>'+fmt(c[it[0]])+'</b></li>';
+    }).join("");
+    $("wall").setAttribute("aria-label", "Fleet of " + fmt(r.totalDrives) + " drives at " + (v === 1 ? "this week" : "week " + v) + ": " +
+      (c.done ? fmt(c.done) + " already pulled, " : "") + fmt(c.week) + " pulled " + (v === 1 ? "this week" : "that week") + ", " +
+      fmt(c.pull) + " more to pull, " + fmt(c.sched) + " to schedule, " + fmt(c.watch) + " to watch, " + fmt(c.hold) + " on hold. The pull list has every batch.");
   }
 
   function wallAt(ev){
@@ -1056,27 +1261,31 @@
     var col = Math.floor(x / g.pitch), row = Math.floor(y / g.pitch), c = row * g.cols + col;
     return col >= 0 && col < g.cols && c >= 0 && c < g.count ? c : -1;
   }
+  function placeTip(tip, ev){
+    var box = tip.parentNode.getBoundingClientRect(), x = ev.clientX - box.left, y = ev.clientY - box.top;
+    var w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = clamp(x + 14, 0, Math.max(0, box.width - w)) + "px";
+    tip.style.top = (y - h - 12 < -40 ? y + 18 : y - h - 12) + "px";
+  }
   function showTip(c, ev){
-    var tip = $("wallTip"), cell = wall.cells[c], row = wall.seq[cell.row], r = wall.r;
-    var d = cell.d, wk = row.band === "hold" ? null : weekOf(d, r);
+    var tip = $("wallTip"), cell = wall.cells[c], row = wall.seq[cell.row], cat = wall.cats[c], v = view.v;
     tip.textContent = "";
     var b = document.createElement("b");
     b.textContent = fmt(row.n) + " × " + row.md.brand + " " + row.md.model;
     tip.appendChild(b);
     tip.appendChild(document.createTextNode(weld(row.md.tb + " TB · " + row.age.toFixed(1) + " yr · " +
-      (row.flagged ? "flagged by SMART" : "no SMART warning") + " · " + (row.rate*100).toFixed(1) + "% a year")));
+      (row.flagged ? "SMART flag" : "no SMART flag") + " · " + (row.rate*100).toFixed(1) + "% a year")));
     var k = document.createElement("span"); k.className = "k";
-    var dot = document.createElement("span"); dot.className = "dot " + row.band; k.appendChild(dot);
-    k.appendChild(document.createTextNode(row.band === "hold" ? "Hold: no action" :
-      BAND[row.band] + (wk === Infinity ? ", not at this pace" : wk === 1 ? ", this week" : ", week " + wk)));
+    var dot = document.createElement("span"); dot.className = "dot " + cat; k.appendChild(dot);
+    k.appendChild(document.createTextNode(
+      cat === "hold" ? "Hold: no action" :
+      cat === "done" ? "Pulled in week " + cell.wk :
+      cat === "week" ? (v === 1 ? "Pulled this week" : "Pulled in week " + v) :
+      BAND[row.band] + (isFinite(cell.wk) ? ", out in week " + cell.wk + " · click to jump there" : ", not at this pace")));
     tip.appendChild(k);
     tip.hidden = false;
-    var box = tip.parentNode.getBoundingClientRect(), x = ev.clientX - box.left, y = ev.clientY - box.top;
-    var w = tip.offsetWidth, h = tip.offsetHeight;
-    tip.style.left = Math.max(0, Math.min(box.width - w, x + 14)) + "px";
-    tip.style.top = (y - h - 12 < 0 ? y + 18 : y - h - 12) + "px";
+    placeTip(tip, ev);
   }
-  function hideTip(){ $("wallTip").hidden = true; }
   function setHoverRow(i){
     if(wall.hoverRow === i) return;
     wall.hoverRow = i; drawWall();
@@ -1084,38 +1293,283 @@
     for(var j = 0; j < trs.length; j++) trs[j].classList.toggle("lit", +trs[j].getAttribute("data-i") === i);
   }
 
-  /* ---------- the pull list ---------- */
-  var openRows = {};
-  function rowKey(x){ return x.md.id + (x.flagged ? ":f" : ":c"); }
-  function renderQueue(r){
-    var tb = $("queue");
-    if(r.queue.length === 0){
-      tb.innerHTML = '<tr class="hold"><td></td><td colspan="4">Nothing on the list. Every drive is on hold: no SMART flag, and nothing old enough to matter.</td></tr>';
-      return;
+  /* ---------- the plan chart ----------
+     Share of the list's data at risk, and of its drives, taken off by each week. Worked top
+     down, the risk line climbs faster than the drive line; that gap is the case for ranking.
+     After a change, the plan before it stays on as a dashed line until the next one. */
+  var NS = 120;
+  var plan = { g:null, Hx:4, cur:null, ghost:null, raf:0, r:null, down:false, C:null };
+  function tickStep(m){ return m <= 8 ? 1 : m <= 16 ? 2 : m <= 40 ? 5 : m <= 80 ? 10 : 20; }
+  // week labels about every 44px at least, on a round step
+  function labelStep(Hx, pw){
+    var steps = [1, 2, 5, 10, 20, 26, 52];
+    for(var i = 0; i < steps.length; i++) if(pw / (Hx / steps[i]) >= 44) return steps[i];
+    return 52;
+  }
+  function horizon(r, p){
+    var c = lastWeek(r), pc = p ? lastWeek(p) : 0, m = isFinite(c) ? c : 0;
+    if(isFinite(pc)) m = Math.max(m, pc);
+    if(!isFinite(c) || !isFinite(pc)) m = Math.max(m, 26);
+    m = clamp(m, 4, 156);
+    var st = tickStep(m);
+    return Math.ceil((m + 0.5) / st) * st;
+  }
+  function series(r, Hx){
+    var a = [], b = [];
+    for(var i = 0; i <= NS; i++){
+      var D = dAt(r, Hx * i / NS);
+      b.push(r.queueDrives ? D / r.queueDrives : 0);
+      a.push(riskShare(r, D));
     }
-    var html = "", before = 0;
-    r.queue.forEach(function(x, i){
-      var a = weekOf(before, r), b = weekOf(before + x.n - 1, r), key = rowKey(x), open = !!openRows[key];
-      var past = a > 1;
-      html += '<tr class="qr'+(past ? ' past' : '')+'" data-i="'+i+'">'+
-        '<td class="rk">'+(i+1)+'</td>'+
-        '<td class="who"><button class="exp" type="button" aria-expanded="'+open+'" aria-controls="qd'+i+'" data-k="'+key+'">'+
-          '<span class="nm">'+fmt(x.n)+' × '+x.md.brand+' '+x.md.model+'</span>'+
-          '<span class="sub">'+weld(x.md.tb+' TB · '+x.age.toFixed(1)+' years · '+(x.flagged ? 'flagged by SMART' : 'no SMART warning, age only'))+'</span>'+
-        '</button></td>'+
-        '<td class="num rate" data-k="Annual rate">'+(x.rate*100).toFixed(1)+'%</td>'+
-        '<td class="num risk" data-k="At risk, 30 days">'+fmtSmall(x.tb)+NB+'TB</td>'+
-        '<td class="when"><span class="wk">'+weekText(a, b)+'</span><span class="bd"><span class="dot '+x.band+'" aria-hidden="true"></span>'+BAND[x.band]+'</span></td>'+
-      '</tr>'+
-      '<tr class="qd" id="qd'+i+'"'+(open ? '' : ' hidden')+'><td></td><td colspan="4"><ol class="chain">'+chain(x, r)+'</ol><p class="note">'+x.md.note+'</p></td></tr>';
-      before += x.n;
+    return { risk:a, drv:b };
+  }
+  function differs(a, b){
+    for(var i = 0; i <= NS; i++) if(Math.abs(a.risk[i] - b.risk[i]) > 1e-4 || Math.abs(a.drv[i] - b.drv[i]) > 1e-4) return true;
+    return false;
+  }
+  function lerpArr(a, b, t){ return a.map(function(x, i){ return x + (b[i] - x) * t; }); }
+  function planGeo(){
+    var fig = $("plan").parentNode, W = Math.max(240, fig.clientWidth || 400);
+    var stacked = fig.clientWidth >= $("wall").parentNode.clientWidth * 0.95;
+    var H = stacked ? Math.round(clamp(W * 0.55, 200, 280)) : Math.round(clamp(wall.geo ? wall.geo.H : 260, 220, 380));
+    return { W:W, H:H, L:40, R:12, T:26, B:28 };
+  }
+  function renderPlan(r, animate){
+    var g = planGeo(), Hx = horizon(r, prevR), to = series(r, Hx), gh = null;
+    if(prevR){ var s = series(prevR, Hx); if(differs(s, to)) gh = s; }
+    var same = plan.g && plan.g.W === g.W && plan.g.H === g.H;
+    plan.g = g; plan.Hx = Hx; plan.r = r; plan.ghost = gh;
+    var box = $("plan");
+    box.setAttribute("viewBox", "0 0 " + g.W + " " + g.H); box.setAttribute("height", g.H);
+    $("planWas").hidden = !gh;
+    cancelAnimationFrame(plan.raf);
+    if(animate && same && plan.cur && !reduce.matches){
+      var from = plan.cur, t0 = null;
+      (function tick(ts){
+        if(t0 === null) t0 = ts;
+        var k = Math.min((ts - t0) / 320, 1), e = ease(k);
+        plan.cur = k < 1 ? { risk:lerpArr(from.risk, to.risk, e), drv:lerpArr(from.drv, to.drv, e) } : to;
+        drawPlan();
+        if(k < 1) plan.raf = requestAnimationFrame(tick);
+      })(performance.now());
+    } else { plan.cur = to; drawPlan(); }
+    var lw = lastWeek(r);
+    $("planMeta").textContent = !r.queueDrives ? "" : !isFinite(lw) ? "never clears at this pace" : lw > 104 ? "clears in " + inYears(lw) : "clear by week " + lw;
+    var D1 = doneBy(r, 1);
+    box.setAttribute("aria-label", !r.queueDrives ? "Nothing on the list to plan." :
+      "This week takes " + Math.round(100 * riskShare(r, D1)) + " percent of the data at risk with " + Math.round(100 * D1 / r.queueDrives) +
+      " percent of the drives. " + (isFinite(lw) ? "The list clears in " + whenText(lw) + "." : "The list never clears at this pace."));
+  }
+  var PC = null;
+  function chartInk(){
+    if(!PC) PC = { ink:cssVar("--tx3"), tx:cssVar("--tx"), tx2:cssVar("--tx2"), grn:cssVar("--grn"), drv:cssVar("--c-drives"),
+                   rule:cssVar("--line"), rule2:cssVar("--line2"), surf:cssVar("--bg2") };
+    return PC;
+  }
+  function svgText(x, y, s, anchor, fill, extra){
+    return '<text x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+anchor+'" fill="'+fill+'" font-size="12" font-family="Archivo, sans-serif"'+(extra || "")+'>'+s+'</text>';
+  }
+  function drawPlan(){
+    var P = plan, g = P.g, r = P.r, v = view.v, K = chartInk(), box = $("plan");
+    if(!g || !r) return;
+    var pw = g.W - g.L - g.R, ph = g.H - g.T - g.B;
+    function X(w){ return g.L + w / P.Hx * pw; }
+    function Y(f){ return g.T + (1 - f) * ph; }
+    function path(arr){ var d = ""; for(var i = 0; i <= NS; i++) d += (i ? "L" : "M") + X(P.Hx * i / NS).toFixed(1) + " " + Y(arr[i]).toFixed(1); return d; }
+    var o = [], i;
+    [0, .25, .5, .75, 1].forEach(function(f){
+      o.push('<line x1="'+g.L+'" y1="'+Y(f).toFixed(1)+'" x2="'+(g.W-g.R)+'" y2="'+Y(f).toFixed(1)+'" stroke="'+(f === 0 ? K.rule2 : K.rule)+'"/>');
+      if(f === 0 || f === .5 || f === 1) o.push(svgText(g.L - 8, Y(f) + 4, Math.round(f * 100) + "%", "end", K.ink));
     });
-    var held = 0; r.rows.forEach(function(x){ if(x.band === "hold") held += x.n; });
-    if(held) html += '<tr class="hold"><td></td><td colspan="4">'+weld('Plus '+fmt(held)+' '+plural(held, 'drive')+' on hold: no SMART flag and under 1.5 percent a year at their age.')+'</td></tr>';
-    tb.innerHTML = html;
+    var st = labelStep(P.Hx, pw), last = Math.floor(P.Hx / st) * st, roomy = pw / (P.Hx / st) >= 64;
+    for(var w = 0; w <= last + 1e-9; w += st)
+      o.push(svgText(X(w), Y(0) + 18, w === 0 ? "now" : w + (w === last && roomy ? " wk" : ""), w === 0 ? "start" : w === last && X(w) > g.W - g.R - 16 ? "end" : "middle", K.ink));
+    if(!r.queueDrives){
+      o.push(svgText(g.L + pw / 2, g.T + ph / 2, "Nothing on the list", "middle", K.tx2));
+      box.innerHTML = o.join(""); return;
+    }
+    // the week being looked at
+    o.push('<rect x="'+X(v - 1).toFixed(1)+'" y="'+g.T+'" width="'+Math.max(1, X(v) - X(v - 1)).toFixed(1)+'" height="'+ph+'" fill="'+K.tx+'" fill-opacity=".07"/>');
+    if(P.ghost){
+      o.push('<path d="'+path(P.ghost.drv)+'" fill="none" stroke="'+K.drv+'" stroke-opacity=".7" stroke-width="1.5" stroke-dasharray="4 4"/>');
+      o.push('<path d="'+path(P.ghost.risk)+'" fill="none" stroke="'+K.grn+'" stroke-opacity=".7" stroke-width="1.5" stroke-dasharray="4 4"/>');
+    }
+    var rp = path(P.cur.risk);
+    o.push('<path d="'+rp+'L'+X(P.Hx).toFixed(1)+' '+Y(0).toFixed(1)+'L'+X(0).toFixed(1)+' '+Y(0).toFixed(1)+'Z" fill="'+K.grn+'" fill-opacity=".09"/>');
+    o.push('<path d="'+path(P.cur.drv)+'" fill="none" stroke="'+K.drv+'" stroke-width="2" stroke-linejoin="round"/>');
+    o.push('<path d="'+rp+'" fill="none" stroke="'+K.grn+'" stroke-width="2" stroke-linejoin="round"/>');
+    // where the list runs out
+    var C = lastWeek(r);
+    if(isFinite(C) && C <= P.Hx){
+      var xc = X(C);
+      o.push('<line x1="'+xc.toFixed(1)+'" y1="'+(g.T - 4)+'" x2="'+xc.toFixed(1)+'" y2="'+Y(0).toFixed(1)+'" stroke="'+K.rule2+'" stroke-dasharray="2 3"/>');
+      o.push(svgText(clamp(xc, g.L + 40, g.W - g.R), g.T - 10, "clear, week " + C, xc > g.W - g.R - 40 ? "end" : "middle", K.tx2));
+    } else {
+      o.push(svgText(g.W - g.R, g.T - 10, isFinite(C) ? "clears in " + whenText(C) + " →" : "never clears at this pace", "end", K.tx2));
+    }
+    // the two readings at the week being looked at
+    var D = doneBy(r, v), fr = riskShare(r, D), fd = D / r.queueDrives, xv = X(v), yr = Y(fr), yd = Y(fd);
+    var end = xv > g.L + pw * 0.78, dx = end ? -9 : 9, an = end ? "end" : "start";
+    var riskUp = yr <= yd, close = Math.abs(yr - yd) < 18;
+    var lyR = close ? (riskUp ? Math.min(yr, yd) - 8 : Math.max(yr, yd) + 16) : yr + 4;
+    var lyD = close ? (riskUp ? Math.max(yr, yd) + 16 : Math.min(yr, yd) - 8) : yd + 4;
+    lyR = clamp(lyR, g.T + 10, Y(0) - 4); lyD = clamp(lyD, g.T + 10, Y(0) - 4);
+    // pinned together at an edge, the lower reading stays put and the other steps above it
+    if(Math.abs(lyR - lyD) < 15){ if(lyR >= lyD) lyD = lyR - 15; else lyR = lyD - 15; }
+    var halo = ' stroke="'+K.surf+'" stroke-width="4" paint-order="stroke" font-weight="500"';
+    o.push('<circle cx="'+xv.toFixed(1)+'" cy="'+yd.toFixed(1)+'" r="4" fill="'+K.surf+'" stroke="'+K.drv+'" stroke-width="2"/>');
+    o.push('<circle cx="'+xv.toFixed(1)+'" cy="'+yr.toFixed(1)+'" r="4" fill="'+K.surf+'" stroke="'+K.grn+'" stroke-width="2"/>');
+    o.push(svgText(xv + dx, lyD, Math.round(fd * 100) + "% of drives", an, K.tx2, halo));
+    o.push(svgText(xv + dx, lyR, Math.round(fr * 100) + "% of risk", an, K.tx, halo));
+    o.push('<line id="plX" y1="'+g.T+'" y2="'+Y(0).toFixed(1)+'" stroke="'+K.ink+'" stroke-opacity=".6" visibility="hidden"/>');
+    box.innerHTML = o.join("");
+  }
+  function planWeekAt(ev){
+    var g = plan.g, rect = $("plan").getBoundingClientRect(), s = rect.width / g.W;
+    var px = (ev.clientX - rect.left) / s;
+    return { px:px, w:(px - g.L) / (g.W - g.L - g.R) * plan.Hx, inside: px >= g.L - 6 && px <= g.W - g.R + 6 };
+  }
+  function planHover(ev){
+    if(!plan.g || !plan.r || !plan.r.queueDrives) return;
+    var a = planWeekAt(ev), tip = $("planTip"), cross = $("plX");
+    if(!a.inside){ planLeave(); return; }
+    var wk = clamp(Math.ceil(a.w), 1, Math.max(1, Math.ceil(plan.Hx)));
+    if(plan.down){ stopPlay(); setView(wk, 120); cross = $("plX"); }
+    var r = plan.r, D = doneBy(r, wk), x = plan.g.L + (wk - 0.5) / plan.Hx * (plan.g.W - plan.g.L - plan.g.R);
+    if(cross){ cross.setAttribute("x1", x.toFixed(1)); cross.setAttribute("x2", x.toFixed(1)); cross.setAttribute("visibility", "visible"); }
+    tip.textContent = "";
+    var b = document.createElement("b"); b.textContent = (wk === 1 ? "Week 1, this week" : "By the end of week " + wk); tip.appendChild(b);
+    function row(k, v){ var d = document.createElement("div"); d.className = "row"; var s1 = document.createElement("span"); s1.textContent = k; var s2 = document.createElement("span"); s2.textContent = v; d.appendChild(s1); d.appendChild(s2); tip.appendChild(d); }
+    row("Risk taken off", Math.round(100 * riskShare(r, D)) + "%");
+    row("Drives pulled", fmt(D) + " of " + fmt(r.queueDrives));
+    if(view.v !== wk) row("Click to show", "week " + wk);
+    tip.hidden = false;
+    placeTip(tip, ev);
+  }
+  function planLeave(){ $("planTip").hidden = true; var c = $("plX"); if(c) c.setAttribute("visibility", "hidden"); }
+
+  /* ---------- the week scrubber and play ---------- */
+  function setView(v, dur){
+    v = clamp(Math.round(v), 1, view.max);
+    if(v === view.v || !lastR) return;
+    view.v = v;
+    paintWall(dur === undefined ? 160 : dur);
+    renderLegend(lastR); drawPlan(); renderGantt(lastR); renderPlayer(lastR);
+  }
+  function renderPlayer(r){
+    var el = $("wk"), v = view.v, Q = r.queueDrives, D = doneBy(r, v);
+    el.max = view.max; el.value = v; el.disabled = view.max <= 1; setFill(el);
+    $("play").disabled = view.max <= 1;
+    $("wkOut").textContent = !Q ? "Nothing to plan" : v === 1 ? "Week 1, this week" : "Week " + v + " of " + fmt(lastWeek(r));
+    $("wkStat").textContent = !Q ? "" : fmt(D) + " of " + fmt(Q) + " pulled · " + Math.round(riskShare(r, D) * 100) + "% of the list's risk";
+    el.setAttribute("aria-valuetext", $("wkOut").textContent + (Q ? ", " + $("wkStat").textContent : ""));
+    setPlayBtn();
+  }
+  function setPlayBtn(){
+    var b = $("play"), atEnd = view.v >= view.max && view.max > 1;
+    b.querySelector("use").setAttribute("href", playing ? "#i-pause" : "#i-play");
+    b.querySelector("span").textContent = playing ? "Pause" : atEnd ? "Replay" : "Play";
+    b.setAttribute("aria-label", playing ? "Pause the plan" : "Play the plan week by week");
+  }
+  function stepMs(){ return clamp(3600 / view.max, 70, 420); }
+  function stopPlay(){ if(!playing) return; playing = false; clearTimeout(playT); setPlayBtn(); }
+  function togglePlay(){
+    if(playing){ stopPlay(); return; }
+    if(view.max <= 1) return;
+    if(view.v >= view.max) setView(1, 0);
+    playing = true; setPlayBtn();
+    (function next(){
+      if(!playing) return;
+      if(view.v >= view.max){ stopPlay(); return; }
+      setView(view.v + 1, Math.min(stepMs(), 240));
+      playT = setTimeout(next, stepMs());
+    })();
   }
 
-  /* the arithmetic for one batch, shared by the pull list and the worked example */
+  /* ---------- the pull list ---------- */
+  var openRows = {}, qSig = "";
+  function rowKey(x){ return x.md.id + (x.flagged ? ":f" : ":c"); }
+  function q(el, sel){ return el.querySelector(sel); }
+  function renderQueue(r){
+    var tb = $("queue");
+    var held = 0; r.rows.forEach(function(x){ if(x.band === "hold") held += x.n; });
+    $("listMeta").textContent = r.queue.length ? " · " + r.queue.length + " " + plural(r.queue.length, "batch", "batches") + ", " + fmt(r.queueDrives) + " " + plural(r.queueDrives, "drive") : "";
+    if(r.queue.length === 0){
+      tb.innerHTML = '<tr class="hold"><td></td><td colspan="4">Nothing on the list. Every drive is on hold: no SMART flag, and nothing old enough to matter.</td></tr>';
+      qSig = ""; return;
+    }
+    var sig = r.queue.map(rowKey).join("|");
+    if(sig !== qSig){
+      var html = "";
+      r.queue.forEach(function(x, i){
+        var key = rowKey(x), open = !!openRows[key];
+        html += '<tr class="qr" data-i="'+i+'">'+
+          '<td class="rk">'+(i+1)+'</td>'+
+          '<td class="who"><button class="exp" type="button" aria-expanded="'+open+'" aria-controls="qd'+i+'" data-k="'+key+'"><span class="nm"></span></button><span class="mt"></span></td>'+
+          '<td class="n rate"><span class="bar" aria-hidden="true"><i class="rb"></i></span><span class="rv"></span></td>'+
+          '<td class="n risk"><span class="bar" aria-hidden="true"><i class="tbb"></i></span><span class="tv"></span></td>'+
+          '<td class="when"><div class="gantt" data-i="'+i+'" title="Show this week"><span class="nw"></span><span class="g"><i></i></span></div>'+
+            '<div class="gl"><span class="bd"><span class="dot"></span><span class="bn"></span></span><span class="wt"></span></div></td>'+
+        '</tr>'+
+        '<tr class="qd" id="qd'+i+'"'+(open ? '' : ' hidden')+'><td></td><td colspan="4"></td></tr>';
+      });
+      html += '<tr class="hold"><td></td><td colspan="4" id="holdRow"></td></tr>';
+      tb.innerHTML = html;
+      qSig = sig;
+    }
+    var maxRate = 0, maxTb = 0, before = 0;
+    r.queue.forEach(function(x){ maxRate = Math.max(maxRate, x.rate); maxTb = Math.max(maxTb, x.tb); });
+    var trs = tb.querySelectorAll("tr.qr");
+    r.queue.forEach(function(x, i){
+      var tr = trs[i];
+      x.wa = weekOf(before, r); x.wb = weekOf(before + x.n - 1, r); before += x.n;
+      q(tr, ".nm").textContent = fmt(x.n) + " × " + x.md.brand + " " + x.md.model;
+      q(tr, ".mt").innerHTML = weld(x.md.tb + " TB · " + x.age.toFixed(1) + " yr") + (x.flagged ? ' <span class="flag">SMART flag</span>' : ' · age only');
+      q(tr, ".rv").textContent = (x.rate*100).toFixed(1) + "%";
+      q(tr, ".rb").style.width = pct(x.rate / maxRate);
+      q(tr, ".tv").textContent = fmtSmall(x.tb) + NB + "TB";
+      q(tr, ".tbb").style.width = pct(x.tb / maxTb);
+      q(tr, ".g").className = "g " + x.band;
+      q(tr, ".dot").className = "dot " + x.band;
+      q(tr, ".bn").textContent = BAND[x.band];
+      q(tr, ".wt").textContent = weekText(x.wa, x.wb);
+      $("qd" + i).lastChild.innerHTML = calc(x, r);
+    });
+    $("holdRow").textContent = held ? weld("Plus " + fmt(held) + " " + plural(held, "drive") + " on hold: no SMART flag and under 1.5 percent a year at their age.") : "Nothing on hold.";
+    renderGantt(r);
+  }
+  /* each batch as a bar on the same weeks as the plan chart, filling green as it is pulled */
+  function renderGantt(r){
+    var Hx = plan.Hx, v = view.v, trs = document.querySelectorAll("#queue tr.qr");
+    r.queue.forEach(function(x, i){
+      var tr = trs[i]; if(!tr) return;
+      var a = x.wa, b = x.wb, g = q(tr, ".g");
+      g.style.display = isFinite(a) ? "" : "none";
+      if(isFinite(a)){
+        var lo = (a - 1) / Hx, hi = isFinite(b) ? Math.min(b, Hx) / Hx : 1;
+        g.style.left = pct(lo); g.style.width = pct(hi - lo);
+        q(g, "i").style.width = pct(isFinite(b) ? (v - a) / (b - a + 1) : 0);
+      }
+      var nw = q(tr, ".nw"); nw.style.left = pct((v - 1) / Hx); nw.style.width = pct(1 / Hx);
+      tr.classList.toggle("past", isFinite(b) && b < v);
+      tr.classList.toggle("cur", a <= v && v <= b);
+    });
+  }
+  /* a row's arithmetic as the numbers that multiply into it */
+  function calc(x, r){
+    var sc = r.sc;
+    function c(b, s, cls){ return '<span class="c'+(cls ? " " + cls : "")+'"><b>'+b+'</b><span>'+s+'</span></span>'; }
+    function op(s){ return '<span class="op">'+s+'</span>'; }
+    var a = c(x.md.afr.toFixed(1) + "%", "published rate") + op("×") + c(x.ageMul.toFixed(2), weld("age " + x.age.toFixed(1) + " yr")) + op("×") +
+      c(x.lr.toFixed(x.flagged ? 1 : 2), x.flagged ? "SMART flag" : "no SMART flag") + op("=") + c((x.rate*100).toFixed(1) + "%", "a year", "out");
+    var b = c(fmtSmall(x.expFail), "expected to fail in 30 days") + op("×") +
+      c(fmt(x.blastTb) + NB + "TB", sc.m === 0 ? "per drive, no parity" : "per " + sc.short + " group") + op("=") + c(fmtSmall(x.tb) + NB + "TB", "at risk, the sort key", "out");
+    var tail = sc.m === 0 ? "No parity, so every failure is data lost. " :
+      "Rebuild " + fmt(x.rebuildH, 1) + " hours; chance a failure here becomes lost data " + odds(x.pLoss) + ". ";
+    return '<p class="calc">'+a+'</p><p class="calc">'+b+'</p><p class="note">'+weld(tail)+x.md.note+'</p>';
+  }
+
+  /* the arithmetic in words, for the worked example */
   function chain(x, r){
     var sc = r.sc, L = [];
     L.push('Published lifetime rate: <b>'+x.md.afr.toFixed(1)+'%</b> a year');
@@ -1128,7 +1582,6 @@
     L.push('Chance a failure here turns into lost data: <b>'+odds(x.pLoss)+'</b>');
     return L.map(function(s){ return '<li><span>'+weld(s)+'</span></li>'; }).join("");
   }
-
   function renderWorked(r){
     var x = r.queue[0];
     if(!x){ $("wxQ").textContent = "Your list is empty, so there is no top row to work through. Try the stale estate."; $("wx").innerHTML = ""; return; }
@@ -1227,9 +1680,13 @@
   // fleet size on a log scale: 100 to 100,000 across the track, rounded to a sensible step
   function sizeFromPos(t){ var v = Math.pow(10, 2 + 3 * t / 1000); var step = v < 1000 ? 10 : v < 10000 ? 100 : 1000; return Math.round(v / step) * step; }
   function posFromSize(n){ return Math.round(1000 * (Math.log(Math.max(100, Math.min(100000, n))) / Math.LN10 - 2) / 3); }
-  function setFill(el){ var mn = +el.min, mx = +el.max; el.style.setProperty("--fill", (100 * (el.value - mn) / (mx - mn)) + "%"); }
-
-  function syncControls(){
+  function setFill(el){ var mn = +el.min, mx = +el.max; el.style.setProperty("--fill", (mx > mn ? 100 * (el.value - mn) / (mx - mn) : 0) + "%"); }
+  function schemeFact(sc){
+    if(sc.m === 0) return "No parity: a failure is data lost";
+    if(sc.k === 1) return "Two copies · survives 1 failure";
+    return "Groups of " + (sc.k + sc.m) + " · survives " + sc.m + " " + plural(sc.m, "failure");
+  }
+  function syncControls(r){
     var p = profile(), sc = scheme();
     var pr = document.querySelector('#profChips input[value="'+state.profile+'"]'); if(pr) pr.checked = true;
     var sr = document.querySelector('#schemeChips input[value="'+state.scheme+'"]'); if(sr) sr.checked = true;
@@ -1246,41 +1703,44 @@
     $("drives").setAttribute("aria-valuetext", fmt(state.drives) + " drives");
     $("pullsOut").textContent = fmt(state.pulls) + " a week";
     $("pulls").setAttribute("aria-valuetext", fmt(state.pulls) + " pulls a week");
-    var y = state.years; $("yearsOut").textContent = y === 0 ? "Today" : "In " + (y % 1 ? y.toFixed(1) : y) + " " + plural(y, "year");
-    $("years").setAttribute("aria-valuetext", $("yearsOut").textContent);
+    var y = state.years; $("yearsOut").textContent = y === 0 ? "Today" : "+" + (y % 1 ? y.toFixed(1) : y) + " " + plural(y, "year");
+    $("years").setAttribute("aria-valuetext", y === 0 ? "Today" : "In " + (y % 1 ? y.toFixed(1) : y) + " " + plural(y, "year") + ", no refresh");
     $("smartOut").textContent = state.smart.toFixed(1) + "%";
     $("smart").setAttribute("aria-valuetext", state.smart.toFixed(1) + " percent of healthy drives");
     $("rebuildOut").textContent = fmt(state.rebuild) + " MB/s";
     $("rebuild").setAttribute("aria-valuetext", fmt(state.rebuild) + " megabytes a second");
     var mean = profileAge(p) + (state.years || 0);
-    $("profNote").textContent = weld(p.mix.length + " batches, " + profileSpan(p) + ", mean age " + mean.toFixed(1) + " years" + (state.years ? " by then." : "."));
-    $("fleetNote").textContent = weld(p.note);
-    $("schemeNote").textContent = weld(sc.note);
+    $("profNote").textContent = weld(p.mix.length + " batches · " + profileSpan(p) + " · mean age " + mean.toFixed(1) + " yr");
+    $("schemeNote").textContent = schemeFact(sc);
+    $("smartNote").textContent = weld((r.totalFlag === 1 ? "1 drive" : fmt(r.totalFlag) + " drives") + " flagged · published baseline 4.2%");
+    $("rebuildNote").textContent = weld("A 16 TB drive rebuilds in " + fmt(16e6/state.rebuild/3600) + " hours");
   }
 
-  function render(){
-    var r = compute();
-    syncControls();
-    var canaries = r.totalFlag === 0 ? "no drive carries a warning" : r.totalFlag === 1 ? "one drive carries a warning" : fmt(r.totalFlag) + " drives carry a warning";
-    $("smartNote").textContent = weld("Share of healthy drives showing one of five SMART warnings. 4.2 percent is the published baseline; in this fleet, " + canaries + ".");
-    $("rebuildNote").textContent = weld("The effective rate against production traffic. At " + fmt(state.rebuild) + " MB/s a 16 TB drive rebuilds in " + fmt(16e6/state.rebuild/3600) + " hours.");
-    renderAnswer(r);
+  function render(animate){
+    var r = run();
+    lastR = r;
+    view.max = maxWeek(r); if(view.v > view.max) view.v = view.max;
+    syncControls(r);
     renderKpis(r);
+    renderAlert(r);
     renderWall(r);
+    renderPlan(r, animate);
     renderQueue(r);
+    renderLegend(r);
+    renderPlayer(r);
     renderWorked(r);
-    renderCurve();
+    if(!$("how").hidden) renderCurve();
     renderTry();
     renderMini(r);
     announce(r);
     writeUrl();
   }
-  /* A user change. The four numbers then say what they were before it, and a slider drag
-     counts as one change from where it started, not one per tick along the way. */
+  /* A user change. The figures then say how they moved from before it, the plan keeps its
+     old line, and a slider drag counts as one change from where it started. */
   function change(fn, drag){
-    if(!(drag && dragging)) kpiBase = lastKpi;
+    if(!(drag && dragging)){ kpiBase = lastR ? vals(lastR) : null; prevR = lastR; }
     dragging = !!drag;
-    fn(); render();
+    fn(); render(true);
   }
 
   function renderTry(){
@@ -1293,9 +1753,13 @@
   }
   function isDefault(){ for(var k in DEFAULTS) if(state[k] !== DEFAULTS[k]) return false; return true; }
 
+  function clearsText(r){
+    var lw = lastWeek(r);
+    return !r.queueDrives ? "Nothing waiting" : !isFinite(lw) ? "List never clears" : "Clears in " + (lw > 104 ? inYears(lw) : fmt(lw) + " " + plural(lw, "week"));
+  }
   function renderMini(r){
     $("miniN").textContent = state.pulls === 0 ? "No pulls this week" : "Pull " + fmt(r.thisWeek) + " this week";
-    $("miniW").textContent = r.backlogWeeks === Infinity ? "List never clears" : "Clears in " + fmt(Math.ceil(r.backlogWeeks)) + " " + plural(Math.ceil(r.backlogWeeks), "week");
+    $("miniW").textContent = clearsText(r);
   }
 
   /* the result is rewritten on every slider tick; a polite status says where it landed */
@@ -1303,23 +1767,25 @@
   function announce(r){
     clearTimeout(srTimer);
     srTimer = setTimeout(function(){
-      $("srStatus").textContent = $("hl").textContent + " " + $("hlSub").textContent + " " + fmt(r.queueDrives) + " on the list, " +
-        (r.backlogWeeks === Infinity ? "never clears" : "clears in " + fmt(Math.ceil(r.backlogWeeks)) + " weeks") +
-        ". Chance of losing data this year " + odds(r.pLossYear) + ".";
+      $("srStatus").textContent = "Pull " + fmt(r.thisWeek) + " " + plural(r.thisWeek, "drive") + " this week. " + fmt(r.queueDrives) + " on the list. " +
+        clearsText(r) + ". " + fmtSmall(r.totalTb) + " terabytes at risk in the next 30 days. Chance of losing data this year " + odds(r.pLossYear) + ".";
     }, 600);
   }
 
   function buildProv(){
     var days = 0; MODELS.forEach(function(m){ days += m.days; });
-    $("prov").textContent = "Backblaze Drive Stats · " + MODELS.length + NB + "drive models · " + fmt(days) + "M" + NB + "drive days · quarterly since" + NB + "2013";
+    $("prov").textContent = "On Backblaze Drive Stats · " + MODELS.length + NB + "drive models · " + fmt(days) + "M" + NB + "drive days · quarterly since" + NB + "2013";
   }
   function buildRef(){
-    $("refSum").textContent = "Show all " + MODELS.length + " drive models";
     $("refBody").innerHTML = MODELS.map(function(m){
       var iv = interval(m.afr, m.days);
       return '<tr><th scope="row">'+m.model+'<span class="ci">'+m.brand+'</span></th>'+
         '<td class="m">'+m.tb+NB+'TB</td><td class="m">'+m.afr.toFixed(1)+'%</td><td class="m">'+ivText(iv)+'</td>'+
         '<td class="m">'+fmt(m.days)+'M<span class="ci">'+fmt(iv[2])+' failures</span></td><td>'+m.note+'</td></tr>';
+    }).join("");
+    $("profs").innerHTML = PROFILES.map(function(p){
+      return '<div><dt>'+p.name.charAt(0).toUpperCase()+p.name.slice(1)+'</dt><dd class="f">'+
+        weld(p.mix.length+' batches · '+profileSpan(p)+' · mean age '+profileAge(p).toFixed(1)+' yr')+'</dd><dd>'+weld(p.note)+'</dd></div>';
     }).join("");
   }
   function buildChips(){
@@ -1329,6 +1795,18 @@
     $("schemeChips").innerHTML = SCHEMES.map(function(s){
       return '<label class="chip"><input type="radio" name="scheme" value="'+s.id+'"><span>'+s.short+'</span></label>';
     }).join("");
+  }
+
+  /* ---------- tabs ---------- */
+  var TABS = ["how","data","method"];
+  function selectTab(id, focus){
+    TABS.forEach(function(k){
+      var t = $("t-" + k), on = k === id;
+      t.setAttribute("aria-selected", on ? "true" : "false"); t.tabIndex = on ? 0 : -1;
+      $(k).hidden = !on;
+    });
+    if(focus) $("t-" + id).focus();
+    if(id === "how") renderCurve();
   }
 
   /* ---------- link, sheet, url ---------- */
@@ -1366,11 +1844,12 @@
     document.body.removeChild(ta);
   }
   function sheet(){
-    var r = compute(), sc = scheme(), L = [], before = 0;
+    var r = run(), sc = scheme(), L = [], before = 0, lw = lastWeek(r);
     L.push("PULL SHEET  ·  " + fmt(r.totalDrives) + " drives  ·  " + profile().name + (state.years ? "  ·  in " + state.years + " years" : ""));
     L.push(sc.name + ", groups of " + r.group + "  ·  rebuild " + state.rebuild + " MB/s  ·  SMART coverage " + state.smart + "%");
     L.push("");
-    L.push("Pull this week: " + fmt(r.thisWeek) + " of " + fmt(r.queueDrives) + " on the list, at " + fmt(state.pulls) + " pulls a week.");
+    L.push("Pull this week: " + fmt(r.thisWeek) + " of " + fmt(r.queueDrives) + " on the list, at " + fmt(state.pulls) + " pulls a week. " +
+      (r.queueDrives ? (isFinite(lw) ? "Clears in " + whenText(lw) + "." : "The list never clears at this pace.") : ""));
     L.push("Expected failures next 30 days: " + fmtSmall(r.totalFail30) + "   At risk: " + fmtSmall(r.totalTb) + " TB   Chance of losing data this year: " + odds(r.pLossYear));
     L.push("");
     L.push("Ranked by risk times blast radius:");
@@ -1385,21 +1864,20 @@
 
   /* ---------- wiring ---------- */
   document.addEventListener("DOMContentLoaded", function(){
-    var shared = readUrl();
+    var shared = readUrl(), anchor = /^#(how|data|method)$/.test(location.hash) ? location.hash.slice(1) : null;
     buildProv(); buildRef(); buildChips();
 
     $("profChips").addEventListener("change", function(e){ change(function(){ state.profile = e.target.value; }); });
     $("schemeChips").addEventListener("change", function(e){ change(function(){ state.scheme = e.target.value; }); });
-    $("drives").addEventListener("input", function(){ var el = this; change(function(){ state.drives = sizeFromPos(+el.value); }, true); });
-    $("drives").addEventListener("change", function(){ dragging = false; });
-    $("pulls").addEventListener("input", function(){ var el = this; change(function(){ state.pulls = +el.value; }, true); });
-    $("pulls").addEventListener("change", function(){ dragging = false; });
-    $("years").addEventListener("input", function(){ var el = this; change(function(){ state.years = +el.value; }, true); });
-    $("years").addEventListener("change", function(){ dragging = false; });
-    $("smart").addEventListener("input", function(){ var el = this; change(function(){ state.smart = Math.round(+el.value * 10) / 10; }, true); });
-    $("smart").addEventListener("change", function(){ dragging = false; });
-    $("rebuild").addEventListener("input", function(){ var el = this; change(function(){ state.rebuild = +el.value; }, true); });
-    $("rebuild").addEventListener("change", function(){ dragging = false; });
+    function slider(id, set){
+      $(id).addEventListener("input", function(){ var el = this; change(function(){ set(+el.value); }, true); });
+      $(id).addEventListener("change", function(){ dragging = false; });
+    }
+    slider("drives", function(v){ state.drives = sizeFromPos(v); });
+    slider("pulls", function(v){ state.pulls = v; });
+    slider("years", function(v){ state.years = v; });
+    slider("smart", function(v){ state.smart = Math.round(v * 10) / 10; });
+    slider("rebuild", function(v){ state.rebuild = v; });
 
     document.querySelector(".try").addEventListener("click", function(e){
       var b = e.target.closest("button"); if(!b || b.disabled) return;
@@ -1413,15 +1891,36 @@
       });
     });
 
+    // the wall: point for the batch, click to jump to the week it comes out
     var cvs = $("wall");
     cvs.addEventListener("pointermove", function(e){
-      var c = wallAt(e); if(c < 0){ hideTip(); setHoverRow(-1); return; }
-      setHoverRow(wall.cells[c].row < wall.r.queue.length ? wall.cells[c].row : -1);
+      var c = wallAt(e); if(c < 0){ $("wallTip").hidden = true; setHoverRow(-1); return; }
+      setHoverRow(wall.cells[c].row < lastR.queue.length ? wall.cells[c].row : -1);
       showTip(c, e);
     });
-    cvs.addEventListener("pointerleave", function(){ hideTip(); setHoverRow(-1); });
+    cvs.addEventListener("pointerleave", function(){ $("wallTip").hidden = true; setHoverRow(-1); });
+    cvs.addEventListener("click", function(e){
+      var c = wallAt(e); if(c < 0) return;
+      var cell = wall.cells[c];
+      if(cell.band !== "hold" && isFinite(cell.wk)){ stopPlay(); setView(cell.wk, 200); showTip(c, e); }
+    });
+    $("legend").addEventListener("pointerover", function(e){ var li = e.target.closest("li"); wall.hoverCat = li ? li.getAttribute("data-k") : null; drawWall(); });
+    $("legend").addEventListener("pointerleave", function(){ wall.hoverCat = null; drawWall(); });
+
+    // the plan: point for the week, press and drag to scrub
+    var pl = $("plan");
+    pl.addEventListener("pointermove", planHover);
+    pl.addEventListener("pointerleave", function(){ if(!plan.down) planLeave(); });
+    pl.addEventListener("pointerdown", function(e){ if(e.button !== 0) return; plan.down = true; try{ pl.setPointerCapture(e.pointerId); }catch(x){} planHover(e); });
+    pl.addEventListener("pointerup", function(e){ plan.down = false; try{ pl.releasePointerCapture(e.pointerId); }catch(x){} });
+    pl.addEventListener("pointercancel", function(){ plan.down = false; planLeave(); });
+
+    $("wk").addEventListener("input", function(){ stopPlay(); setView(+this.value, 120); });
+    $("play").addEventListener("click", togglePlay);
 
     $("queue").addEventListener("click", function(e){
+      var gb = e.target.closest(".gantt");
+      if(gb){ var x = lastR.queue[+gb.getAttribute("data-i")]; if(x && isFinite(x.wa)){ stopPlay(); setView(x.wa, 200); } return; }
       var b = e.target.closest(".exp"); if(!b) return;
       var open = b.getAttribute("aria-expanded") !== "true", key = b.getAttribute("data-k");
       b.setAttribute("aria-expanded", open); openRows[key] = open;
@@ -1434,24 +1933,39 @@
     $("copySheet").addEventListener("click", function(){ copy(sheet(), "Pull sheet copied"); });
     window.addEventListener("beforeprint", function(){ $("printUrl").textContent = "Reproduce this list: " + location.href; });
 
-    render();
+    // tabs, with arrow keys, and the header links that open them
+    var tl = document.querySelector("[role=tablist]");
+    tl.addEventListener("click", function(e){ var t = e.target.closest("[role=tab]"); if(t) selectTab(t.getAttribute("aria-controls")); });
+    tl.addEventListener("keydown", function(e){
+      var i = TABS.indexOf(document.activeElement.getAttribute("aria-controls")); if(i < 0) return;
+      var n = e.key === "ArrowRight" ? i + 1 : e.key === "ArrowLeft" ? i - 1 : e.key === "Home" ? 0 : e.key === "End" ? TABS.length - 1 : null;
+      if(n === null) return;
+      e.preventDefault(); selectTab(TABS[(n + TABS.length) % TABS.length], true);
+    });
+    document.querySelectorAll("[data-tab]").forEach(function(a){
+      a.addEventListener("click", function(e){ e.preventDefault(); selectTab(a.getAttribute("data-tab")); $("ref").scrollIntoView(); });
+    });
 
-    var rt; window.addEventListener("resize", function(){ clearTimeout(rt); rt = setTimeout(function(){ wall.geo = null; render(); }, 120); });
+    if(anchor) selectTab(anchor);
+    render(false);
+
+    var rt; window.addEventListener("resize", function(){ clearTimeout(rt); rt = setTimeout(function(){ wall.geo = null; plan.g = null; render(false); }, 120); });
     $("curve").addEventListener("pointermove", curveTrack);
     $("curve").addEventListener("pointerleave", curveHide);
 
-    // phone: the one-line answer rides along while the controls are on screen and the answer is not
+    // phone: the one-line answer rides along while the inputs are on screen and the figures are not
     if("IntersectionObserver" in window){
       var ansVis = true, conVis = false;
       var upd = function(){ $("mini").classList.toggle("on", !ansVis && conVis); };
       new IntersectionObserver(function(es){ ansVis = es[0].isIntersecting; upd(); }).observe($("answer"));
-      new IntersectionObserver(function(es){ conVis = es[0].isIntersecting; upd(); }).observe(document.querySelector(".ctl"));
+      new IntersectionObserver(function(es){ conVis = es[0].isIntersecting; upd(); }).observe(document.querySelector(".rail"));
     }
 
-    // a shared link should land on the tool, not the introduction
-    if(shared){
-      var html = document.documentElement; html.style.scrollBehavior = "auto";
-      window.scrollTo(0, $("console").getBoundingClientRect().top + window.pageYOffset);
+    // a shared link should land on the tool; a link to a tab, on the tab
+    var html = document.documentElement;
+    if(shared || anchor){
+      html.style.scrollBehavior = "auto";
+      window.scrollTo(0, (anchor ? $("ref") : $("console")).getBoundingClientRect().top + window.pageYOffset - (anchor ? 0 : 12));
       setTimeout(function(){ html.style.scrollBehavior = ""; }, 60);
     }
   });
