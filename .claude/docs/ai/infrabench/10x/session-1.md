@@ -6,30 +6,31 @@ Session 1 | Date: 2026-10-06
 Four static, client-side tools on public data, each a console with a rail of inputs, five live
 figures, a picture, a ranked table and explanation in tabs. Every setup is a shareable URL.
 
-| Tool | Answers | Inputs today | What you can "play" with today |
+| Tool | Answers | Inputs today | What you can try today |
 |---|---|---|---|
 | **Crash Cart** | Which drives do I pull this week? | 5 fleet profiles, size, protection scheme, SMART coverage, rebuild speed, pulls a week, look ahead | Week player, racks fill green, 4 what-ifs (double the crew, turn off SMART, five years ahead, reset) |
 | **Where the power is** | Which grid can energize my load by my date? | MW, needed-by year, gas bridge, two assumptions | Drag the deadline, 5 what-ifs, sort by time, carbon or price |
 | **Outage replay** | How long did the status page stay green? | 6 incidents, your paging threshold | Play or scrub the replay, drag your threshold, log jumps |
 | **Rack Budget** | What fits in my megawatts? | Power or fleet, rack profile, PUE, margin | Hall or campus redraws, waterfall, every profile side by side, 5 what-ifs |
 
-**Who uses it.** Two audiences, and they want different things:
-1. **Operators and planners** (siting, capacity, SRE, fleet). They come with a real number and
-   want an answer they can paste into a doc or a budget ask. Today they get a well-modeled
-   answer to a *generic* fleet, region list or incident.
-2. **Portfolio visitors** (hiring managers, design leads). They come to judge the craft and
-   leave after about a minute unless something pulls them in or gives them something to share.
+**Who uses it.** The people who do the work: siting and capacity planners, SREs, and fleet
+and hardware operators. They come with a real number and want an answer they can paste into a
+doc, a ticket or a budget ask. Today they get a well-modeled answer to a *generic* fleet,
+region list or incident.
+
+*Decided after session 1:* these are work tools, not games. No scores, challenges or
+share-bait. A visitor judging the craft is served by the tools being good at the job.
 
 **The gap.** All four tools answer "what if?" well. None of them yet answers "*so what do I do,
-and what does it cost?*" for *my* situation, and none of them gives a visitor a reason to come
-back or share. Each tool is also an island, even though their numbers chain naturally:
+and what does it cost?*" for *my* situation. Each tool is also an island, even though their
+numbers chain naturally:
 Rack Budget's megawatts are Where the power is's input, and the power page's price and carbon
 are exactly what Rack Budget's "energy a year" figure is missing.
 
 ## The Question
 
 What would make an operator open one of these before a planning meeting instead of a
-spreadsheet, and make a visitor play long enough to send it to someone?
+spreadsheet?
 
 ---
 
@@ -63,25 +64,6 @@ a single project summary across tools.
 price and carbon. High for a joint "project" view.
 **Risk**: Little; the model numbers already exist on both pages.
 **Score**: 🔥
-
-### 3. Game modes that test your judgement
-**What**: Each tool gets a challenge using the same model:
-- **Outage replay, "Call it"**: the replay runs with the truth lane hidden. You see only what
-  you would have seen: your own error-rate line, a Downdetector spike, the status page. Press
-  **Page now** when you would act. The score is minutes ahead of the status page (or behind
-  real impact). The truth then reveals, and a run through all six gives a total.
-- **Crash Cart, "Triage"**: twelve pulls, your pick of batches. Your pick's risk cleared is
-  compared with the ranked list's, so you learn why risk × blast radius beats "oldest first".
-- **Where the power is, "Make the date"**: a target (500 MW by 2029) and a budget. Split
-  the load across regions, bridge with gas or move the date to win.
-
-**Why 10x**: It's what makes visitors stay, and it teaches the model better than the Method
-tab does. A score is the thing people share.
-**Unlocks**: Shareable result cards, repeat visits, and a reason to link the suite in talks and posts.
-**Effort**: Medium to High each. "Call it" is the most contained, because it reuses the replay
-engine, the hidden truth lane and the log.
-**Risk**: It gamifies a serious topic. Keep the scoring honest and the tone dry.
-**Score**: 🔥 for "Call it", 👍 for Triage, 🤔 for Make the date.
 
 ---
 
@@ -132,12 +114,12 @@ are solid, the rest hollow, so the cheap-and-clean corner jumps out.
 **Effort**: Medium.
 **Score**: 🤔 (useful but complex; the GPU-count mode below gets most buyers most of the way)
 
-### 6. Share cards
-**What**: "Download card" renders the current figures and picture to a PNG in the
-browser (racks, campus, replay), sized for Slack and LinkedIn, with the setup's URL.
-**Why 10x**: It's the sharing loop for both audiences, and the art (campus, racks, replay)
-is the most distinctive thing the suite has.
-**Effort**: Medium.
+### 6. Export for the planning doc
+**What**: Take the work out of the page in the shape the next step needs: the ranked table as
+CSV, the pull sheet and spares list as CSV for a ticket, the hall or replay as a PNG for a slide.
+Each tool already copies a text summary; this covers the table and the picture.
+**Why 10x**: The answer ends up in a doc, a ticket or a parts order, not on this page.
+**Effort**: Low to Medium.
 **Score**: 👍
 
 ---
@@ -165,13 +147,12 @@ status page said a word", for each incident and in total.
 **Effort**: Low.
 **Score**: 👍
 
-### 4. Real-world presets
-**What**: One-click setups from public projects, each sourced: Colossus (≈150 MW, 100k H100),
-Stargate Abilene (1.2 GW), a typical 2019 colo. For Outage replay, the same six incidents named
-by headline.
-**Why powerful**: Instantly relatable, and a natural "try this" for visitors.
+### 4. Reference builds
+**What**: Sourced reference points to check a plan against: Colossus (≈150 MW, 100k H100),
+Stargate Abilene (1.2 GW), a typical 2019 colo.
+**Why powerful**: A sanity check: "my 30 MW plan is a fifth of Colossus".
 **Effort**: Low to Medium (sourcing each number honestly is the work).
-**Score**: 👍
+**Score**: 🤔
 
 ### 5. Explain this number
 **What**: Hover or focus a figure to see its formula with your values filled in
@@ -190,48 +171,40 @@ by headline.
 
 ## Recommended Priority
 
-### Do Now (quick wins)
-1. **Suite handoffs: Rack Budget ↔ Where the power is, with price and carbon.**
-   - Why: the strongest compounding move, and cheap because both tools keep `mw` in the URL.
-   - Impact: energy $ and CO₂ appear in Rack Budget, and siting is one click from sizing.
-2. **Rack Budget: start from GPUs.**
-   - Why: it matches how AI buyers think.
-   - Impact: a third, high-traffic way in.
-3. **Crash Cart: what one more pull buys.**
-   - Why: it's the budget sentence.
-   - Impact: the tool argues for its own output.
-4. **Outage replay: what the dark window cost.**
-   - Why: it turns curiosity into a business case.
-   - Impact: the replay becomes a monitoring ROI.
+### Shipped (quick wins)
+- **Rack Budget ↔ Where the power is**, carrying price and carbon: Rack Budget shows $ a year
+  and t CO₂ for the grid you pick.
+- **Rack Budget: start from GPUs.**
+- **Crash Cart: what one more pull buys.**
+- **Outage replay: what the dark window cost.**
 
 ### Do Next (high leverage)
-1. **Outage replay "Call it" game.**
-   - Why: the most playable idea, and it reuses the replay engine.
-   - Unlocks: scores and sharing, plus the pattern for the other games.
-2. **Pin and compare A vs B (shared across all four).**
-   - Why: decisions are comparisons.
-   - Unlocks: "A vs B" summaries and briefs.
-3. **Crash Cart spares planner.**
-   - Why: a second real deliverable (a parts order).
-   - Unlocks: monthly repeat use.
-4. **Share cards.**
-   - Why: the distribution loop for both audiences.
+1. **Pin and compare A vs B (shared across all four).**
+   - Why: every real decision is a comparison: RAID 6 or 17+3, GB200 or Kyber, ERCOT or PJM.
+   - Start with Rack Budget, then roll it to the other three.
+2. **Crash Cart spares planner.**
+   - Why: a second real deliverable (a parts order), and a monthly task done by hand today.
+3. **Explain this number.**
+   - Why: operators argue with numbers they can't trace. Low effort, and it builds trust in all four.
+4. **Bring your own data, starting with Crash Cart CSV and smartctl.**
+   - Why: it turns a model of a generic fleet into your fleet's pull sheet.
+   - Risk: messy inputs and an accuracy burden.
 
 ### Explore (strategic bets)
-1. **Bring your own data, starting with Crash Cart CSV and smartctl.**
-   - Risk: messy inputs and an accuracy burden.
-   - Upside: a tool people use weekly.
-2. **Design your detection (Outage replay).**
+1. **Design your detection (Outage replay).**
    - Risk: signal timings need sourcing.
-   - Upside: the SRE's real decision.
-3. **Triage and Make-the-date games.**
-   - Risk: tone and effort.
-   - Upside: teaching by play.
+   - Upside: the SRE's real decision, which monitors to pay for.
+2. **Bring your own data for the other tools** (a rack list, a Statuspage incident JSON).
+3. **Mixed halls (Rack Budget).**
 
 ### Backlog
-- **Mixed halls:** valuable, but GPU-count mode covers the common case first.
+- **Export for the planning doc:** after compare, so it can export A vs B.
 - **2D trade-off view:** nice, but the table already serves it.
+- **Reference builds:** waits on sourcing.
 - **Remember last setup:** URLs mostly cover it.
+
+### Dropped
+- **Game modes** ("Call it", Triage, Make the date) and **share cards**: these are work tools.
 
 ---
 
@@ -246,17 +219,19 @@ by headline.
 - **Q**: Does the power page have price and carbon per region?
   **A**: Yes. Each region carries `price` (¢/kWh) and `co2` (g/kWh).
 
-### Blockers (need your call)
-- **Q**: Who is the primary audience for the next round: operators (lean toward handoffs, GPU mode,
-  spares, bring-your-own-data) or portfolio visitors (lean toward "Call it", share cards, presets)?
-- **Q**: Are dollar figures welcome? Cost per pull, $/kWh bills and revenue per minute need
-  stated assumptions on the page.
-- **Q**: Real-world presets name companies and projects. Is that a line you want to cross, given
+- **Q**: Who is the audience?
+  **A**: The people who do the work. No games or share-bait.
+- **Q**: Are dollar figures welcome?
+  **A**: Yes, with the assumption on the page: the grid's ¢/kWh is named next to the bill, and
+  the outage cost a minute is the reader's own input.
+
+### Open
+- **Q**: Reference builds name companies and projects. Is that a line you want to cross, given
   every number must be sourced?
 
 ## Next Steps
-- [ ] Decide: audience priority for the next round (operators vs visitors).
-- [ ] Build the four "Do Now" items; each is a day or less.
-- [ ] Prototype "Call it" on one incident (GCP) before committing to all six.
+- [x] Decide the audience: operators.
+- [x] Build the four quick wins.
+- [ ] Build pin and compare in Rack Budget, then the other three.
 - [ ] Research: public timing for synthetic checks and Downdetector spikes per incident (for detection design).
-- [ ] Validate: share a "Call it" prototype with two SREs; watch where they hesitate.
+- [ ] Validate: put compare and the spares planner in front of two operators; watch where they hesitate.
