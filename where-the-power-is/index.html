@@ -329,6 +329,11 @@
   .calc .c.out{border-color:var(--tx3)}
   .calc .op{color:var(--tx3);font-family:var(--mono);font-size:var(--fs-small);padding:0 2px}
   .qd .note{margin:10px 0 0;color:var(--tx2);font-size:var(--fs-caption);max-width:54ch;text-wrap:pretty}
+  /* the step to Rack Budget: what fits on this grid's power, priced at its rate */
+  .qd .size{margin:12px 0 0;font-size:var(--fs-small)}
+  .qd .size a,.pl .use{color:var(--tx);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em;text-decoration-color:var(--link-underline)}
+  .qd .size a:hover,.pl .use:hover{text-decoration-color:currentColor}
+  .pl .use{display:block;width:max-content;margin-top:5px;font-size:var(--fs-caption)}
   .qd .note + .note{color:var(--tx3);margin-top:6px}
 
   @container list (max-width:819px){
@@ -1146,7 +1151,8 @@
   function buildList(){
     $("queue").innerHTML = REGIONS.map(function(g){
       return '<tr class="qr" data-id="' + g.id + '"><td class="rk"></td>' +
-        '<td class="who"><button class="exp" type="button" aria-expanded="false" aria-controls="qd-' + g.id + '"><span class="nm">' + g.name + '</span></button><span class="ar">' + g.area + '</span></td>' +
+        '<td class="who"><button class="exp" type="button" aria-expanded="false" aria-controls="qd-' + g.id + '"><span class="nm">' + g.name + '</span></button><span class="ar">' + g.area + '</span>' +
+        '<a class="use" hidden>Price my hall on ' + g.name + ' <span aria-hidden="true">→</span></a></td>' +
         '<td class="when"><span class="win"></span><span class="vd"><span class="dot"></span><span class="vt"></span></span></td>' +
         '<td class="n q"><span class="bar" aria-hidden="true"><i></i></span><span class="qv"></span></td>' +
         '<td class="n co2"><span class="bar" aria-hidden="true"><i></i></span><span class="cv"></span></td>' +
@@ -1177,6 +1183,7 @@
       q(tr, "td.co2").classList.toggle("sorted", state.srt === "carbon");
       q(tr, "td.price").classList.toggle("sorted", state.srt === "price");
       qd.lastChild.innerHTML = calc(x);
+      var use = q(tr, ".use"); use.hidden = !fromRack(); use.href = rackHref(g);
       var open = !!openRows[g.id];
       qd.hidden = !open; q(tr, ".exp").setAttribute("aria-expanded", open);
     });
@@ -1192,8 +1199,9 @@
     }
     ["thWin","thCo2","thPrice"].forEach(function(id){ $(id).removeAttribute("aria-sort"); });
     $(state.srt === "carbon" ? "thCo2" : state.srt === "price" ? "thPrice" : "thWin").setAttribute("aria-sort", "ascending");
-    $("listMeta").textContent = " · by " + (state.srt === "carbon" ? "grid carbon" : state.srt === "price" ? "power price" : "earliest window");
-    document.querySelectorAll(".seg button").forEach(function(b){ b.setAttribute("aria-pressed", b.getAttribute("data-srt") === state.srt); });
+    $("listMeta").textContent = " · by " + (state.srt === "carbon" ? "grid carbon" : state.srt === "price" ? "power price" : "earliest window") +
+      (fromRack() ? " · pick a grid to price your Rack Budget hall" : "");
+    document.querySelectorAll(".listw .seg button").forEach(function(b){ b.setAttribute("aria-pressed", b.getAttribute("data-srt") === state.srt); });
   }
   var lastOrder = null;
   /* a region's arithmetic, as the numbers that add into its window */
@@ -1204,7 +1212,8 @@
     var h = c(g.lo + "–" + g.hi + NB + "yr", "published band") + op("+") + c(s.toFixed(1) + NB + "yr", fmt(state.mw) + NB + "MW of study");
     if(x.bridged) h += op("−") + c(BRIDGE_CREDIT.toFixed(1) + NB + "yr", "bridged, floor " + state.floor + NB + "yr");
     h += op("=") + c(x.lo.toFixed(1) + "–" + x.hi.toFixed(1) + NB + "yr", "from mid-2026") + op("→") + c(windowText(x), verdictText(x, state.yr).toLowerCase(), "out");
-    return '<p class="calc">' + h + '</p><p class="note">' + g.con + '</p><p class="note">' + g.note + '</p>';
+    return '<p class="calc">' + h + '</p><p class="note">' + g.con + '</p><p class="note">' + g.note + '</p>' +
+      '<p class="size"><a href="' + rackHref(g) + '">' + (fromRack() ? "Price my hall on " + g.name + "’s power" : "What fits in " + fmt(state.mw) + NB + "MW here? Size it in Rack Budget") + ' <span aria-hidden="true">→</span></a></p>';
   }
 
   /* ---------- the worked example, following the top of your ranking ---------- */
@@ -1360,6 +1369,16 @@
   }
 
   /* ---------- URL state ---------- */
+  /* Arriving from Rack Budget, its sizing rides along in rb so the grid you pick goes back
+     with the hall you left. Change the load here and the link goes back as a power budget. */
+  var RB = null, RB_MW = null;
+  function fromRack(){ return !!RB && state.mw === RB_MW; }
+  function rackHref(g){
+    var u = new URLSearchParams(fromRack() ? RB : "");
+    if(!fromRack()){ u.set("m", "A"); u.set("mw", state.mw); u.delete("r"); u.delete("gp"); }
+    u.set("g", g.id); u.set("gn", g.name); u.set("gc", g.price); u.set("gco", g.co2);
+    return "/rack-budget/#" + u.toString();
+  }
   function writeUrl(){
     var u = new URLSearchParams();
     u.set("mw", state.mw);
@@ -1368,6 +1387,7 @@
     if(state.srt !== "time") u.set("srt", state.srt);
     if(state.per !== 250) u.set("per", state.per);
     if(state.floor !== 2) u.set("fl", state.floor);
+    if(RB) u.set("rb", RB);
     try{ history.replaceState(null, "", "#" + u.toString()); }
     catch(e){ try{ location.hash = u.toString(); }catch(e2){} }
   }
@@ -1382,6 +1402,8 @@
     if(u.get("srt") === "carbon" || u.get("srt") === "price") state.srt = u.get("srt");
     if(u.get("per")) state.per = Math.max(100, Math.min(1000, parseFloat(u.get("per")) || 250));
     if(u.get("fl")) state.floor = Math.max(0.5, Math.min(5, parseFloat(u.get("fl")) || 2));
+    var rb = u.get("rb");
+    if(rb && /^[A-Za-z0-9=&._%-]{1,400}$/.test(rb)){ RB = rb; RB_MW = state.mw; }
     return true;
   }
 
@@ -1427,7 +1449,7 @@
     slider("per", function(v){ state.per = v; });
     slider("floor", function(v){ state.floor = v; });
     $("bridgeChips").addEventListener("change", function(e){ change(function(){ state.bridge = e.target.value; }); });
-    document.querySelector(".seg").addEventListener("click", function(e){
+    document.querySelector(".listw .seg").addEventListener("click", function(e){
       var b = e.target.closest("button"); if(!b || b.getAttribute("data-srt") === state.srt) return;
       change(function(){ state.srt = b.getAttribute("data-srt"); });
     });
