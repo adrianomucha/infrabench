@@ -360,8 +360,9 @@
   /* ---------- Rack Budget's own parts ---------- */
   /* a figure you can also type, sitting where the other tools show a read-out */
   .nin{display:inline-flex;align-items:baseline;gap:6px;font-size:var(--fs-small);font-weight:500;color:var(--tx);white-space:nowrap}
-  .nin input{width:6ch;padding:0 0 1px;margin:0;background:none;border:0;border-bottom:1px dashed var(--control-border-hover);border-radius:0;
+  .nin input{width:7.2ch;padding:0 0 1px;margin:0;background:none;border:0;border-bottom:1px dashed var(--control-border-hover);border-radius:0;
     font:inherit;color:var(--tx);text-align:end;font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield}
+  .nin input.wide{width:9ch}
   .nin input::-webkit-outer-spin-button,.nin input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   .nin input:hover{border-bottom-style:solid}
   .nin input:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
@@ -414,14 +415,23 @@
   @media (prefers-reduced-motion: no-preference){ .wf .t .b{transition:left .3s ease-out,width .3s ease-out} }
   .dragging .wf .t .b,.dragging .bar i,.dragging .split i{transition:none}
 
+  /* the step to the next tool: find a grid for this load, or the grid it is priced on */
+  .handoff{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:var(--fs-small);color:var(--tx2);text-wrap:pretty}
+  .handoff b{color:var(--tx);font-weight:500}
+  .handoff a,.handoff button{font:inherit;color:var(--tx);background:none;border:0;padding:0;cursor:pointer;
+    text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em;text-decoration-color:var(--link-underline)}
+  .handoff a:hover,.handoff button:hover{text-decoration-color:currentColor}
+  .handoff .sep{color:var(--tx3);margin:0 .4em}
+
   /* ---------- every rack at the same budget ---------- */
   .pl .pick{display:block;padding:0;margin:0;background:none;border:0;font:inherit;color:inherit;text-align:start;cursor:pointer}
   .pl .pick .nm::after{content:none}
   .pl .pick:hover .nm{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
   .pl .pick[aria-pressed="true"] .nm{color:var(--grn)}
+  .pl .pick:disabled{cursor:default} .pl .pick:disabled .nm{color:var(--tx3)} .pl .pick:disabled:hover .nm{text-decoration:none}
   .pl tr.cur td{background:#12161A}
   .pl td.n .none{color:var(--tx3);font-weight:400}
-  .pl td.gp .bar i{background:var(--tx)}
+  .pl td.cmp .bar i{background:var(--tx)}
   @container list (max-width:760px){
     .pl thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
     .pl tr.qr{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:16px;row-gap:4px;padding:12px var(--pad) 14px;border-top:1px solid var(--line)}
@@ -489,8 +499,9 @@
     <fieldset class="grp">
       <legend>Start from</legend>
       <div class="chips" id="modeChips">
-        <label class="chip"><input type="radio" name="mode" value="A"><span>The power</span></label>
-        <label class="chip"><input type="radio" name="mode" value="B"><span>The fleet</span></label>
+        <label class="chip"><input type="radio" name="mode" value="A"><span>Power</span></label>
+        <label class="chip"><input type="radio" name="mode" value="B"><span>Racks</span></label>
+        <label class="chip"><input type="radio" name="mode" value="C"><span>GPUs</span></label>
       </div>
       <p class="hint" id="modeHint"></p>
     </fieldset>
@@ -504,9 +515,16 @@
 
     <div class="grp" id="gRacks" hidden>
       <div class="grp-h"><label for="racks">Racks</label>
-        <span class="nin"><input type="number" id="racksN" inputmode="numeric" min="1" max="20000" step="1" aria-label="Racks, as a number"><span>racks</span></span></div>
+        <span class="nin"><input type="text" id="racksN" inputmode="numeric" autocomplete="off" spellcheck="false" aria-label="Racks, as a number"><span>racks</span></span></div>
       <input type="range" id="racks" min="0" max="1000" step="1">
       <div class="scale" aria-hidden="true"><span>1</span><span>100</span><span>10,000</span></div>
+    </div>
+
+    <div class="grp" id="gGpus" hidden>
+      <div class="grp-h"><label for="gpus">GPUs</label>
+        <span class="nin"><input type="text" id="gpusN" class="wide" inputmode="numeric" autocomplete="off" spellcheck="false" aria-label="GPUs, as a number"><span>GPUs</span></span></div>
+      <input type="range" id="gpus" min="0" max="1000" step="1">
+      <div class="scale" aria-hidden="true"><span>100</span><span>10,000</span><span>1M</span></div>
     </div>
 
     <div class="grp">
@@ -576,6 +594,7 @@
       <figure aria-labelledby="wfTitle">
         <figcaption><b id="wfTitle">Where the megawatts go</b><span>from the fence to the racks</span></figcaption>
         <ol class="wf" id="wf"></ol>
+        <p class="handoff" id="handoff"></p>
       </figure>
     </div>
   </div>
@@ -590,7 +609,7 @@
     </div>
     <table class="pl">
       <caption class="sr-only">Each published rack profile sized at your current settings: how many racks fit or how much power they need, their GPUs and their white space</caption>
-      <thead><tr><th scope="col">Rack</th><th scope="col" class="n" id="thLead">Racks that fit</th><th scope="col" class="n">GPUs</th><th scope="col" class="n" id="thFloor">White space</th></tr></thead>
+      <thead><tr><th scope="col">Rack</th><th scope="col" class="n" id="thLead">Racks that fit</th><th scope="col" class="n" id="thMid">GPUs</th><th scope="col" class="n" id="thFloor">White space</th></tr></thead>
       <tbody id="ladder"></tbody>
     </table>
     <p class="print-url" id="printUrl"></p>
@@ -800,34 +819,59 @@
   }
   // a figure past a million reads in millions, so the tile keeps its width
   function big(n){ n = Math.round(n); return n >= 1e6 ? fmt(n / 1e6, n >= 1e7 ? 1 : 2) + "M" : fmt(n); }
+  // money at a glance: $850K, $14.7M, $1.2B
+  function money(n){
+    // three figures at most: $1,650, $590K, $14.7M, $740M, $1.2B; rounding up never reads as $1,000K
+    var v, s;
+    if(n >= 9995e5){ v = n / 1e9; s = "B"; } else if(n >= 999500){ v = n / 1e6; s = "M"; }
+    else return n >= 9999.5 ? "$" + fmt(n / 1e3) + "K" : "$" + fmt(n);
+    return "$" + (v >= 99.95 ? fmt(v) : v.toFixed(1)) + s;
+  }
   function mwText(x){ return x >= 1 || x === 0 ? fmt(x, 1) + NB + "MW" : fmt(x * 1000) + NB + "kW"; }
 
-  var DEFAULTS = { mode:"A", mw:30, racks:64, preset:"gb200", kw:120, pue:1.2, margin:15 };
+  var DEFAULTS = { mode:"A", mw:30, racks:64, gpus:10000, preset:"gb200", kw:120, pue:1.2, margin:15 };
+  state.gpus = DEFAULTS.gpus; state.grid = null;
   var REAL = PRESETS.filter(function(p){ return p.id !== "custom"; });
   var ISO_MAX = 600, COS = 0.866, SIN = 0.5;   // past this many racks one hall becomes a campus; the iso projection
 
+  /* Starting from GPUs is the fleet calculation, with the racks worked out from the GPU target
+     and rounded up to whole racks. A rack with no GPUs cannot meet a GPU target, so it sizes
+     to nothing and says so. */
+  function presetById(id){ for(var i = 0; i < PRESETS.length; i++) if(PRESETS[i].id === id) return PRESETS[i]; return null; }
+  function computeAs(id){
+    var keepP = state.preset, keepM = state.mode, keepR = state.racks, gp = 0;
+    if(id) state.preset = id;
+    if(state.mode === "C"){
+      gp = state.preset === "custom" ? 0 : preset().gpus;
+      state.mode = "B"; state.racks = gp ? Math.ceil(state.gpus / gp) : 0;
+    }
+    var r = compute();
+    r.noGpu = keepM === "C" && !gp;
+    state.preset = keepP; state.mode = keepM; state.racks = keepR;
+    return r;
+  }
   /* compute() plus the split every panel shares */
   function run(){
-    var r = compute();
+    var r = computeAs();
     r.heldMw = r.itMw * state.margin / 100;
     r.shortMw = state.mode === "A" ? Math.max(0, r.itMw - r.heldMw - r.deployedMw) : 0;
     r.share = r.facilityMw > 0 ? r.deployedMw / r.facilityMw : 0;
     r.p = preset();
+    // priced on a grid picked in Where the power is: its industrial rate and its carbon intensity
+    if(state.grid){ r.bill = r.annualMwh * 1000 * state.grid.c / 100; r.co2t = r.annualMwh * state.grid.co2 / 1000; }
     r.name = state.preset === "custom" ? r.rackKw + NB + "kW custom rack" : r.p.name;
     return r;
   }
   // the same settings, on another rack profile
-  function computeFor(id){
-    var keep = state.preset; state.preset = id;
-    var r = compute(); state.preset = keep;
-    return r;
-  }
+  function computeFor(id){ return computeAs(id); }
 
   /* ---------- the log sliders ----------
      Power, racks and custom kW span three or four decades, so the sliders run on a log
      scale and land on round numbers. The arrow keys step between those round numbers. */
-  var LOGS = { mw:{ lo:1, hi:2500, max:2500 }, racks:{ lo:1, hi:10000, max:20000 }, kw:{ lo:1, hi:1600, max:1600 } };
+  var LOGS = { mw:{ lo:1, hi:2500, max:2500 }, racks:{ lo:1, hi:10000, max:20000 }, kw:{ lo:1, hi:1600, max:1600 },
+               gpus:{ lo:100, hi:1000000, max:1000000, min:1 } };
   function stepOf(k, v){
+    if(k === "gpus") return v < 1000 ? 10 : v < 10000 ? 100 : v < 100000 ? 1000 : 10000;
     if(k === "racks") return v < 100 ? 1 : v < 1000 ? 5 : 50;
     if(k === "kw") return v < 10 ? 0.5 : v < 100 ? 1 : 5;
     return v < 10 ? 0.5 : v < 100 ? 1 : v < 500 ? 5 : 10;
@@ -840,7 +884,7 @@
     if(dir > 0) return clamp(roundTo(k, v + stepOf(k, v)), L.lo, Math.max(L.hi, v));
     return clamp(roundTo(k, v - stepOf(k, Math.max(L.lo, v - 1e-9))), L.lo, L.max);
   }
-  var UNIT_WORDS = { mw:["megawatt", "megawatts"], racks:["rack", "racks"], kw:["kilowatt per rack", "kilowatts per rack"] };
+  var UNIT_WORDS = { mw:["megawatt", "megawatts"], racks:["rack", "racks"], kw:["kilowatt per rack", "kilowatts per rack"], gpus:["GPU", "GPUs"] };
 
   /* ---------- numbers that count to their new value ---------- */
   var tw = {};
@@ -892,7 +936,9 @@
     } else {
       tweenText("kv0", r.facilityMw, function(n){ return fmt(n, 1); });
       $("ku0").textContent = "MW";
-      $("ks0").textContent = "for " + fmt(r.racks) + NB + pl(r.racks, "rack") + (r.gpus ? ", " + fmt(r.gpus) + NB + "GPUs" : " at " + fmt(r.rackKw) + NB + "kW");
+      $("ks0").textContent = r.noGpu ? "this rack has no GPUs; pick a GPU rack"
+        : state.mode === "C" ? "for " + fmt(r.gpus) + NB + "GPUs in " + fmt(r.racks) + NB + pl(r.racks, "rack")
+        : "for " + fmt(r.racks) + NB + pl(r.racks, "rack") + (r.gpus ? ", " + fmt(r.gpus) + NB + "GPUs" : " at " + fmt(r.rackKw) + NB + "kW");
       delta("kd0", v[0], b && b[0], function(d, up){ return fmt(d, 1) + " MW " + (up ? "more" : "less"); }, 0);
     }
 
@@ -914,7 +960,9 @@
 
     var gwh = r.annualMwh / 1000;
     tweenText("kv4", gwh, function(n){ return fmt(n, n < 100 ? 1 : 0); });
-    $("ks4").textContent = r.racks ? "as much as " + fmt(r.homes) + NB + "US homes use" : "nothing running";
+    $("ks4").textContent = !r.racks ? "nothing running"
+      : state.grid ? money(r.bill) + " a year on " + state.grid.name + ", " + fmt(Math.round(r.co2t / 100) * 100) + NB + "t CO₂"
+      : "as much as " + fmt(r.homes) + NB + "US homes use";
     delta("kd4", Math.round(v[4]), b && Math.round(b[4]), function(d, up){ return fmt(d / 1000, d < 100000 ? 1 : 0) + " GWh " + (up ? "more" : "less"); }, 0);
 
     var now = shown();
@@ -937,7 +985,7 @@
     } else {
       t = "At " + fmt(r.rackKw) + NB + "kW a rack air still works, and floor binds before cooling does: plan on about " + fmt(area(r.shell)) + NB + areaUnitLc() + " of building.";
     }
-    if(state.mode === "B" && r.facilityMw > 100){
+    if(state.mode !== "A" && r.facilityMw > 100){
       tone = tone === "bad" ? tone : "warn";
       t += " A " + fmt(r.facilityMw) + NB + "MW service is a multi-year utility conversation, not a purchase order.";
     }
@@ -1160,6 +1208,34 @@
     svg.setAttribute("aria-label", (r.racks <= ISO_MAX ? "The hall" : "The campus") + " from above at an angle: " + cap.textContent);
   }
 
+  /* ---------- the next tool ----------
+     The load goes to Where the power is with this sizing riding along, so the grid you pick
+     there comes back here with its price and carbon and the hall you left. */
+  var POWER_MIN = 20, POWER_MAX = 2000;
+  function ownHash(){ return stateParams(false).toString(); }
+  function renderHandoff(r){
+    var el = $("handoff"), mw = Math.round(r.facilityMw * 10) / 10;
+    var u = new URLSearchParams(); u.set("mw", Math.round(clamp(mw, POWER_MIN, POWER_MAX))); u.set("rb", ownHash());
+    var href = "/where-the-power-is/#" + u.toString();
+    el.textContent = "";
+    if(!r.racks){ el.hidden = true; return; }
+    el.hidden = false;
+    if(state.grid){
+      el.appendChild(document.createTextNode("Priced on "));
+      var b = document.createElement("b"); b.textContent = state.grid.name; el.appendChild(b);
+      el.appendChild(document.createTextNode(": " + state.grid.c.toFixed(1) + "¢/kWh and " + fmt(state.grid.co2) + NB + "g CO₂/kWh."));
+      var s1 = document.createElement("span"); s1.className = "sep"; s1.textContent = " "; el.appendChild(s1);
+      var a = document.createElement("a"); a.href = href; a.textContent = "Change grid"; el.appendChild(a);
+      var s2 = document.createElement("span"); s2.className = "sep"; s2.textContent = "·"; s2.setAttribute("aria-hidden", "true"); el.appendChild(s2);
+      var c = document.createElement("button"); c.type = "button"; c.id = "clearGrid"; c.textContent = "Clear"; el.appendChild(c);
+    } else {
+      var a2 = document.createElement("a"); a2.href = href;
+      a2.textContent = "Find a grid that can energize " + mwText(Math.max(mw, 0.1)) + " →";
+      el.appendChild(a2);
+      el.appendChild(document.createTextNode(" and price the power here."));
+    }
+  }
+
   /* ---------- the waterfall: what each step between the fence and the racks takes ---------- */
   var wfBase = null, wfLast = null;
   function wfRows(r){
@@ -1203,29 +1279,44 @@
         '<td class="who"><button class="pick" type="button" aria-pressed="false"><span class="nm">' + p.name + '</span>' +
         '<span class="ar">' + (p.liquid ? "Liquid" : "Air") + " · " + p.kw + NB + "kW" + (p.gpus ? " · " + p.gpus + NB + "GPUs" : "") + '</span></button></td>' +
         '<td class="n pri"><span class="lv"></span></td>' +
-        '<td class="n gp"><span class="bar" aria-hidden="true"><i></i></span><span class="gv"></span></td><td class="n fl"></td></tr>';
+        '<td class="n cmp"><span class="bar" aria-hidden="true"><i></i></span><span class="cv"></span></td><td class="n fl"></td></tr>';
     }).join("");
   }
+  /* The bars go where the trade is. From power or racks that is GPUs: racks and floor only
+     restate the rack's power. From GPUs it is the power each rack needs to reach the target. */
   function renderLadder(r){
-    // the bars go on GPUs: racks and floor only restate the rack's power, GPUs are the trade
-    var A = state.mode === "A", res = {}, max = 0;
-    REAL.forEach(function(p){ var x = computeFor(p.id); res[p.id] = x; max = Math.max(max, x.gpus); });
-    $("listH").textContent = A ? "Every rack profile in " + fmt(state.mw, state.mw % 1 ? 1 : 0) + NB + "MW" : "Every rack profile, " + fmt(state.racks) + " of each";
+    var M = state.mode, A = M === "A", C = M === "C", res = {}, max = 0;
+    REAL.forEach(function(p){
+      var x = computeFor(p.id); res[p.id] = x;
+      max = Math.max(max, C ? (x.noGpu ? 0 : x.facilityMw) : x.gpus);
+    });
+    $("listH").textContent = A ? "Every rack profile in " + fmt(state.mw, state.mw % 1 ? 1 : 0) + NB + "MW"
+      : C ? "Every GPU rack, at " + fmt(state.gpus) + NB + "GPUs" : "Every rack profile, " + fmt(state.racks) + " of each";
     $("listMeta").textContent = "· PUE " + state.pue.toFixed(2) + ", " + fmt(state.margin) + "% held back";
-    $("thLead").textContent = A ? "Racks that fit" : "Power at the fence";
+    $("thLead").textContent = A ? "Racks that fit" : C ? "Racks" : "Power at the fence";
+    $("thMid").textContent = C ? "Power at the fence" : "GPUs";
     $("thFloor").textContent = "White space, " + areaUnitLc();
     REAL.forEach(function(p){
       var x = res[p.id], tr = $("ladder").querySelector('tr[data-id="' + p.id + '"]'), cur = p.id === state.preset;
-      var cells = tr.children;
+      var cells = tr.children, pick = tr.querySelector(".pick"), lead, leadU = null, mid, midU = null, bar;
       tr.classList.toggle("cur", cur);
-      tr.querySelector(".pick").setAttribute("aria-pressed", cur ? "true" : "false");
-      cells[1].querySelector(".lv").innerHTML = A ? (x.racks ? fmt(x.racks) : '<span class="none">none fit</span>') : fmt(x.facilityMw, 1) + NB + "MW";
-      if(A && x.racks) cells[1].setAttribute("data-u", pl(x.racks, "rack")); else cells[1].removeAttribute("data-u");
-      cells[2].querySelector(".bar").style.visibility = x.gpus ? "" : "hidden";
-      cells[2].querySelector(".bar i").style.width = (max ? 100 * x.gpus / max : 0).toFixed(1) + "%";
-      cells[2].querySelector(".gv").textContent = x.gpus ? fmt(x.gpus) : "—";
-      cells[2].classList.toggle("nil", !x.gpus);
-      if(x.gpus) cells[2].setAttribute("data-u", "GPUs"); else cells[2].removeAttribute("data-u");
+      tr.style.display = C && x.noGpu ? "none" : "";
+      pick.setAttribute("aria-pressed", cur ? "true" : "false");
+      pick.disabled = !!x.noGpu;
+      if(x.noGpu){ lead = '<span class="none">no GPUs</span>'; mid = "—"; bar = 0; }
+      else if(C){ lead = fmt(x.racks); leadU = pl(x.racks, "rack"); mid = fmt(x.facilityMw, 1) + NB + "MW"; bar = x.facilityMw; }
+      else {
+        lead = A ? (x.racks ? fmt(x.racks) : '<span class="none">none fit</span>') : fmt(x.facilityMw, 1) + NB + "MW";
+        if(A && x.racks) leadU = pl(x.racks, "rack");
+        mid = x.gpus ? fmt(x.gpus) : "—"; if(x.gpus) midU = "GPUs"; bar = x.gpus;
+      }
+      cells[1].querySelector(".lv").innerHTML = lead;
+      if(leadU) cells[1].setAttribute("data-u", leadU); else cells[1].removeAttribute("data-u");
+      cells[2].querySelector(".bar").style.visibility = bar ? "" : "hidden";
+      cells[2].querySelector(".bar i").style.width = (max ? 100 * bar / max : 0).toFixed(1) + "%";
+      cells[2].querySelector(".cv").textContent = mid;
+      cells[2].classList.toggle("nil", mid === "—");
+      if(midU) cells[2].setAttribute("data-u", midU); else cells[2].removeAttribute("data-u");
       cells[3].textContent = x.racks ? fmt(area(x.sqft)) : "—";
       cells[3].classList.toggle("nil", !x.racks);
       if(x.racks) cells[3].setAttribute("data-u", areaUnitLc()); else cells[3].removeAttribute("data-u");
@@ -1249,14 +1340,19 @@
     if(lastSrc !== rg) rg.value = toPos(k, v);
     rg.style.setProperty("--fill", (rg.value / 10) + "%");
     rg.setAttribute("aria-valuetext", fmt(v, v % 1 ? 1 : 0) + " " + (v === 1 ? w[0] : w[1]));
-    if(lastSrc !== nb) nb.value = v;
+    if(lastSrc !== nb) nb.value = shownN(k, v);
   }
+  // whole counts read with separators, so a million GPUs is 1,000,000 and not 1000000
+  function shownN(k, v){ return k === "racks" || k === "gpus" ? fmt(v) : v; }
   function syncControls(){
-    var A = state.mode === "A", p = preset();
+    var A = state.mode === "A", C = state.mode === "C", p = preset();
     document.querySelectorAll('#modeChips input').forEach(function(i){ i.checked = i.value === state.mode; });
-    $("modeHint").textContent = A ? "You have a power budget. See what fits in it." : "You have the racks. See the power to ask for.";
-    $("gPower").hidden = !A; $("gRacks").hidden = A;
-    syncLog("mw", "mw", "mwN"); syncLog("racks", "racks", "racksN"); syncLog("kw", "kw", "kwN");
+    $("modeHint").textContent = A ? "You have a power budget. See what fits in it." : C ? "You have a GPU target. See the racks and power it takes."
+      : "You have the racks. See the power to ask for.";
+    $("gPower").hidden = !A; $("gRacks").hidden = state.mode !== "B"; $("gGpus").hidden = !C;
+    syncLog("mw", "mw", "mwN"); syncLog("racks", "racks", "racksN"); syncLog("kw", "kw", "kwN"); syncLog("gpus", "gpus", "gpusN");
+    // a GPU target needs a rack with GPUs in it
+    [].forEach.call($("rack").options, function(o){ var pp = presetById(o.value); o.disabled = C && !(pp && pp.id !== "custom" && pp.gpus); });
 
     $("rack").value = state.preset;
     $("rackOut").textContent = fmt(rackKw(), rackKw() % 1 ? 1 : 0) + NB + "kW" + (isLiquid() ? ", liquid" : ", air");
@@ -1284,12 +1380,12 @@
   }
   function isDefault(){ for(var k in DEFAULTS) if(state[k] !== DEFAULTS[k]) return false; return true; }
   function renderTry(){
-    var A = state.mode === "A";
+    var A = state.mode === "A", C = state.mode === "C";
     q('[data-try=denser]').disabled = !nextUp();
     q('[data-try=old]').disabled = state.pue === 1.6;
     q('[data-try=nomargin]').disabled = state.margin === 0;
-    $("tryDouble").textContent = A ? "Double the power" : "Double the fleet";
-    $("tryDouble").disabled = A ? state.mw * 2 > LOGS.mw.max : state.racks * 2 > LOGS.racks.max;
+    $("tryDouble").textContent = A ? "Double the power" : C ? "Double the GPUs" : "Double the fleet";
+    $("tryDouble").disabled = A ? state.mw * 2 > LOGS.mw.max : C ? state.gpus * 2 > LOGS.gpus.max : state.racks * 2 > LOGS.racks.max;
     q('[data-try=reset]').disabled = isDefault();
   }
 
@@ -1303,12 +1399,15 @@
       L.push("less " + fmt(state.margin) + " percent held back = " + fmt(usable, 2) + NB + "MW for compute");
       L.push("divided by " + fmt(r.rackKw) + NB + "kW a rack, rounded down = <b>" + fmt(r.racks) + NB + pl(r.racks, "rack") + "</b>");
     } else {
-      $("wxQ").textContent = "How much power do " + fmt(state.racks) + " " + r.name + " racks need?";
+      if(state.mode === "C"){
+        $("wxQ").textContent = "How much power do " + fmt(state.gpus) + " GPUs need on " + r.name + "?";
+        L.push(fmt(state.gpus) + " GPUs ÷ " + r.p.gpus + " a rack, rounded up = <b>" + fmt(r.racks) + NB + pl(r.racks, "rack") + "</b>, " + fmt(r.gpus) + " GPUs");
+      } else $("wxQ").textContent = "How much power do " + fmt(state.racks) + " " + r.name + " racks need?";
       L.push(fmt(r.racks) + " racks × " + fmt(r.rackKw) + NB + "kW = " + fmt(r.deployedMw, 2) + NB + "MW of compute");
       L.push("grossed up for " + fmt(state.margin) + " percent held back = " + fmt(r.itMw, 2) + NB + "MW of IT capacity");
       L.push("times PUE " + state.pue.toFixed(2) + " = <b>" + fmt(r.facilityMw, 1) + NB + "MW at the fence</b>");
     }
-    if(r.gpus) L.push("times " + r.p.gpus + " GPUs a rack = <b>" + fmt(r.gpus) + " GPUs</b>");
+    if(r.gpus && state.mode !== "C") L.push("times " + r.p.gpus + " GPUs a rack = <b>" + fmt(r.gpus) + " GPUs</b>");
     L.push(fmt(r.deployedMw, 2) + NB + "MW of heat / 3.517 kW a ton = <b>" + fmt(r.tons) + " tons</b>" + sub);
     L.push(fmt(r.racks) + " racks × " + (r.liquid ? 40 : 30) + " sq ft = <b>" + fmt(r.sqft) + " sq ft</b> of white space, about " + fmt(r.shell) + " of building");
     $("wx").innerHTML = L.map(function(s){ return "<li><span>" + s + "</span></li>"; }).join("");
@@ -1337,7 +1436,7 @@
   function render(){
     var r = run(); lastR = r;
     syncControls();
-    renderKpis(r); renderAlert(r); renderHall(r); renderWf(r); renderLadder(r); renderWorked(r);
+    renderKpis(r); renderAlert(r); renderHall(r); renderWf(r); renderHandoff(r); renderLadder(r); renderWorked(r);
     renderMini(r); announce(r); writeUrl();
   }
   /* A user change. The figures then say how they moved from before it, and a drag counts
@@ -1401,12 +1500,17 @@
   }
 
   /* ---------- URL state, with the same keys the calculator always used ---------- */
-  function writeUrl(){
+  function stateParams(withGrid){
     var u = new URLSearchParams();
     u.set("m", state.mode); u.set("p", state.preset); u.set("pue", state.pue); u.set("mg", state.margin);
-    if(state.mode === "A") u.set("mw", state.mw); else u.set("r", state.racks);
+    if(state.mode === "A") u.set("mw", state.mw); else if(state.mode === "C") u.set("gp", state.gpus); else u.set("r", state.racks);
     if(state.preset === "custom") u.set("kw", state.kw);
     if(state.units === "m") u.set("u", "m");
+    if(withGrid && state.grid){ u.set("g", state.grid.id); u.set("gn", state.grid.name); u.set("gc", state.grid.c); u.set("gco", state.grid.co2); }
+    return u;
+  }
+  function writeUrl(){
+    var u = stateParams(true);
     try{ history.replaceState(null, "", "#" + u.toString()); }
     catch(e){ try{ location.hash = u.toString(); }catch(e2){} }
   }
@@ -1415,15 +1519,21 @@
     var h = location.hash.slice(1);
     if(h.indexOf("=") === -1) return false;
     var u = new URLSearchParams(h), n;
-    if(u.get("m") === "B") state.mode = "B";
+    if(u.get("m") === "B" || u.get("m") === "C") state.mode = u.get("m");
     PRESETS.forEach(function(p){ if(p.id === u.get("p")) state.preset = p.id; });
     if(u.get("pue")){ n = parseFloat(u.get("pue")); if(isFinite(n)) state.pue = Math.round(clamp(n, 1, 2.2) * 100) / 100; }
     if(u.get("mg")){ n = parseFloat(u.get("mg")); if(isFinite(n)) state.margin = Math.round(clamp(n, 0, 50)); }
     if(u.get("mw")){ n = parseFloat(u.get("mw")); if(isFinite(n) && n > 0) state.mw = clamp(n, LOGS.mw.lo, LOGS.mw.max); }
     if(u.get("r")){ n = parseInt(u.get("r"), 10); if(isFinite(n) && n > 0) state.racks = clamp(n, 1, LOGS.racks.max); }
+    if(u.get("gp")){ n = parseInt(u.get("gp"), 10); if(isFinite(n) && n > 0) state.gpus = clamp(n, LOGS.gpus.min, LOGS.gpus.max); }
     if(u.get("kw")){ n = parseFloat(u.get("kw")); if(isFinite(n) && n > 0) state.kw = clamp(n, LOGS.kw.lo, LOGS.kw.max); }
     if(state.preset !== "custom") state.kw = preset().kw;
+    if(state.mode === "C" && (state.preset === "custom" || !preset().gpus)){ state.preset = "gb200"; state.kw = preset().kw; }
     if(u.get("u") === "m") state.units = "m";
+    // a grid handed over from Where the power is: a short name, a rate and an intensity, checked
+    var gc = parseFloat(u.get("gc")), gco = parseFloat(u.get("gco")), gn = (u.get("gn") || "").replace(/[^A-Za-z0-9 .\/-]/g, "").slice(0, 32);
+    if(gn && isFinite(gc) && gc > 0 && gc < 100 && isFinite(gco) && gco >= 0 && gco < 2000)
+      state.grid = { id:(u.get("g") || "").replace(/[^a-z0-9-]/g, "").slice(0, 24), name:gn, c:gc, co2:gco };
     return true;
   }
 
@@ -1443,6 +1553,7 @@
     var r = run(), L = [];
     L.push(state.mode === "A"
       ? fmt(state.mw, 1) + " MW facility, PUE " + state.pue.toFixed(2) + ", " + fmt(state.margin) + "% held back, " + r.name
+      : state.mode === "C" ? fmt(state.gpus) + " GPUs on " + r.name + ", PUE " + state.pue.toFixed(2) + ", " + fmt(state.margin) + "% held back"
       : fmt(r.racks) + " x " + r.name + ", PUE " + state.pue.toFixed(2) + ", " + fmt(state.margin) + "% held back");
     L.push("");
     L.push("Racks: " + fmt(r.racks) + (r.gpus ? "   GPUs: " + fmt(r.gpus) : ""));
@@ -1451,6 +1562,7 @@
     L.push("Heat to reject: " + fmt(r.tons) + " tons" + (r.liquid ? "   (liquid " + fmt(r.tonsLiquid) + ", air " + fmt(r.tonsAir) + ")" : ""));
     L.push("White space: " + fmt(area(r.sqft)) + " " + areaUnitLc() + "   Total shell: " + fmt(area(r.shell)) + " " + areaUnitLc());
     L.push("Energy: " + fmt(r.annualMwh / 1000, 1) + " GWh a year, about " + fmt(r.homes) + " US homes");
+    if(state.grid) L.push("On " + state.grid.name + " (" + state.grid.c.toFixed(1) + "¢/kWh, " + fmt(state.grid.co2) + " g CO2/kWh): " + money(r.bill) + " a year, " + fmt(Math.round(r.co2t / 100) * 100) + " t CO2");
     L.push("");
     L.push("Run your own: " + location.href);
     return L.join("\n");
@@ -1466,6 +1578,10 @@
       // flipping sides keeps the same hall: the racks you fit become the fleet, and back
       change(function(){
         if(m === "B") state.racks = Math.max(1, lastR.racks || 1);
+        else if(m === "C"){
+          if(state.preset === "custom" || !preset().gpus){ state.preset = "gb200"; state.kw = preset().kw; state.gpus = DEFAULTS.gpus; }
+          else state.gpus = clamp(lastR.gpus || DEFAULTS.gpus, LOGS.gpus.min, LOGS.gpus.max);
+        }
         else state.mw = clamp(Math.round(lastR.facilityMw * 10) / 10, LOGS.mw.lo, LOGS.mw.max);
         state.mode = m;
       });
@@ -1485,13 +1601,19 @@
         if(v !== state[k]) change(function(){ state[k] = v; });
       });
       nb.addEventListener("input", function(){
-        var v = parseFloat(nb.value); if(!isFinite(v) || v <= 0) return;
-        v = clamp(k === "racks" ? Math.round(v) : v, LOGS[k].lo, LOGS[k].max);
+        var v = parseFloat(String(nb.value).replace(/[,\s]/g, "")); if(!isFinite(v) || v <= 0) return;
+        v = clamp(k === "racks" || k === "gpus" ? Math.round(v) : v, LOGS[k].min || LOGS[k].lo, LOGS[k].max);
         change(function(){ state[k] = v; }, true, nb);
       });
-      nb.addEventListener("change", function(){ endDrag(); nb.value = state[k]; });
+      nb.addEventListener("change", function(){ endDrag(); nb.value = shownN(k, state[k]); });
+      // the counts are text boxes (for the separators), so give them back the arrow keys a number box has
+      if(nb.type === "text") nb.addEventListener("keydown", function(e){
+        var d = { ArrowUp:1, ArrowDown:-1 }[e.key]; if(!d) return;
+        e.preventDefault();
+        var v = stepNice(k, state[k], d); if(v !== state[k]) change(function(){ state[k] = v; });
+      });
     }
-    bindLog("mw", "mw", "mwN"); bindLog("racks", "racks", "racksN"); bindLog("kw", "kw", "kwN");
+    bindLog("mw", "mw", "mwN"); bindLog("racks", "racks", "racksN"); bindLog("kw", "kw", "kwN"); bindLog("gpus", "gpus", "gpusN");
     $("rack").addEventListener("change", function(e){
       var id = e.target.value; if(id === state.preset) return;
       change(function(){ state.preset = id; if(id !== "custom") state.kw = preset().kw; });
@@ -1507,7 +1629,11 @@
         if(t === "denser"){ state.preset = nextUp(); state.kw = preset().kw; }
         if(t === "old") state.pue = 1.6;
         if(t === "nomargin") state.margin = 0;
-        if(t === "double"){ if(state.mode === "A") state.mw = Math.min(LOGS.mw.max, state.mw * 2); else state.racks = Math.min(LOGS.racks.max, state.racks * 2); }
+        if(t === "double"){
+          if(state.mode === "A") state.mw = Math.min(LOGS.mw.max, state.mw * 2);
+          else if(state.mode === "C") state.gpus = Math.min(LOGS.gpus.max, state.gpus * 2);
+          else state.racks = Math.min(LOGS.racks.max, state.racks * 2);
+        }
         if(t === "reset") for(var k in DEFAULTS) state[k] = DEFAULTS[k];
       });
     });
@@ -1522,6 +1648,7 @@
       change(function(){ state.preset = id; state.kw = preset().kw; });
     });
 
+    $("handoff").addEventListener("click", function(e){ if(e.target.id === "clearGrid") change(function(){ state.grid = null; }); });
     $("copyLink").addEventListener("click", function(){ copy(location.href, "Link copied"); });
     $("copySummary").addEventListener("click", function(){ copy(summary(), "Sizing summary copied"); });
     window.addEventListener("beforeprint", function(){ $("printUrl").textContent = "Reproduce this sizing: " + location.href; });

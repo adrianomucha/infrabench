@@ -524,6 +524,7 @@
       <div class="grp-h"><label for="pulls">Crew capacity</label><output id="pullsOut" for="pulls"></output></div>
       <input type="range" id="pulls" min="0" max="100" step="1">
       <div class="scale" aria-hidden="true"><span>0</span><span>50</span><span>100 a week</span></div>
+      <p class="hint" id="pullsHint"></p>
     </div>
 
     <fieldset class="grp">
@@ -1025,6 +1026,23 @@
     return e <= 0 ? r.thisWeek : Math.min(r.queueDrives, r.thisWeek + (w - 1) * e);
   }
   function lastWeek(r){ return r.queueDrives ? weekOf(r.queueDrives - 1, r) : 0; }
+  /* What one more pull a week buys: the same list, worked one drive a week faster. It is
+     the sentence a crew-time request needs, so it sits under the crew slider. */
+  function plusOne(r){
+    if(!r.queueDrives) return "Nothing on the list to pull";
+    if(r.pulls >= r.queueDrives) return "The whole list comes out this week";
+    var r1 = Object.create(r); r1.pulls = r.pulls + 1; r1.thisWeek = Math.min(r1.pulls, r.queueDrives);
+    var w0 = lastWeek(r), w1 = lastWeek(r1), month = 4;
+    var g = Math.round(100 * (riskShare(r1, doneBy(r1, month)) - riskShare(r, doneBy(r, month))));
+    var arr = Math.max(1, Math.round(r.arrivals));
+    if(!isFinite(w1)) return "One more still can’t keep up: about " + fmt(arr) + " " + plural(arr, "drive") + " a week join the list";
+    if(!isFinite(w0)) return "One more a week: clears in " + whenText(w1) + " instead of never";
+    var s = w0 - w1, sooner = s > 104 ? inYears(s) : fmt(s) + " " + plural(s, "week");
+    var parts = [];
+    if(s > 0) parts.push("clears " + sooner + " sooner");
+    if(g > 0) parts.push(g + "% more risk off by week " + month);
+    return parts.length ? "One more a week: " + parts.join(", ") : "One more a week barely moves this list";
+  }
   // share of the list's data at risk taken off by the first D drives, worked top down
   function riskShare(r, D){
     var acc = 0, before = 0, q = r.queue;
@@ -1823,6 +1841,7 @@
     syncControls(r);
     renderKpis(r);
     renderAlert(r);
+    $("pullsHint").textContent = plusOne(r);
     renderWall(r);
     renderPlan(r, animate);
     renderQueue(r);

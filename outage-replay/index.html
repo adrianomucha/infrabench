@@ -181,6 +181,16 @@
   details.more .grp{padding-top:4px}
 
   .whatif{padding:14px var(--pad) 16px;border-top:1px solid var(--line)}
+  /* a figure you can also type, as in Rack Budget */
+  .nin{display:inline-flex;align-items:baseline;gap:4px;font-size:var(--fs-small);font-weight:500;color:var(--tx);white-space:nowrap}
+  .nin input{width:9.5ch;padding:0 0 1px;margin:0;background:none;border:0;border-bottom:1px dashed var(--control-border-hover);border-radius:0;
+    font:inherit;color:var(--tx);text-align:end;font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield}
+  .nin input::-webkit-outer-spin-button,.nin input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .nin input::placeholder{color:var(--tx3)}
+  .nin input:hover{border-bottom-style:solid}
+  .nin input:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  .nin span{font-weight:400;color:var(--tx2)}
+  .rail .seg{display:flex} .rail .seg button{flex:1 1 0;padding-inline:6px}
   .whatif h2{font-size:var(--fs-small);font-weight:500;margin:0 0 8px}
   .whatif div{display:flex;flex-wrap:wrap;gap:8px}
   .whatif button{font:inherit;font-size:var(--fs-small);line-height:1.4;color:var(--tx);background:none;border:1px dashed var(--control-border-hover);padding:5px 10px;cursor:pointer;white-space:nowrap}
@@ -538,6 +548,15 @@
       <input type="range" id="thr" min="0" max="1000" step="1">
       <div class="scale" aria-hidden="true"><span>1</span><span>60</span><span>240 min</span></div>
       <p class="hint">after your users start failing. Drag the dashed line on the replay to set it there.</p>
+    </div>
+
+    <div class="grp">
+      <div class="grp-h"><label for="cost">A minute down costs you</label>
+        <span class="nin"><span>$</span><input type="text" id="cost" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="0"></span></div>
+      <div class="seg" role="group" aria-label="Typical costs a minute" id="costSeg">
+        <button type="button" data-c="0">None</button><button type="button" data-c="1000">$1K</button><button type="button" data-c="10000">$10K</button><button type="button" data-c="100000">$100K</button>
+      </div>
+      <p class="hint" id="costNote"></p>
     </div>
 
     <div class="whatif" role="group" aria-labelledby="wiH">
@@ -921,7 +940,15 @@
   function q(el, sel){ return el.querySelector(sel); }
   function fmt(n){ return Math.round(n).toLocaleString("en-US"); }
 
-  var DEFAULTS = { inc:"gcp2025", thr:15, srt:"gap" };
+  var DEFAULTS = { inc:"gcp2025", thr:15, srt:"gap", cost:0 };
+  state.cost = 0;   // what a minute down costs you; off until you set it
+  function money(n){
+    // three figures at most: $1,650, $590K, $14.7M, $740M, $1.2B; rounding up never reads as $1,000K
+    var v, s;
+    if(n >= 9995e5){ v = n / 1e9; s = "B"; } else if(n >= 999500){ v = n / 1e6; s = "M"; }
+    else return n >= 9999.5 ? "$" + fmt(n / 1e3) + "K" : "$" + fmt(n);
+    return "$" + (v >= 99.95 ? fmt(v) : v.toFixed(1)) + s;
+  }
   var VWORD = { make:"You would know first", slip:"Too close to call", miss:"The status page would tell you first" };
   var MAXGAP = 0, MAXTOTAL = 0;
   INCIDENTS.forEach(function(x){ MAXGAP = Math.max(MAXGAP, mins(x.t0, x.ack)); MAXTOTAL = Math.max(MAXTOTAL, mins(x.t0, x.end)); });
@@ -973,7 +1000,7 @@
     var m = r.cur, x = m.x, v = vals(r), b = kpiBase;
 
     tweenText("kv0", m.gap, function(n){ return fmt(n); });
-    $("ks0").textContent = hhmm(x.t0) + " → " + hhmm(x.ack) + " UTC · " + x.when;
+    $("ks0").textContent = hhmm(x.t0) + " → " + hhmm(x.ack) + " UTC · " + (state.cost ? money(m.gap * state.cost) + " in the dark" : x.when);
     if(b && b[0] !== v[0]) chip("kd0", v[0] > b[0] ? 1 : -1, dur(Math.abs(v[0] - b[0])) + " " + (v[0] > b[0] ? "longer" : "shorter"), "");
     else chip("kd0", 0, "");
 
@@ -984,7 +1011,8 @@
       $("ku1").textContent = n && a < 60 ? "min " + side : side;
       return (n > 0 ? "+" : n < 0 ? "−" : "") + (a < 60 ? fmt(a) : dur(a).replace(" ", NB));
     });
-    $("ks1").innerHTML = '<span class="dot ' + m.band + '" aria-hidden="true"></span> ' + VWORD[m.band];
+    $("ks1").innerHTML = '<span class="dot ' + m.band + '" aria-hidden="true"></span> ' + VWORD[m.band] +
+      (state.cost && m.margin ? (m.margin > 0 ? ": " + money(m.margin * state.cost) + " of warning" : ": " + money(-m.margin * state.cost) + " behind") : "");
     if(b && b[1] !== v[1]) chip("kd1", v[1] > b[1] ? 1 : -1, dur(Math.abs(v[1] - b[1])) + " " + (v[1] > b[1] ? "sooner" : "later"), v[1] > b[1] ? "good" : "bad");
     else chip("kd1", 0, "");
 
@@ -1284,7 +1312,7 @@
     placeTicks();
     $("listMeta").textContent = " · by " + (state.srt === "gap" ? "longest dark window" : state.srt === "len" ? "longest outage" : "most recent") +
       (state.thr <= MAXGAP ? " · the tick is your " + state.thr + NB + "min" : "");
-    document.querySelectorAll(".seg button").forEach(function(b){ b.setAttribute("aria-pressed", b.getAttribute("data-srt") === state.srt); });
+    document.querySelectorAll(".listw .seg button").forEach(function(b){ b.setAttribute("aria-pressed", b.getAttribute("data-srt") === state.srt); });
   }
 
   /* ---------- the incident in words, and the worked example ---------- */
@@ -1314,6 +1342,12 @@
   function setFill(el){ var mn = +el.min, mx = +el.max; el.style.setProperty("--fill", (mx > mn ? 100 * (el.value - mn) / (mx - mn) : 0) + "%"); }
   function syncControls(){
     var held = document.activeElement;
+    if($("cost") !== held) $("cost").value = state.cost ? fmt(state.cost) : "";
+    document.querySelectorAll("#costSeg button").forEach(function(b){ b.setAttribute("aria-pressed", +b.getAttribute("data-c") === state.cost ? "true" : "false"); });
+    var x = byId(state.inc), g = mins(x.t0, x.ack), all = 0;
+    INCIDENTS.forEach(function(i){ all += mins(i.t0, i.ack); });
+    $("costNote").textContent = state.cost ? dur(g) + " dark on " + x.name + ": " + money(g * state.cost) + ". All six: " + money(all * state.cost) + "."
+      : "Optional: prices each minute the page stayed green";
     if($("thr") !== held) $("thr").value = posFromThr(state.thr);
     setFill($("thr"));
     $("thrOut").textContent = state.thr + NB + pl(state.thr, "minute");
@@ -1435,6 +1469,7 @@
     var u = new URLSearchParams();
     u.set("i", state.inc); u.set("t", state.thr);
     if(state.srt !== "gap") u.set("srt", state.srt);
+    if(state.cost) u.set("c", state.cost);
     try{ history.replaceState(null, "", "#" + u.toString()); }
     catch(e){ try{ location.hash = u.toString(); }catch(e2){} }
   }
@@ -1446,6 +1481,7 @@
     if(i){ for(var k = 0; k < INCIDENTS.length; k++){ if(INCIDENTS[k].id === i) state.inc = i; } }
     if(u.get("t")) state.thr = Math.max(1, Math.min(240, parseInt(u.get("t"), 10) || 15));
     if(u.get("srt") === "len" || u.get("srt") === "date") state.srt = u.get("srt");
+    if(u.get("c")){ var c = parseFloat(u.get("c")); if(isFinite(c) && c > 0) state.cost = Math.min(1e7, Math.round(c)); }
     return true;
   }
 
@@ -1473,6 +1509,8 @@
     L.push("");
     L.push("At a " + state.thr + " minute paging threshold you are " +
       (m.margin > 0 ? dur(m.margin) + " ahead of the status page." : m.margin < 0 ? dur(-m.margin) + " behind it." : "level with it."));
+    if(state.cost) L.push("At " + money(state.cost) + " a minute, the dark window cost " + money(m.gap * state.cost) +
+      (m.margin > 0 ? "; your head start is worth " + money(m.margin * state.cost) + "." : "."));
     L.push("");
     L.push("All " + r.all.length + " incidents by dark window:");
     r.all.slice().sort(function(a, b){ return b.gap - a.gap; }).forEach(function(a, i){
@@ -1493,8 +1531,11 @@
 
     $("incs").addEventListener("change", function(e){ change(function(){ state.inc = e.target.value; }); });
     $("thr").addEventListener("input", function(){ var el = this; change(function(){ state.thr = thrFromPos(+el.value); }, true); });
+    $("cost").addEventListener("input", function(){ var v = parseFloat(this.value.replace(/[$,\s]/g, "")); v = isFinite(v) && v > 0 ? Math.min(1e7, Math.round(v)) : 0; change(function(){ state.cost = v; }, true); });
+    $("cost").addEventListener("change", function(){ endDrag(); this.value = state.cost ? fmt(state.cost) : ""; });
+    $("costSeg").addEventListener("click", function(e){ var b = e.target.closest("button"); if(!b) return; var v = +b.getAttribute("data-c"); if(v !== state.cost) change(function(){ state.cost = v; }); });
     $("thr").addEventListener("change", endDrag);
-    document.querySelector(".seg").addEventListener("click", function(e){
+    document.querySelector(".listw .seg").addEventListener("click", function(e){
       var b = e.target.closest("button"); if(!b || b.getAttribute("data-srt") === state.srt) return;
       change(function(){ state.srt = b.getAttribute("data-srt"); });
     });
