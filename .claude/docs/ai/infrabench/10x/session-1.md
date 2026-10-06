@@ -232,6 +232,7 @@ Stargate Abilene (1.2 GW), a typical 2019 colo.
 ## Next Steps
 - [x] Decide the audience: operators.
 - [x] Build the four quick wins.
-- [ ] Build pin and compare in Rack Budget, then the other three.
+- [x] Build pin and compare in Rack Budget.
+- [ ] Pin and compare in Crash Cart, Where the power is and Outage replay.
 - [ ] Research: public timing for synthetic checks and Downdetector spikes per incident (for detection design).
 - [ ] Validate: put compare and the spares planner in front of two operators; watch where they hesitate.

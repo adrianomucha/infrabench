@@ -1403,7 +1403,7 @@
     if(u.get("per")) state.per = Math.max(100, Math.min(1000, parseFloat(u.get("per")) || 250));
     if(u.get("fl")) state.floor = Math.max(0.5, Math.min(5, parseFloat(u.get("fl")) || 2));
     var rb = u.get("rb");
-    if(rb && /^[A-Za-z0-9=&._%-]{1,400}$/.test(rb)){ RB = rb; RB_MW = state.mw; }
+    if(rb && /^[A-Za-z0-9=&._%-]{1,800}$/.test(rb)){ RB = rb; RB_MW = state.mw; }
     return true;
   }
 

@@ -445,9 +445,51 @@
   }
   .alert.info .ic{background:var(--tx3)}
 
+  /* ---------- a pinned sizing, A, and what you have now, B ----------
+     A is always drawn dashed: the key in the table head, the outlines on the waterfall. */
+  .tbar .acts{flex-wrap:wrap}
+  .sw{display:inline-block;width:14px;height:8px;margin-inline-end:7px;border:1px dashed var(--tx3);vertical-align:1px}
+  .pinbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0;padding:10px var(--pad);background:var(--bg2);border:1px solid var(--line);border-top:0;
+    font-size:var(--fs-small);line-height:1.45;color:var(--tx2);text-wrap:pretty}
+  .pinbar .tag{display:inline-grid;place-items:center;flex:none;width:20px;height:20px;border:1px dashed var(--tx3);font-size:var(--fs-caption);font-weight:500;color:var(--tx)}
+  .pinbar .t{flex:1 1 18em;min-width:0}
+  .pinbar .t b{font-weight:500;color:var(--tx)}
+  .pinbar .pacts{display:flex;gap:16px;margin-inline-start:auto}
+  .pinbar button{font:inherit;color:var(--tx);background:none;border:0;padding:0;cursor:pointer;white-space:nowrap;
+    text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em;text-decoration-color:var(--link-underline)}
+  .pinbar button:hover{text-decoration-color:currentColor}
+  #wfSub .sw{margin-inline-end:6px}
+
+  /* the comparison gets its own row in the grid, only while something is pinned */
+  .dash.pinned{grid-template-rows:auto auto auto auto 1fr;grid-template-areas:"rail kpi" "rail viz" "rail cmp" "rail list" "rail ."}
+  @media(max-width:900px){ .dash.pinned{grid-template-rows:none;grid-template-areas:"kpi" "rail" "viz" "cmp" "list"} }
+  .cmpw{grid-area:cmp;min-width:0;container:cmp / inline-size}
+  .cmpw .pn-hd{align-items:center;padding:12px var(--pad)}
+  .cmp th[scope=row]{font-size:var(--fs-small);font-weight:400;color:var(--tx2);white-space:normal;border-top:1px solid var(--line)}
+  .cmp td{text-align:end;white-space:nowrap;color:var(--tx)}
+  .cmp td.ch{color:var(--tx2)}
+  .cmp td.ch.same{color:var(--tx3)}
+  .cmp th[scope=row],.cmp td{padding-block:8px}
+  .cmp #cmpSet td{white-space:normal;text-wrap:balance}
+  .cmp #cmpSet tr.eq > *{color:var(--tx3)}
+  .cmp #cmpSet td.all{text-align:start;text-wrap:pretty}
+  .pinned .kpi .d{white-space:normal}
+  .cmp #cmpRes tr:first-child > *{border-top-color:var(--line2)}
+  @container cmp (max-width:620px){
+    .cmp thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+    .cmp tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:12px;row-gap:2px;padding:10px var(--pad) 12px;border-top:1px solid var(--line)}
+    .cmp #cmpRes tr:first-child{border-top-color:var(--line2)}
+    .cmp tr > *{border:0 !important;padding:0 !important;background:none;text-align:start}
+    .cmp th[scope=row]{grid-column:1 / -1}
+    .cmp td{white-space:normal}
+    .cmp td[data-l]::before{content:attr(data-l) "  ";color:var(--tx3);white-space:pre}
+    .cmp td.ch:empty{display:none}
+    .cmp td.all{grid-column:1 / -1}
+  }
+
   @media print{
     :root{--bg:#fff;--bg2:#fff;--bg3:#fff;--line:#c7cdd5;--line2:#a8b1bc;--tx:#12161b;--tx2:#39424d;--tx3:#5b6470}
-    .top nav,.tbar .acts,.rail,.mini,.toast,.skip,.ref,.sec,.listw .pn-hd .r{display:none}
+    .top nav,.tbar .acts,.rail,.mini,.toast,.skip,.ref,.sec,.listw .pn-hd .r,.cmpw .pn-hd .r,.pinbar .pacts{display:none}
     .dash{display:block;padding:0} .kpiw,.vizw{margin-bottom:16px}
     .print-url{display:block;margin-top:14px;font-family:var(--mono);font-size:11px;word-break:break-all}
   }
@@ -461,6 +503,7 @@
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="g-infrabench" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="9" width="14" height="10" fill="currentColor"/></symbol>
   <symbol id="i-link" viewBox="0 0 14 14"><path d="M6 8a2.5 2.5 0 0 0 3.5 0l2-2A2.5 2.5 0 0 0 8 2.5l-.8.8M8 6a2.5 2.5 0 0 0-3.5 0l-2 2A2.5 2.5 0 0 0 6 11.5l.8-.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 14 14"><path d="M4.5 1.5h5M5.5 1.5v4L3.5 8.5h7l-2-3v-4M7 8.5v4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </svg>
 
 <header class="wrap top">
@@ -486,6 +529,7 @@
     <p class="src" id="prov"></p>
   </div>
   <div class="acts">
+    <button class="btn ghost" type="button" id="pinBtn" title="Keep this sizing as A, then compare what you change against it"><svg aria-hidden="true"><use href="#i-pin"/></svg>Pin as A</button>
     <button class="btn ghost" type="button" id="copyLink"><svg aria-hidden="true"><use href="#i-link"/></svg>Copy link to this sizing</button>
   </div>
 </div>
@@ -576,6 +620,9 @@
       <div class="kpi" id="k4"><dt>Energy a year</dt><dd class="v"><b id="kv4"></b><small>GWh</small></dd><dd class="d" id="kd4"></dd><dd class="s" id="ks4"></dd></div>
     </dl>
     <p class="alert info" id="alert"><span class="ic" aria-hidden="true"></span><span id="alertT"></span></p>
+    <!-- the pinned sizing everything below is measured against -->
+    <p class="pinbar" id="pinbar" hidden><span class="tag" aria-hidden="true">A</span><span class="t" id="pinT"></span>
+      <span class="pacts"><button type="button" id="swapAB">Swap A and B</button><button type="button" id="unpin">Unpin</button></span></p>
   </div>
 
   <!-- the hall and the megawatts -->
@@ -592,11 +639,25 @@
         <p class="hall-cap" id="hallCap"></p>
       </figure>
       <figure aria-labelledby="wfTitle">
-        <figcaption><b id="wfTitle">Where the megawatts go</b><span>from the fence to the racks</span></figcaption>
+        <figcaption><b id="wfTitle">Where the megawatts go</b><span id="wfSub">from the fence to the racks</span></figcaption>
         <ol class="wf" id="wf"></ol>
         <p class="handoff" id="handoff"></p>
       </figure>
     </div>
+  </div>
+
+  <!-- A against B, while a sizing is pinned -->
+  <div class="cmpw pn" id="cmpw" hidden>
+    <div class="pn-hd">
+      <h2>A against B <span class="meta" id="cmpMeta"></span></h2>
+      <div class="r"><button class="btn ghost" type="button" id="copyCmp">Copy comparison</button></div>
+    </div>
+    <table class="pl cmp">
+      <caption class="sr-only">The pinned sizing A and your current sizing B side by side: their settings, then every result and how far B is from A</caption>
+      <thead><tr><th scope="col"><span class="sr-only">Setting or result</span></th><th scope="col" class="n"><span class="sw" aria-hidden="true"></span>A, pinned</th><th scope="col" class="n">B, now</th><th scope="col" class="n">B against A</th></tr></thead>
+      <tbody id="cmpSet"></tbody>
+      <tbody id="cmpRes"></tbody>
+    </table>
   </div>
 
   <!-- every rack profile at the same settings -->
@@ -865,6 +926,25 @@
   // the same settings, on another rack profile
   function computeFor(id){ return computeAs(id); }
 
+  /* ---------- a pinned sizing to compare against ----------
+     Pin keeps the whole setup as A, and the page then reads as B, what you have now, against
+     it: the figures say how far B is from A, the waterfall draws A dashed on the same scale,
+     and a table sets the two side by side. Units are a way of reading, so they stay unpinned. */
+  var PIN_KEYS = ["mode", "mw", "racks", "gpus", "preset", "kw", "pue", "margin", "grid"];
+  var pin = null, lastA = null;
+  function snap(){ var s = {}; PIN_KEYS.forEach(function(k){ s[k] = state[k]; }); return s; }
+  function put(s){ PIN_KEYS.forEach(function(k){ state[k] = s[k]; }); }
+  function withState(s, fn){ var keep = snap(); put(s); try{ return fn(); } finally{ put(keep); } }
+  // the settings that matter, as the URL writes them, so a slider parked off-mode does not count
+  function setupKey(){ var u = stateParams(true); u.delete("u"); return u.toString(); }
+  function pinKey(){ return withState(pin, setupKey); }
+  function sameAsPin(){ return !!pin && setupKey() === pinKey(); }
+  function setupText(r){
+    var from = state.mode === "A" ? fmt(state.mw, state.mw % 1 ? 1 : 0) + NB + "MW at the fence"
+      : state.mode === "C" ? fmt(state.gpus) + NB + "GPUs" : fmt(state.racks) + NB + pl(state.racks, "rack");
+    return r.name + " · " + from + " · PUE " + state.pue.toFixed(2) + " · " + fmt(state.margin) + "% held back" + (state.grid ? " · on " + state.grid.name : "");
+  }
+
   /* ---------- the log sliders ----------
      Power, racks and custom kW span three or four decades, so the sliders run on a log
      scale and land on round numbers. The arrow keys step between those round numbers. */
@@ -921,9 +1001,13 @@
   /* ---------- the five figures, each saying how it moved ---------- */
   var kpiBase = null, lastR = null, dragging = false, lastShown = null, dragShown = null;
   function vals(r){ return [state.mode === "A" ? r.racks : r.facilityMw, r.tons, r.sqft, r.share, r.annualMwh]; }
+  // with a pin, every change is measured from A, in the terms the figures read in now
+  var than = "";
   function shown(){ return [0, 1, 2, 3, 4].map(function(i){ return $("kv" + i).textContent; }); }
   function renderKpis(r){
-    var v = vals(r), b = kpiBase && kpiBase.mode === state.mode ? kpiBase.v : null, A = state.mode === "A";
+    var v = vals(r), A = state.mode === "A";
+    var b = pin && lastA ? vals(lastA) : kpiBase && kpiBase.mode === state.mode ? kpiBase.v : null;
+    than = pin ? " than A" : "";
 
     $("kt0").textContent = A ? "Racks that fit" : "Power at the fence";
     $("k0").classList.toggle("none", A && r.racks === 0);
@@ -932,38 +1016,38 @@
       $("ku0").textContent = pl(r.racks, "rack");
       $("ks0").textContent = r.racks === 0 ? "not one rack at these settings"
         : r.gpus ? fmt(r.gpus) + NB + "GPUs at " + r.p.gpus + " a rack" : "at " + fmt(r.rackKw) + NB + "kW a rack";
-      delta("kd0", v[0], b && b[0], function(d, up){ return fmt(d) + (up ? " more" : " fewer"); }, 1);
+      delta("kd0", v[0], b && b[0], function(d, up){ return fmt(d) + (up ? " more" : " fewer") + than; }, 1);
     } else {
       tweenText("kv0", r.facilityMw, function(n){ return fmt(n, 1); });
       $("ku0").textContent = "MW";
       $("ks0").textContent = r.noGpu ? "this rack has no GPUs; pick a GPU rack"
         : state.mode === "C" ? "for " + fmt(r.gpus) + NB + "GPUs in " + fmt(r.racks) + NB + pl(r.racks, "rack")
         : "for " + fmt(r.racks) + NB + pl(r.racks, "rack") + (r.gpus ? ", " + fmt(r.gpus) + NB + "GPUs" : " at " + fmt(r.rackKw) + NB + "kW");
-      delta("kd0", v[0], b && b[0], function(d, up){ return fmt(d, 1) + " MW " + (up ? "more" : "less"); }, 0);
+      delta("kd0", v[0], b && b[0], function(d, up){ return fmt(d, 1) + " MW " + (up ? "more" : "less") + than; }, 0);
     }
 
     tweenText("kv1", r.tons, big);
     $("ks1").textContent = r.racks === 0 ? "nothing running" : r.liquid ? fmt(r.tonsLiquid) + " to the liquid loop, " + fmt(r.tonsAir) + " to room air" : "all of it by air";
-    delta("kd1", Math.round(v[1]), b && Math.round(b[1]), function(d, up){ return fmt(d) + (up ? " more" : " fewer"); }, 0);
+    delta("kd1", Math.round(v[1]), b && Math.round(b[1]), function(d, up){ return fmt(d) + (up ? " more" : " fewer") + than; }, 0);
 
     tweenText("kv2", area(r.sqft), big);
     $("ku2").textContent = areaUnitLc();
     $("ks2").textContent = r.racks ? "about " + big(area(r.shell)) + NB + areaUnitLc() + " of building" : "no floor to plan yet";
-    delta("kd2", area(v[2]), b && area(b[2]), function(d, up){ return fmt(d) + (up ? " more" : " less"); }, 0);
+    delta("kd2", area(v[2]), b && area(b[2]), function(d, up){ return fmt(d) + (up ? " more" : " less") + than; }, 0);
 
     tweenText("kv3", Math.round(r.share * 100), function(n){ return fmt(Math.round(n)) + "%"; });
     // one ratio against the whole: a meter, with the breakdown left to the waterfall below
     var sp = $("split"); if(!sp.firstChild) sp.innerHTML = "<i></i>";
     sp.firstChild.style.width = (100 * clamp(r.share, 0, 1)).toFixed(1) + "%";
     $("ks3").textContent = mwText(r.deployedMw) + " of " + mwText(r.facilityMw);
-    delta("kd3", Math.round(v[3] * 100), b && Math.round(b[3] * 100), function(d){ return d + " " + pl(d, "point"); }, 1);
+    delta("kd3", Math.round(v[3] * 100), b && Math.round(b[3] * 100), function(d, up){ return d + " " + pl(d, "point") + (pin ? (up ? " above A" : " below A") : ""); }, 1);
 
     var gwh = r.annualMwh / 1000;
     tweenText("kv4", gwh, function(n){ return fmt(n, n < 100 ? 1 : 0); });
     $("ks4").textContent = !r.racks ? "nothing running"
       : state.grid ? money(r.bill) + " a year on " + state.grid.name + ", " + fmt(Math.round(r.co2t / 100) * 100) + NB + "t CO₂"
       : "as much as " + fmt(r.homes) + NB + "US homes use";
-    delta("kd4", Math.round(v[4]), b && Math.round(b[4]), function(d, up){ return fmt(d / 1000, d < 100000 ? 1 : 0) + " GWh " + (up ? "more" : "less"); }, 0);
+    delta("kd4", Math.round(v[4]), b && Math.round(b[4]), function(d, up){ return fmt(d / 1000, d < 100000 ? 1 : 0) + " GWh " + (up ? "more" : "less") + than; }, 0);
 
     var now = shown();
     if(lastShown && !dragging){ for(var i = 0; i < 5; i++) if(lastShown[i] !== now[i]) flash($("k" + i)); }
@@ -1212,7 +1296,8 @@
      The load goes to Where the power is with this sizing riding along, so the grid you pick
      there comes back here with its price and carbon and the hall you left. */
   var POWER_MIN = 20, POWER_MAX = 2000;
-  function ownHash(){ return stateParams(false).toString(); }
+  // the pin rides along, so a grid picked there comes back to the same comparison
+  function ownHash(){ var u = stateParams(false); if(pin) u.set("a", pinKey()); return u.toString(); }
   function renderHandoff(r){
     var el = $("handoff"), mw = Math.round(r.facilityMw * 10) / 10;
     var u = new URLSearchParams(); u.set("mw", Math.round(clamp(mw, POWER_MIN, POWER_MAX))); u.set("rb", ownHash());
@@ -1255,7 +1340,13 @@
     }).join("");
   }
   function renderWf(r){
-    var rows = wfRows(r), F = Math.max(r.facilityMw, 1e-9), base = wfBase && wfBase.mode === state.mode ? wfBase : null;
+    var rows = wfRows(r), own = Math.max(r.facilityMw, 1e-9), F = own, ghost = null;
+    if(pin && lastA){
+      // A and B share one scale, the larger of the two fences, and A is the dashed outline
+      F = Math.max(own, lastA.facilityMw);
+      ghost = {}; wfRows(lastA).forEach(function(w){ ghost[w.id] = [clamp(w.a / F, 0, 1), clamp(w.b / F, 0, 1)]; });
+    } else if(wfBase && wfBase.mode === state.mode) ghost = wfBase.rows;
+    $("wfSub").innerHTML = pin ? '<span class="sw" aria-hidden="true"></span>dashed: A, pinned' : "from the fence to the racks";
     rows.forEach(function(w){
       var li = $("wf").querySelector('[data-id="' + w.id + '"]'), b = li.querySelector(".b"), g = li.querySelector(".g");
       li.className = w.cls; li.hidden = !!w.hide;
@@ -1263,12 +1354,12 @@
       var x0 = clamp(w.a / F, 0, 1), x1 = clamp(w.b / F, 0, 1);
       var bw = Math.max(0.25, 100 * (x1 - x0));
       b.style.left = Math.min(100 * x0, 100 - bw).toFixed(3) + "%"; b.style.width = bw.toFixed(3) + "%";
-      // the dashed ghost keeps where this bar stood before your last change
-      var o = base && base.rows[w.id], show = o && (Math.abs(o[0] - x0) > 0.004 || Math.abs(o[1] - x1) > 0.004);
+      // the dashed ghost keeps where this bar stood in A, or before your last change
+      var o = ghost && ghost[w.id], show = o && (Math.abs(o[0] - x0) > 0.004 || Math.abs(o[1] - x1) > 0.004);
       g.hidden = !show;
       if(show){ var gw = Math.max(0.25, 100 * (o[1] - o[0])); g.style.left = Math.min(100 * o[0], 100 - gw).toFixed(3) + "%"; g.style.width = gw.toFixed(3) + "%"; }
     });
-    var map = {}; rows.forEach(function(w){ map[w.id] = [clamp(w.a / F, 0, 1), clamp(w.b / F, 0, 1)]; });
+    var map = {}; rows.forEach(function(w){ map[w.id] = [clamp(w.a / own, 0, 1), clamp(w.b / own, 0, 1)]; });
     wfLast = { mode:state.mode, rows:map };
   }
 
@@ -1435,8 +1526,9 @@
   /* ---------- the lifecycle ---------- */
   function render(){
     var r = run(); lastR = r;
+    lastA = pin ? withState(pin, run) : null;
     syncControls();
-    renderKpis(r); renderAlert(r); renderHall(r); renderWf(r); renderHandoff(r); renderLadder(r); renderWorked(r);
+    renderKpis(r); renderAlert(r); renderPin(); renderHall(r); renderWf(r); renderHandoff(r); renderCmp(r); renderLadder(r); renderWorked(r);
     renderMini(r); announce(r); writeUrl();
   }
   /* A user change. The figures then say how they moved from before it, and a drag counts
@@ -1458,6 +1550,88 @@
     $("console").classList.remove("dragging");
     if(dragShown && lastShown) for(var i = 0; i < 5; i++) if(dragShown[i] !== lastShown[i]) flash($("k" + i));
     dragShown = null;
+  }
+
+  /* ---------- A against B ---------- */
+  function renderPin(){
+    var on = !!pin, same = sameAsPin();
+    $("pinbar").hidden = !on; $("cmpw").hidden = !on;
+    $("console").classList.toggle("pinned", on);
+    if(!on) return;
+    var t = withState(pin, function(){ return setupText(lastA); });
+    $("pinT").innerHTML = (same ? "Pinned as A: " : "Comparing with A: ") + "<b></b>" + (same ? ". Change anything to compare." : "");
+    $("pinT").querySelector("b").textContent = t;
+    $("swapAB").hidden = same;
+  }
+  function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]; }); }
+  // one side's settings, in words
+  function sideSetup(s, r){
+    return withState(s, function(){
+      return [r.name, r.liquid ? "Liquid cooled" : "Air cooled",
+        state.mode === "A" ? fmt(state.mw, state.mw % 1 ? 1 : 0) + NB + "MW at the fence" : state.mode === "C" ? fmt(state.gpus) + NB + "GPUs" : fmt(state.racks) + NB + pl(state.racks, "rack"),
+        state.pue.toFixed(2), fmt(state.margin) + "%",
+        state.grid ? state.grid.name + ", " + state.grid.c.toFixed(1) + "¢/kWh" : null];
+    });
+  }
+  function cmpData(b){
+    var a = lastA, A = sideSetup(pin, a), B = sideSetup(snap(), b), set = [], res = [];
+    ["Rack", "Cooling", "Sized from", "PUE", "Held back"].forEach(function(l, i){ set.push([l, A[i], B[i]]); });
+    if(A[5] || B[5]) set.push(["Grid", A[5] || "not priced", B[5] || "not priced"]);
+    function row(l, va, vb, f, kind){ res.push({ l:l, a:va, b:vb, f:f, kind:kind || "" }); }
+    function unit(u){ return function(n){ return fmt(n) + NB + u; }; }
+    row("Power at the fence", a.facilityMw, b.facilityMw, function(n){ return fmt(n, 1) + NB + "MW"; });
+    row("Racks", a.racks, b.racks, function(n){ return fmt(n); });
+    if(a.gpus || b.gpus) row("GPUs", a.gpus || null, b.gpus || null, function(n){ return fmt(n); });
+    row("Heat to reject", a.tons, b.tons, unit("tons"));
+    row("White space", area(a.sqft), area(b.sqft), unit(areaUnitLc()));
+    row("Building", area(a.shell), area(b.shell), unit(areaUnitLc()));
+    row("Runs compute", a.share * 100, b.share * 100, function(n){ return fmt(n) + "%"; }, "pt");
+    row("Energy a year", a.annualMwh / 1000, b.annualMwh / 1000, function(n){ return fmt(n, n < 100 ? 1 : 0) + NB + "GWh"; });
+    if(a.bill !== undefined || b.bill !== undefined){
+      row("Energy bill a year", a.bill === undefined ? null : a.bill, b.bill === undefined ? null : b.bill, money);
+      row("Carbon a year", a.co2t === undefined ? null : a.co2t, b.co2t === undefined ? null : b.co2t, function(n){ return fmt(Math.round(n / 100) * 100) + NB + "t CO₂"; });
+    }
+    return { set:set, res:res };
+  }
+  // how far B is from A: the difference in the row's own unit, then as a share of A, or a multiple once B is twice A or more
+  function diffText(x){
+    if(x.a === null || x.b === null) return "";
+    if(x.f(x.a) === x.f(x.b)) return "same";
+    if(x.kind === "pt"){ var p = Math.round(x.b) - Math.round(x.a); return (p > 0 ? "+" : "−") + Math.abs(p) + NB + pl(Math.abs(p), "point"); }
+    var d = x.b - x.a, t = (d > 0 ? "+" : "−") + x.f(Math.abs(d)), k = x.a > 0 ? x.b / x.a : 0, pc = Math.round(100 * (k - 1));
+    if(!x.a) return t;
+    if(k >= 2) return t + " · " + fmt(k, k < 10 ? 1 : 0) + "×";
+    return pc ? t + " · " + (pc > 0 ? "+" : "−") + fmt(Math.abs(pc)) + "%" : t;
+  }
+  function renderCmp(r){
+    if(!pin) return;
+    var D = cmpData(r), changed = [], both = [];
+    // the settings that differ get a row each; the ones A and B share are read in one line
+    $("cmpSet").innerHTML = D.set.map(function(s){
+      if(s[1] === s[2]){ both.push(s[0] === "PUE" ? "PUE " + s[1] : s[0] === "Held back" ? s[1] + " held back" : s[0] === "Grid" ? (s[1] === "not priced" ? "not priced" : "on " + s[1]) : s[1]); return ""; }
+      if(s[0] !== "Cooling") changed.push(s[0] === "Sized from" ? "size" : s[0] === "Held back" ? "margin" : s[0] === "PUE" ? "PUE" : s[0].toLowerCase());
+      return '<tr><th scope="row">' + s[0] + '</th><td data-l="A">' + esc(s[1]) + '</td><td data-l="B">' + esc(s[2]) + '</td><td class="ch"></td></tr>';
+    }).join("") + (both.length ? '<tr class="eq"><th scope="row">Same in both</th><td class="all" colspan="3">' + esc(both.join(" · ")) + "</td></tr>" : "");
+    $("cmpRes").innerHTML = D.res.map(function(x){
+      var d = diffText(x);
+      return '<tr><th scope="row">' + x.l + '</th><td data-l="A">' + (x.a === null ? "—" : esc(x.f(x.a))) + '</td><td data-l="B">' + (x.b === null ? "—" : esc(x.f(x.b))) +
+        '</td><td class="ch' + (d === "same" ? " same" : "") + '">' + esc(d) + "</td></tr>";
+    }).join("");
+    $("cmpMeta").textContent = changed.length ? "· B changes the " + (changed.length > 1 ? changed.slice(0, -1).join(", ") + " and " + changed[changed.length - 1] : changed[0])
+      : "· nothing changed yet";
+  }
+  // the comparison as plain text, in columns, for a doc or a ticket
+  function cmpText(){
+    var D = cmpData(lastR), rows = [["", "A", "B", "B against A"]];
+    D.set.forEach(function(s){ if(s[1] !== s[2]) rows.push([s[0], s[1], s[2], ""]); });
+    D.res.forEach(function(x){ rows.push([x.l, x.a === null ? "-" : x.f(x.a), x.b === null ? "-" : x.f(x.b), diffText(x)]); });
+    var w = [0, 0, 0]; rows.forEach(function(c){ for(var i = 0; i < 3; i++) w[i] = Math.max(w[i], c[i].length); });
+    var L = ["Rack Budget: A against B",
+      "A, pinned: " + withState(pin, function(){ return setupText(lastA); }),
+      "B, now:    " + setupText(lastR), ""];
+    rows.forEach(function(c){ L.push((c[0].padEnd(w[0] + 3) + c[1].padEnd(w[1] + 3) + c[2].padEnd(w[2] + 3) + c[3]).replace(/\s+$/, "")); });
+    L.push(""); L.push("Run your own: " + location.href);
+    return L.join("\n").replace(new RegExp(NB, "g"), " ");
   }
 
   function renderMini(r){
@@ -1511,6 +1685,7 @@
   }
   function writeUrl(){
     var u = stateParams(true);
+    if(pin) u.set("a", pinKey());
     try{ history.replaceState(null, "", "#" + u.toString()); }
     catch(e){ try{ location.hash = u.toString(); }catch(e2){} }
   }
@@ -1518,7 +1693,21 @@
     if(!location.hash || location.hash.length < 2) return false;
     var h = location.hash.slice(1);
     if(h.indexOf("=") === -1) return false;
-    var u = new URLSearchParams(h), n;
+    var u = new URLSearchParams(h);
+    applyParams(u);
+    // a pinned A, written with the same keys and read from the same defaults
+    var ah = u.get("a");
+    var ua = ah && ah.length <= 800 ? new URLSearchParams(ah) : null;
+    if(ua && /^[ABC]$/.test(ua.get("m") || "")){
+      ua.delete("u"); ua.delete("a");
+      var keep = snap();
+      put({ mode:DEFAULTS.mode, mw:DEFAULTS.mw, racks:DEFAULTS.racks, gpus:DEFAULTS.gpus, preset:DEFAULTS.preset, kw:DEFAULTS.kw, pue:DEFAULTS.pue, margin:DEFAULTS.margin, grid:null });
+      applyParams(ua); pin = snap(); put(keep);
+    }
+    return true;
+  }
+  function applyParams(u){
+    var n;
     if(u.get("m") === "B" || u.get("m") === "C") state.mode = u.get("m");
     PRESETS.forEach(function(p){ if(p.id === u.get("p")) state.preset = p.id; });
     if(u.get("pue")){ n = parseFloat(u.get("pue")); if(isFinite(n)) state.pue = Math.round(clamp(n, 1, 2.2) * 100) / 100; }
@@ -1534,7 +1723,6 @@
     var gc = parseFloat(u.get("gc")), gco = parseFloat(u.get("gco")), gn = (u.get("gn") || "").replace(/[^A-Za-z0-9 .\/-]/g, "").slice(0, 32);
     if(gn && isFinite(gc) && gc > 0 && gc < 100 && isFinite(gco) && gco >= 0 && gco < 2000)
       state.grid = { id:(u.get("g") || "").replace(/[^a-z0-9-]/g, "").slice(0, 24), name:gn, c:gc, co2:gco };
-    return true;
   }
 
   /* ---------- copy actions ---------- */
@@ -1651,6 +1839,14 @@
     $("handoff").addEventListener("click", function(e){ if(e.target.id === "clearGrid") change(function(){ state.grid = null; }); });
     $("copyLink").addEventListener("click", function(){ copy(location.href, "Link copied"); });
     $("copySummary").addEventListener("click", function(){ copy(summary(), "Sizing summary copied"); });
+    $("pinBtn").addEventListener("click", function(){
+      var had = !!pin, same = sameAsPin();
+      change(function(){ pin = snap(); });
+      toast(same ? "This is A already" : had ? "A is now this sizing" : "Pinned as A. Change anything to compare");
+    });
+    $("swapAB").addEventListener("click", function(){ change(function(){ var now = snap(); put(pin); pin = now; }); toast("Swapped A and B"); });
+    $("unpin").addEventListener("click", function(){ change(function(){ pin = null; }); $("pinBtn").focus(); });
+    $("copyCmp").addEventListener("click", function(){ copy(cmpText(), "Comparison copied"); });
     window.addEventListener("beforeprint", function(){ $("printUrl").textContent = "Reproduce this sizing: " + location.href; });
 
     var tlist = q("[role=tablist]");
