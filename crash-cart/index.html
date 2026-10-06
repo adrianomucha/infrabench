@@ -1181,42 +1181,73 @@
   }
 
   /* ---------- the wall ----------
-     One square per drive, grouped by what it needs (pull, schedule, watch, hold) and in
-     pull-list order inside each group. Squares the crew has pulled by the week being looked
-     at turn green; the week's own pulls are white. Past 3,000 drives a square stands for a
-     few. */
+     One rack per batch, oldest on the left, one bay per drive. A rack stands as tall as its
+     batch is large, and fills from the floor up in the order it needs work: pull, schedule,
+     watch, then hold, and in pull-list order inside each. Bays the crew has pulled by the
+     week being looked at turn green; the week's own pulls are white. Past 3,000 drives a bay
+     stands for a few. */
   var MAXCELLS = 3000;
   var wall = { cells:[], cats:[], from:null, to:null, t:1, raf:0, hoverRow:-1, hoverCat:null, geo:null, seq:[], unit:1 };
   function hexRgb(h){ h = h.replace("#",""); return [parseInt(h.substr(0,2),16), parseInt(h.substr(2,2),16), parseInt(h.substr(4,2),16)]; }
   var PAL = null;
   function palette(){
     if(!PAL) PAL = { week:hexRgb(cssVar("--r-week")), pull:hexRgb(cssVar("--r-pull")), sched:hexRgb(cssVar("--r-sched")),
-                     watch:hexRgb(cssVar("--r-watch")), hold:hexRgb(cssVar("--r-hold")), done:hexRgb(cssVar("--r-done")), bg:hexRgb(cssVar("--bg2")) };
+                     watch:hexRgb(cssVar("--r-watch")), hold:hexRgb(cssVar("--r-hold")), done:hexRgb(cssVar("--r-done")), bg:hexRgb(cssVar("--bg2")),
+                     cab:"#0B0E11", cabRgb:[11,14,17], frame:cssVar("--line2"), bay:"#161B20", tx2:cssVar("--tx2"), tx3:cssVar("--tx3") };
     return PAL;
   }
   function buildWall(r){
     // seq is the pull list followed by the drives on hold, so a row's index matches the table
     var seq = r.queue.concat(r.rows.filter(function(x){ return x.band === "hold"; }));
     var at = 0; seq.forEach(function(x){ x.listStart = at; at += x.n; });
-    var order = [];
-    ["pull","sched","watch","hold"].forEach(function(b){ seq.forEach(function(x, i){ if(x.band === b) order.push(i); }); });
-    var N = at, unit = Math.max(1, Math.ceil(N / MAXCELLS)), count = Math.ceil(N / unit);
-    var cells = new Array(count), oi = 0, start = 0;
-    for(var c = 0; c < count; c++){
-      var pos = c * unit;
-      while(oi < order.length - 1 && pos >= start + seq[order[oi]].n){ start += seq[order[oi]].n; oi++; }
-      var ri = order[oi], row = seq[ri], d = row.listStart + (pos - start);
-      cells[c] = { d:d, row:ri, band:row.band, wk: row.band === "hold" ? 0 : weekOf(d, r) };
-    }
-    return { seq:seq, cells:cells, unit:unit, N:N };
+    var N = at, unit = Math.max(1, Math.ceil(N / MAXCELLS));
+    // a batch is one model at one age; its flagged and clean drives share a rack
+    var byKey = {}, groups = [];
+    seq.forEach(function(x, i){
+      var key = x.md.id + "|" + x.age;
+      if(!byKey[key]){ byKey[key] = { md:x.md, age:x.age, rows:[], n:0 }; groups.push(byKey[key]); }
+      byKey[key].rows.push(i); byKey[key].n += x.n;
+    });
+    groups.sort(function(a, b){ return b.age - a.age || a.md.tb - b.md.tb; });
+    var SEV = { pull:0, sched:1, watch:2, hold:3 }, cells = [];
+    groups.forEach(function(g, gi){
+      g.rows.sort(function(a, b){ return SEV[seq[a].band] - SEV[seq[b].band] || a - b; });
+      g.start = cells.length; g.count = Math.ceil(g.n / unit);
+      var ri = 0, off = 0;
+      for(var k = 0; k < g.count; k++){
+        var pos = k * unit;
+        while(ri < g.rows.length - 1 && pos >= off + seq[g.rows[ri]].n){ off += seq[g.rows[ri]].n; ri++; }
+        var row = seq[g.rows[ri]], d = row.listStart + (pos - off);
+        cells.push({ d:d, row:g.rows[ri], band:row.band, wk: row.band === "hold" ? 0 : weekOf(d, r), g:gi });
+      }
+    });
+    return { seq:seq, cells:cells, unit:unit, N:N, groups:groups };
   }
   function catOf(c, v){ return c.band === "hold" ? "hold" : c.wk < v ? "done" : c.wk === v ? "week" : c.band; }
-  function layoutWall(count){
-    var cv = $("wall"), W = cv.parentNode.clientWidth || 600;
-    var Hmax = clamp(W * 0.48, 200, 340);
-    var pitch = clamp(Math.floor(Math.sqrt(W * Hmax / Math.max(count, 1))), 4, 26);
-    var cols = Math.max(1, Math.floor(W / pitch)), rows = Math.ceil(count / cols);
-    return { W:W, H:rows * pitch, pitch:pitch, cols:cols, rows:rows, gap:pitch >= 9 ? 2 : 1, count:count };
+  /* The bay size is the largest that lets the biggest batch fit the panel's height, with
+     every rack the same width; bays stand taller than they are wide, like drive sleds. */
+  function layoutWall(built){
+    var cv = $("wall"), W = cv.parentNode.clientWidth || 600, G = Math.max(1, built.groups.length);
+    var gap = clamp(Math.round(W * 0.03), 6, 22), pad = W < 500 ? 2 : 4, labH = 40, Hmax = clamp(W * 0.5, 280, 320);
+    var rackW = (W - (G - 1) * gap) / G, maxCount = 1, p, gx, rp, cols = 1, maxRows = 1;
+    built.groups.forEach(function(g){ maxCount = Math.max(maxCount, g.count); });
+    for(p = 11; p >= 2; p--){
+      gx = p >= 6 ? 2 : 1;
+      cols = Math.max(1, Math.floor((rackW - 2 * pad + gx) / p));
+      rp = Math.max(3, Math.round(p * 1.5));
+      maxRows = Math.ceil(maxCount / cols);
+      if(maxRows * rp <= Hmax) break;
+    }
+    p = Math.max(2, p); gx = p >= 6 ? 2 : 1; rp = Math.max(3, Math.round(p * 1.5));
+    var blockW = cols * p - gx, top = pad + 1, base = top + maxRows * rp - gx, racks = [], xs = [], ys = [];
+    built.groups.forEach(function(g, i){
+      var rows = Math.max(1, Math.ceil(g.count / cols)), sx = Math.round(i * (rackW + gap) + (rackW - blockW) / 2);
+      racks.push({ sx:sx, rows:rows, start:g.start, count:g.count, g:g,
+        fx:sx - pad, fy:base - rows * rp + gx - pad, fw:blockW + 2 * pad, fh:rows * rp - gx + 2 * pad, cx:i * (rackW + gap) + rackW / 2, w:rackW + gap - 4 });
+      for(var k = 0; k < g.count; k++){ xs.push(sx + (k % cols) * p); ys.push(base - (rp - gx) - Math.floor(k / cols) * rp); }
+    });
+    return { W:W, H:base + pad + labH, p:p, gx:gx, rp:rp, cw:p - gx, ch:rp - gx, cols:cols, base:base, racks:racks, xs:xs, ys:ys,
+             count:built.cells.length, sig:W + ":" + cols + ":" + p + ":" + built.groups.map(function(g){ return g.count; }).join(",") };
   }
   function sizeCanvas(geo){
     var cv = $("wall"), dpr = window.devicePixelRatio || 1;
@@ -1225,22 +1256,44 @@
     cv.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
   }
   function mix(a, b, t){ return [a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t, a[2] + (b[2]-a[2])*t]; }
+  var FONT = null;
+  function rackLabel(ctx, R, P){
+    if(!FONT) FONT = cssVar("--sans") || "sans-serif";
+    // the longest label that fits under the rack, so narrow phones still get a name
+    var g = R.g, age = g.age.toFixed(1), n = fmt(g.n);
+    var one = [g.md.brand + " " + g.md.tb + " TB", g.md.tb + " TB"], two = [age + " yrs · " + n, age + " yrs", age + "y"];
+    function pick(list){ for(var i = 0; i < list.length; i++) if(ctx.measureText(list[i]).width <= R.w) return list[i]; return list[list.length - 1]; }
+    ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+    ctx.font = "500 " + cssVar("--fs-caption") + " " + FONT; ctx.fillStyle = P.tx2;
+    ctx.fillText(pick(one), R.cx, R.fy + R.fh + 17);
+    ctx.font = "400 " + cssVar("--fs-micro") + " " + FONT; ctx.fillStyle = P.tx3;
+    ctx.fillText(pick(two), R.cx, R.fy + R.fh + 33);
+  }
   function drawWall(){
     var geo = wall.geo; if(!geo || !wall.to) return;
     var ctx = $("wall").getContext("2d"), P = palette(), k = wall.t, e = ease(k);
     ctx.clearRect(0, 0, geo.W, geo.H);
-    var s = geo.pitch - geo.gap, hr = wall.hoverRow, hc = wall.hoverCat, white = [255,255,255];
+    var hr = wall.hoverRow, hc = wall.hoverCat, white = [255,255,255];
+    // the cabinets, the empty bays at the top of each, and the batch under it
+    geo.racks.forEach(function(R){
+      ctx.fillStyle = P.cab; ctx.fillRect(R.fx, R.fy, R.fw, R.fh);
+      ctx.strokeStyle = P.frame; ctx.lineWidth = 1; ctx.strokeRect(R.fx + 0.5, R.fy + 0.5, R.fw - 1, R.fh - 1);
+      ctx.fillStyle = P.bay;
+      for(var j = R.count; j < R.rows * geo.cols; j++)
+        ctx.fillRect(R.sx + (j % geo.cols) * geo.p, geo.base - geo.ch - Math.floor(j / geo.cols) * geo.rp, geo.cw, geo.ch);
+      rackLabel(ctx, R, P);
+    });
     for(var c = 0; c < geo.count; c++){
       var to = wall.to[c], from = wall.from && k < 1 ? wall.from[c] : null, col = to;
       if(from){
         col = mix(from, to, e);
-        // a square that changed what it needs glints as it settles, so the eye finds it
+        // a bay that changed what it needs glints as it settles, so the eye finds it
         // (not mid-drag, when it would sparkle on every tick)
         if(wall.glint && (from[0] !== to[0] || from[1] !== to[1] || from[2] !== to[2])) col = mix(col, white, (1 - e) * 0.5);
       }
-      if((hr >= 0 && wall.cells[c].row !== hr) || (hc && wall.cats[c] !== hc)) col = mix(col, P.bg, 0.72);
+      if((hr >= 0 && wall.cells[c].row !== hr) || (hc && wall.cats[c] !== hc)) col = mix(col, P.cabRgb, 0.72);
       ctx.fillStyle = "rgb(" + (col[0]|0) + "," + (col[1]|0) + "," + (col[2]|0) + ")";
-      ctx.fillRect((c % geo.cols) * geo.pitch, Math.floor(c / geo.cols) * geo.pitch, s, s);
+      ctx.fillRect(geo.xs[c], geo.ys[c], geo.cw, geo.ch);
     }
   }
   function currentColors(){
@@ -1268,12 +1321,14 @@
     } else { wall.t = 1; drawWall(); }
   }
   function renderWall(r){
-    var built = buildWall(r), geo = layoutWall(built.cells.length);
-    var same = wall.geo && wall.geo.count === geo.count && wall.geo.cols === geo.cols && wall.geo.W === geo.W;
+    var built = buildWall(r), geo = layoutWall(built);
+    var same = wall.geo && wall.geo.sig === geo.sig;
     wall.cells = built.cells; wall.seq = built.seq; wall.unit = built.unit;
-    if(!same){ wall.geo = geo; sizeCanvas(geo); wall.to = null; }
+    // same bays, so the colours can move; but the batches under them may have aged
+    wall.geo = geo;
+    if(!same){ sizeCanvas(geo); wall.to = null; }
     paintWall(same ? 340 : 0);
-    $("wallMeta").textContent = fmt(r.totalDrives) + " " + plural(r.totalDrives, "drive") + (built.unit === 1 ? ", one square each" : ", about " + fmt(built.unit) + " to a square");
+    $("wallMeta").textContent = fmt(r.totalDrives) + " " + plural(r.totalDrives, "drive") + (built.unit === 1 ? ", one bay each" : ", about " + fmt(built.unit) + " to a bay") + ", a rack per batch";
   }
   function countsAt(r, v){
     var lo = doneBy(r, v - 1), hi = doneBy(r, v), c = { done:lo, week:hi - lo, pull:0, sched:0, watch:0, hold:0 }, before = 0;
@@ -1295,8 +1350,15 @@
   function wallAt(ev){
     var g = wall.geo; if(!g) return -1;
     var rect = $("wall").getBoundingClientRect(), x = ev.clientX - rect.left, y = ev.clientY - rect.top;
-    var col = Math.floor(x / g.pitch), row = Math.floor(y / g.pitch), c = row * g.cols + col;
-    return col >= 0 && col < g.cols && c >= 0 && c < g.count ? c : -1;
+    for(var i = 0; i < g.racks.length; i++){
+      var R = g.racks[i], cx = x - R.sx;
+      if(cx < -2 || cx > g.cols * g.p + 1) continue;
+      var col = clamp(Math.floor(cx / g.p), 0, g.cols - 1), row = Math.floor((g.base - y) / g.rp);
+      if(row < 0 || row >= R.rows) return -1;
+      var k = row * g.cols + col;
+      return k < R.count ? R.start + k : -1;
+    }
+    return -1;
   }
   function placeTip(tip, ev){
     var box = tip.parentNode.getBoundingClientRect(), x = ev.clientX - box.left, y = ev.clientY - box.top;
@@ -2010,6 +2072,8 @@
 
     if(anchor) selectTab(anchor);
     render(false);
+    // the rack labels are drawn in the page face, so draw them again once it has loaded
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(drawWall);
     cue(document.querySelector(".rail"), "more-below", true);
     cue(document.querySelector(".tscroll"), "more-end", false);
     document.querySelector("details.more").addEventListener("toggle", recue);
