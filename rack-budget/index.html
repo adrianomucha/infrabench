@@ -54,7 +54,7 @@
     --link-underline:rgba(168,176,184,.45);
     --fs-micro:12px; --fs-caption:13px; --fs-small:14px; --fs-ui:15px; --fs-body:16px; --fs-lead:18px;
     --fs-sub:20px; --fs-heading:22px; --fs-title:28px; --fs-kpi:30px; --fs-hero:48px;
-    --col-gap:80px; --gap:16px; --rail:296px; --pad:18px;
+    --col-gap:80px; --gutter:56px; --gap:16px; --rail:296px; --pad:18px;
     --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
     --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
@@ -279,9 +279,10 @@
   .cards > div{background:var(--bg2);padding:20px 22px}
   .cards h3{font-size:var(--fs-body);margin:0 0 8px}
   .cards p{margin:0;color:var(--tx2);font-size:var(--fs-ui);text-wrap:pretty}
-  .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin:40px 0 0;padding:0}
+  /* on the cards' column lines: no column gap, the gutter trails each figure instead */
+  .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 0;margin:40px 0 0;padding:0}
   @media(max-width:700px){.stats{grid-template-columns:minmax(0,1fr)}}
-  .stats div{margin:0}
+  .stats div{margin:0;padding-inline-end:var(--gutter)}
   .stats dd{margin:0;font-size:var(--fs-kpi);font-weight:500;letter-spacing:-.02em;line-height:1.1}
   .stats dd small{font-size:var(--fs-small);font-weight:400;color:var(--tx2);letter-spacing:0;margin-inline-start:.3em}
   .stats dt{order:2;margin-top:6px;font-size:var(--fs-small);color:var(--tx2)}
@@ -321,20 +322,39 @@
   .calls p{margin:0 0 16px;color:var(--tx2);max-width:50ch;text-wrap:pretty}
   .calls p b{color:var(--tx);font-weight:500}
 
-  /* about and footer, as on the other pages */
+  /* ---------- about and footer ----------
+     Both sit on the three-up grid of the cards and figures in the section above, so every
+     column starts on a card edge. The tracks have no gap of their own: each column carries
+     its gutter on its trailing side instead, which is what puts its leading edge on the line.
+     The about block reads suite, author, then the author's two actions; the footer reads
+     sources, the caveat on them, then the credit. */
   .sec{padding-block:96px;border-top:1px solid var(--line)}
   @media(max-width:700px){.sec{padding-block:64px}.ref{padding-block:56px 64px}}
-  .about .two p{color:var(--tx2);margin:12px 0 0;max-width:54ch;text-wrap:pretty}
-  .about .acts{display:flex;flex-wrap:wrap;align-items:center;gap:12px 28px;margin-top:24px}
+  .about .wrap,footer .wrap{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}
+  .about .me{grid-column:span 2;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+  .about .me > :not(.acts){grid-column:1}
+  .about .suite,.about .me > *,footer p{padding-inline-end:var(--gutter)}
+  .about p{color:var(--tx2);margin:12px 0 0;text-wrap:pretty}
+  .about p .lnk{white-space:nowrap}
+  .about .acts{grid-column:2;grid-row:2;display:flex;flex-wrap:wrap;align-items:center;gap:12px 28px;margin-top:12px}
   .about .btn{padding:12px 20px;font-size:var(--fs-ui)}
   .lnk{font-size:var(--fs-ui);font-weight:500;color:var(--tx);text-decoration:none;padding:12px 0}
   .lnk:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
   footer{padding:0 0 56px;font-size:var(--fs-small);color:var(--tx3)}
-  footer .wrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);column-gap:var(--col-gap);row-gap:14px;align-items:start}
+  footer .wrap{row-gap:14px}
   footer .wrap::before{content:"";grid-column:1 / -1;border-top:1px solid var(--line);margin-bottom:22px}
-  @media(max-width:900px){footer .wrap{grid-template-columns:minmax(0,1fr)}}
-  footer p{margin:0;max-width:58ch;text-wrap:pretty}
+  footer p{margin:0;text-wrap:pretty}
   footer .fine{color:var(--tx2)}
+  /* stacked, each block takes back its own measure */
+  @media(max-width:900px){
+    .about .wrap,.about .me,footer .wrap{grid-template-columns:minmax(0,1fr)}
+    .about .wrap{row-gap:48px}
+    .about .me,.about .acts{grid-column:auto;grid-row:auto}
+    .about .suite,.about .me > *,footer p{padding-inline-end:0}
+    .about p{max-width:54ch}
+    .about .acts{margin-top:24px}
+    footer p{max-width:58ch}
+  }
   footer a{color:var(--tx2);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em;text-decoration-color:var(--link-underline)}
   footer a:hover{color:var(--tx);text-decoration-color:currentColor}
 
@@ -698,12 +718,12 @@
 </div></section>
 
 <section class="sec about" aria-label="About">
-  <div class="wrap two">
-    <div>
+  <div class="wrap">
+    <div class="suite">
       <h2>Part of Infrabench</h2>
       <p>Free tools for the people who build data centers, on public data with every constant on the page. <a class="lnk" href="/">See all the tools</a></p>
     </div>
-    <div>
+    <div class="me">
       <h2>Built by Adrian Mucha</h2>
       <p>A product designer for the software most designers avoid: data center tools, AI tooling and operator consoles where a wrong click costs real money. Based in Los Angeles and open to new work.</p>
       <div class="acts">
@@ -718,7 +738,8 @@
 
 <footer>
   <div class="wrap">
-    <p class="fine">Rack power figures come from NVIDIA platform disclosures as reported by <a href="https://www.datacenterdynamics.com/en/analysis/nvidia-gtc-jensen-huang-data-center-rack-density/" target="_blank" rel="noopener">Data Center Dynamics</a>, <a href="https://www.siliconreport.com/nvidia-vera-rubin-everything-we-know-33727d4d" target="_blank" rel="noopener">Silicon Report</a> and <a href="https://www.techradar.com/pro/megawatt-class-ai-server-racks-may-well-become-the-norm-before-2030-as-nvidia-displays-600kw-kyber-rack-design" target="_blank" rel="noopener">TechRadar Pro</a>, and PUE bands from <a href="https://intelligence.uptimeinstitute.com/resource/mapping-pue-trends-data-center-region-age-and-size" target="_blank" rel="noopener">Uptime Institute</a> survey data. Figures are public as of July 2026 and change fast. Check them with your own engineer before spending money.</p>
+    <p class="fine">Rack power figures come from NVIDIA platform disclosures as reported by <a href="https://www.datacenterdynamics.com/en/analysis/nvidia-gtc-jensen-huang-data-center-rack-density/" target="_blank" rel="noopener">Data Center Dynamics</a>, <a href="https://www.siliconreport.com/nvidia-vera-rubin-everything-we-know-33727d4d" target="_blank" rel="noopener">Silicon Report</a> and <a href="https://www.techradar.com/pro/megawatt-class-ai-server-racks-may-well-become-the-norm-before-2030-as-nvidia-displays-600kw-kyber-rack-design" target="_blank" rel="noopener">TechRadar Pro</a>, and PUE bands from <a href="https://intelligence.uptimeinstitute.com/resource/mapping-pue-trends-data-center-region-age-and-size" target="_blank" rel="noopener">Uptime Institute</a> survey data.</p>
+    <p class="fine">Figures are public as of July 2026 and change fast. Check them with your own engineer before spending money.</p>
     <p class="meta">Rack Budget is part of <a href="/">Infrabench</a> by <a href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">Adrian Mucha</a> / FruitBat Design, Los&nbsp;Angeles &middot; MIT licensed &middot; <a href="https://github.com/adrianomucha/infrabench" target="_blank" rel="noopener">Source&nbsp;on&nbsp;GitHub</a></p>
   </div>
 </footer>
