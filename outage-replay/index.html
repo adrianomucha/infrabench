@@ -57,15 +57,15 @@
     --control-border:#2A3037; --control-border-hover:#7B838D;
     --link-underline:rgba(168,176,184,.45);
     --fs-micro:12px; --fs-caption:13px; --fs-small:14px; --fs-ui:15px; --fs-body:16px; --fs-lead:18px;
-    --fs-sub:20px; --fs-heading:22px; --fs-title:28px; --fs-kpi:30px; --fs-hero:40px;
+    --fs-sub:20px; --fs-heading:22px; --fs-title:28px; --fs-kpi:30px; --fs-hero:48px;
     --col-gap:80px; --gap:16px; --rail:296px; --pad:18px;
     --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
     --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
-  @media(max-width:700px){:root{--fs-lead:17px;--fs-kpi:26px;--fs-hero:34px;--pad:16px}}
+  @media(max-width:700px){:root{--fs-lead:17px;--fs-kpi:26px;--fs-hero:40px;--pad:16px}}
   @media(min-width:1680px){:root{--fs-micro:13px;--fs-caption:14px;--fs-small:15px;--fs-ui:16px;--fs-body:17px;--fs-lead:20px;
-    --fs-sub:23px;--fs-heading:26px;--fs-title:34px;--fs-kpi:36px;--fs-hero:48px;--col-gap:112px;--gap:20px;--rail:336px;--pad:22px}}
-  @media(min-width:2200px){:root{--fs-small:16px;--fs-body:18px;--fs-lead:21px;--fs-sub:24px;--fs-title:36px;--fs-kpi:40px;--fs-hero:52px;--col-gap:136px;--rail:360px}}
+    --fs-sub:23px;--fs-heading:26px;--fs-title:34px;--fs-kpi:36px;--fs-hero:56px;--col-gap:112px;--gap:20px;--rail:336px;--pad:22px}}
+  @media(min-width:2200px){:root{--fs-small:16px;--fs-body:18px;--fs-lead:21px;--fs-sub:24px;--fs-title:36px;--fs-kpi:40px;--fs-hero:60px;--col-gap:136px;--rail:360px}}
 
   *{box-sizing:border-box}
   [hidden]{display:none !important}
@@ -374,8 +374,12 @@
   .inc .nm{font-size:var(--fs-small);color:var(--tx);line-height:1.35}
   .inc .dt{grid-column:1;font-size:var(--fs-caption);color:var(--tx3);line-height:1.35}
   .inc .g{grid-row:1 / span 2;grid-column:2;align-self:center;font-size:var(--fs-small);font-weight:500;color:var(--tx2);white-space:nowrap}
-  .inc .gb{grid-column:1 / -1;height:3px;margin-top:6px;background:var(--line2)}
-  .inc .gb i{display:block;height:100%;background:var(--v-miss)}
+  .inc .gb{position:relative;grid-column:1 / -1;height:3px;margin-top:6px;background:var(--line2)}
+  .inc .gb i{display:block;height:100%;background:var(--tx3)}
+  .inc.on .gb i{background:var(--tx)}
+  /* your threshold, on the same scale as the dark window: a gap that passes the tick is one you beat */
+  .th{position:absolute;top:-3px;bottom:-3px;width:2px;margin-inline-start:-1px;background:var(--tx);box-shadow:0 0 0 1px var(--bg2)}
+  .pl td.dark.sorted .bar i{background:var(--tx3)}
   .inc:hover{border-color:var(--control-border-hover)}
   .inc.on{border-color:var(--tx);background:var(--bg3)}
   .inc:has(input:focus-visible){outline:2px solid var(--grn);outline-offset:2px}
@@ -455,7 +459,7 @@
   .pl .pick[aria-pressed="true"] .nm{color:var(--grn)}
   .pl tr.cur td{background:#12161A}
   .pl .vt{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;color:var(--tx2);font-size:var(--fs-caption)}
-  .pl td.dark .bar i{background:var(--v-miss)}
+  .pl td.dark .bar{position:relative}
   @container list (max-width:760px){
     .pl thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
     .pl tr.qr{position:relative;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:16px;row-gap:4px;
@@ -1023,7 +1027,7 @@
       return '<label class="inc" data-id="' + x.id + '"><input type="radio" name="inc" value="' + x.id + '">' +
         '<span class="nm">' + esc(x.name) + '</span><span class="dt">' + esc(x.when) + '</span>' +
         '<span class="g">' + dur(g) + '<span class="sr-only"> dark</span></span>' +
-        '<span class="gb" aria-hidden="true"><i style="width:' + pct(g / MAXGAP) + '"></i></span></label>';
+        '<span class="gb" aria-hidden="true"><i style="width:' + pct(g / MAXGAP) + '"></i><b class="th"></b></span></label>';
     }).join("");
   }
 
@@ -1235,10 +1239,15 @@
     $("queue").innerHTML = INCIDENTS.map(function(x){
       return '<tr class="qr" data-id="' + x.id + '"><td class="rk"></td>' +
         '<td class="who"><button class="pick" type="button" aria-pressed="false"><span class="nm">' + esc(x.name) + '</span><span class="ar">' + esc(x.when) + '</span></button></td>' +
-        '<td class="n dark"><span class="bar" aria-hidden="true"><i></i></span><span class="gv"></span></td>' +
+        '<td class="n dark"><span class="bar" aria-hidden="true"><i></i><b class="th"></b></span><span class="gv"></span></td>' +
         '<td class="n total"><span class="bar" aria-hidden="true"><i></i></span><span class="tv"></span></td>' +
         '<td class="you"><span class="vt"><span class="dot"></span><span class="yv"></span></span></td></tr>';
     }).join("");
+  }
+  // the threshold tick, on the dark-window scale in the rail and the table alike
+  function placeTicks(){
+    var on = state.thr <= MAXGAP, left = pct(Math.min(state.thr, MAXGAP) / MAXGAP);
+    document.querySelectorAll(".th").forEach(function(t){ t.hidden = !on; t.style.insetInlineStart = left; });
   }
   function renderList(r){
     var tb = $("queue"), first = {}, order = r.order.map(function(m){ return m.x.id; }).join();
@@ -1252,6 +1261,8 @@
       q(tr, ".pick").setAttribute("aria-pressed", cur ? "true" : "false");
       q(tr, ".gv").textContent = dur(m.gap);
       q(tr, ".dark .bar i").style.width = pct(m.gap / MAXGAP);
+      q(tr, ".dark").classList.toggle("sorted", state.srt === "gap");
+      q(tr, ".total").classList.toggle("sorted", state.srt === "len");
       q(tr, ".tv").textContent = dur(m.total);
       q(tr, ".total .bar i").style.width = pct(m.total / MAXTOTAL);
       q(tr, ".you .dot").className = "dot " + m.band;
@@ -1270,7 +1281,9 @@
     ["thGap","thLen"].forEach(function(id){ $(id).removeAttribute("aria-sort"); });
     if(state.srt !== "date") $(state.srt === "gap" ? "thGap" : "thLen").setAttribute("aria-sort", "descending");
     $("thYou").textContent = "At your " + state.thr + NB + "min";
-    $("listMeta").textContent = " · by " + (state.srt === "gap" ? "longest dark window" : state.srt === "len" ? "longest outage" : "most recent");
+    placeTicks();
+    $("listMeta").textContent = " · by " + (state.srt === "gap" ? "longest dark window" : state.srt === "len" ? "longest outage" : "most recent") +
+      (state.thr <= MAXGAP ? " · the tick is your " + state.thr + NB + "min" : "");
     document.querySelectorAll(".seg button").forEach(function(b){ b.setAttribute("aria-pressed", b.getAttribute("data-srt") === state.srt); });
   }
 
