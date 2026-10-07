@@ -430,8 +430,13 @@
   @media(max-width:700px){.sec{padding-block:64px}.ref{padding-block:56px 64px}}
   .about,footer{background:var(--bg2)}
   .about .wrap,footer .wrap{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}
-  .about .me{grid-column:span 2}
-  .about .suite,.about .me,footer p{padding-inline-end:var(--gutter)}
+  /* The author's block fills its two columns: the pitch is sized to their width, and the
+     row under it puts the status on the second column line and the actions on the third,
+     at the foot of the block, so it ends level with the tool list. */
+  .about .me{grid-column:span 2;align-self:stretch;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-template-rows:auto auto 1fr auto;container-type:inline-size}
+  .about .me > .eyebrow,.about .pitch{grid-column:1 / -1}
+  .about .suite,.about .me > *,footer p{padding-inline-end:var(--gutter)}
   /* the two labels take the wordmark's voice: mono, tracked, upper case */
   .about .eyebrow{display:flex;align-items:center;gap:10px;margin:0 0 20px;font-family:var(--mono);font-size:var(--fs-caption);
     font-weight:500;letter-spacing:.12em;line-height:20px;text-transform:uppercase;color:var(--tx2)}
@@ -447,11 +452,12 @@
   /* this tool keeps its brand green and says so in words; the others light up on hover */
   .tools a:hover .glyph,.tools a[aria-current] .glyph{color:var(--grn)}
   .tools a:hover .tl-end{color:var(--tx)}
-  .about .pitch{max-width:30em;font-size:var(--fs-title);font-weight:500;letter-spacing:-.025em;line-height:1.25;color:var(--tx);text-wrap:balance}
+  .about .pitch{margin-bottom:40px;font-size:clamp(var(--fs-title),5.2cqi,64px);font-weight:500;letter-spacing:-.025em;line-height:1.2;
+    color:var(--tx);text-wrap:balance}
   .about .pitch span{color:var(--tx2)}
-  .about .avail{display:flex;align-items:center;gap:10px;margin-top:32px;font-size:var(--fs-ui)}
+  .about .avail{grid-row:4;align-self:center;display:flex;align-items:center;gap:10px;font-size:var(--fs-ui)}
   .about .avail::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--grn)}
-  .about .acts{display:flex;flex-wrap:wrap;align-items:center;gap:12px 28px;margin-top:20px}
+  .about .acts{grid-row:4;grid-column:2;display:flex;flex-wrap:wrap;align-items:center;gap:12px 28px}
   .about .btn{padding:12px 20px;font-size:var(--fs-ui)}
   .lnk{font-size:var(--fs-ui);font-weight:500;color:var(--tx);text-decoration:none;padding:12px 0}
   .lnk:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
@@ -460,14 +466,25 @@
   footer .wrap::before{content:"";grid-column:1 / -1;border-top:1px solid var(--line);margin-bottom:22px}
   footer p{margin:0;text-wrap:pretty}
   footer .fine{color:var(--tx2)}
+  /* Narrower, the status and the actions would each wrap inside one column, and the tool
+     list grows taller than the pitch: they stack under the pitch instead, and the block
+     keeps its own height. */
+  @media(max-width:1300px){
+    .about .me{align-self:start;grid-template-rows:none}
+    .about .avail,.about .acts{grid-column:1 / -1;grid-row:auto}
+    .about .acts{margin-top:20px}
+  }
   /* stacked, the author comes first and each block takes back its own measure */
   @media(max-width:900px){
     .about .wrap,footer .wrap{grid-template-columns:minmax(0,1fr)}
     .about .wrap{row-gap:64px}
-    .about .me{grid-column:auto;grid-row:1}
-    .about .suite,.about .me,footer p{padding-inline-end:0}
+    .about .me{grid-column:auto;grid-row:1;grid-template-columns:minmax(0,1fr);grid-template-rows:none}
+    .about .avail,.about .acts{grid-column:auto;grid-row:auto}
+    .about .avail{margin-top:28px}
+    .about .acts{margin-top:20px}
+    .about .suite,.about .me > *,footer p{padding-inline-end:0}
     .about .suite{max-width:54ch}
-    .about .pitch{font-size:var(--fs-sub)}
+    .about .pitch{margin-bottom:0;font-size:clamp(var(--fs-sub),5cqi,var(--fs-title))}
     footer p{max-width:58ch}
   }
   footer a{color:var(--tx2);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em;text-decoration-color:var(--link-underline)}
