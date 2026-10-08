@@ -1,7 +1,9 @@
 # Deploying Infrabench
 
 Static site. No build step, no dependencies, no framework. Deploy the repo root
-as-is.
+as-is. The one moving part is the contact form's endpoint, `api/contact.js`, a Vercel
+function that Vercel picks up from the `api/` folder with no configuration; it needs one
+environment variable, below.
 
     /                       suite index
     /og.png                 suite social card
@@ -13,6 +15,8 @@ as-is.
     /where-the-power-is/og.png  tool social card
     /outage-replay/         Outage replay
     /assets/analytics.js    analytics opt-out hook, Vercel and Google
+    /assets/contact.js      the contact form, shared by every page
+    /api/contact            contact form endpoint (api/contact.js, a Vercel function)
 
 Outage replay has no card of its own yet, so its `og:image` points at the suite card
 at `/og.png`. Cut `/outage-replay/og.png` on the template the other three use and
@@ -77,6 +81,48 @@ project and redirect it to `/rack-budget`.
 - **GitHub Pages**: push the folder contents to a `gh-pages` branch. Note that a
   project page serves from a subpath, which breaks the root-relative links. Use a
   custom domain or a user/organisation page to avoid that.
+
+---
+
+## Contact form
+
+"Write to Adrian" in every page's sign-off opens a short form (name, email, message)
+that posts to `/api/contact`. The function emails the message through
+[Resend](https://resend.com) with the sender as the reply-to, so answering it is a plain
+reply. Adrian's address is never in the page.
+
+### Setting it up, about five minutes
+
+1. Open a free Resend account with **hello@adrianmucha.us**. Until a domain is verified,
+   Resend's onboarding sender only delivers to the address the account was opened with,
+   which is exactly where these messages should go.
+2. In Resend, **API Keys > Create**, with sending access. Copy the key.
+3. In the Vercel project, **Settings > Environment Variables**, add `RESEND_API_KEY` with
+   the key, for **Production** and **Preview**.
+4. Redeploy. Environment variables only reach deployments made after they are set.
+5. Send yourself a message from any page. If nothing arrives, the function's logs in
+   Vercel (**Deployments > the deployment > Functions**) explain why; every line starts
+   with `contact:`.
+
+Until the key is set the form still opens, and sending says "The form is not set up yet"
+rather than pretending to work.
+
+### Optional settings
+
+| Variable       | Default                                 | What it changes |
+|----------------|-----------------------------------------|-----------------|
+| `CONTACT_TO`   | `hello@adrianmucha.us`                  | Where messages go |
+| `CONTACT_FROM` | `Infrabench <onboarding@resend.dev>`    | The sender. To send from your own domain, verify `adrianmucha.us` in Resend (it gives you DNS records to add), then set this to an address on it, e.g. `Infrabench <contact@adrianmucha.us>` |
+
+### Spam
+
+No captcha. The function quietly drops anything that fills a hidden field people never
+see, or arrives less than three seconds after the form opened, while answering as if it
+were sent, so a bot learns nothing. It also caps every field's length and refuses
+requests from other sites (anything but infrabench.dev, Vercel previews and localhost).
+
+Only Vercel runs `api/`. On any other host from the alternatives above the form opens but
+cannot send.
 
 ---
 
@@ -173,6 +219,8 @@ Adding a page means adding every analytics tag in the same order, or it counts y
 6. Keep the analytics tags in the head, in order: `/assets/analytics.js` first and
    un-deferred, then the deferred insights tag, then the async gtag.js loader and
    its inline config.
+7. Keep `<script src="/assets/contact.js" defer></script>` before `</body>`; it is what
+   makes "Write to Adrian" open the form.
 
 ## Conventions worth preserving
 
