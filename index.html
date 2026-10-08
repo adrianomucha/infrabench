@@ -115,7 +115,7 @@
   @media(max-width:700px){.intro{padding-block:40px 64px;row-gap:36px}}
   h1{font-size:var(--fs-display);font-weight:500;line-height:1.02;letter-spacing:-.04em;margin:0;max-width:14ch;text-wrap:balance}
   /* ch is Archivo's 0, about a quarter wider than its average letter: 50ch is ~66 characters */
-  .lede{font-size:var(--fs-lead);color:var(--tx2);max-width:50ch;margin:28px 0 0;text-wrap:pretty}
+  .lede{font-size:var(--fs-lead);color:var(--tx2);margin:28px 0 0;text-wrap:pretty}
   @media(max-width:700px){.lede{margin-top:22px}}
 
   /* The hall. 30 MW at 120 kW a rack is 250 racks on paper. PUE 1.2 takes 42 of them
@@ -177,8 +177,8 @@
   .t-name .glyph{width:26px;height:26px}
   .t-q{font-size:var(--fs-sub);line-height:1.35;letter-spacing:-.015em;color:var(--tx);margin:22px 0 0}
   .t-q span{display:block;color:var(--tx2)}
-  .t-d{font-size:var(--fs-body);color:var(--tx2);margin:10px 0 0;max-width:46ch;text-wrap:pretty}
-  .t-src{font-size:var(--fs-caption);line-height:1.5;color:var(--tx3);margin:24px 0 0;max-width:46ch;text-wrap:pretty}
+  .t-d{font-size:var(--fs-body);color:var(--tx2);margin:10px 0 0;text-wrap:pretty}
+  .t-src{font-size:var(--fs-caption);line-height:1.5;color:var(--tx3);margin:24px 0 0;text-wrap:pretty}
   .go{grid-area:go;align-self:end;justify-self:start;display:inline-flex;align-items:baseline;gap:6px;padding-top:28px;
     font-size:var(--fs-ui);font-weight:500;color:var(--tx);text-decoration:none}
   /* the arrow is part of the link, so it takes the link's colour; green is not for actions */
@@ -238,7 +238,7 @@
   .so-half{grid-row:span 3;display:grid;grid-template-rows:subgrid}
   .so-label{margin:0 0 20px;font-family:var(--mono);font-size:var(--fs-caption);font-weight:500;letter-spacing:.12em;
     line-height:20px;text-transform:uppercase;color:var(--tx2)}
-  .so-line{margin:0;font-size:var(--fs-heading);font-weight:500;letter-spacing:-.02em;line-height:1.35;color:var(--tx);text-wrap:balance}
+  .so-line{margin:0;font-size:var(--fs-heading);font-weight:500;letter-spacing:-.02em;line-height:1.35;color:var(--tx);text-wrap:pretty}
   .so-line span{color:var(--tx2)}
   .so-rows{align-self:start;list-style:none;margin:32px 0 0;padding:0;border-bottom:1px solid var(--line)}
   .so-rows li > *{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:14px;padding:12px 0;
@@ -255,7 +255,7 @@
   footer{padding:0 0 56px;font-size:var(--fs-small);color:var(--tx3)}
   /* the rule sits inside the content edge, like the rules between the tool rows */
   footer .wrap::before{content:"";grid-column:1 / -1;border-top:1px solid var(--line);margin-bottom:22px}
-  footer p{margin:0;max-width:58ch;text-wrap:pretty}
+  footer p{margin:0;text-wrap:pretty}
   /* the disclaimer is three lines of reading, so it takes the body grey (Lc 75); the
      credit beside it stays on the caption grey (Lc 60) */
   footer .fine{color:var(--tx2)}
