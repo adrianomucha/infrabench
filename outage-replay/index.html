@@ -278,32 +278,39 @@
   /* ---------- under the hood ---------- */
   .ref{padding-block:72px 88px;border-top:1px solid var(--line)}
   .ref-hd{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 40px;border-bottom:1px solid var(--line);margin-bottom:40px}
-  .ref-hd h2{padding-bottom:14px}
+  .ref-hd h2{display:flex;align-items:center;gap:12px;padding-bottom:14px}
+  .ref-hd h2 .glyph{width:20px;height:20px}
   .tabs{display:flex;gap:28px;overflow-x:auto;scrollbar-width:none}
   .tabs button{background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:12px 0;font:inherit;font-size:var(--fs-ui);color:var(--tx2);cursor:pointer;white-space:nowrap}
   .tabs button:hover{color:var(--tx)}
-  .tabs button[aria-selected="true"]{color:var(--tx);border-bottom-color:var(--tx)}
+  .tabs button[aria-selected="true"]{color:var(--tx);border-bottom-color:var(--grn)}
   .tabs button:focus-visible{outline-offset:-2px}
   [role=tabpanel]:focus-visible{outline-offset:8px}
   .two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);column-gap:var(--col-gap);row-gap:48px}
   @media(max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
-  .lead{margin:0 0 28px;color:var(--tx2);max-width:50ch;text-wrap:pretty}
+  .lead{margin:0 0 28px;font-size:var(--fs-lead);line-height:1.5;color:var(--tx2);max-width:50ch;text-wrap:pretty}
+  .lead span{color:var(--tx)}
   .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
   @media(max-width:900px){.cards{grid-template-columns:minmax(0,1fr)}}
+  .cards{counter-reset:card}
   .cards > div{background:var(--bg2);padding:20px 22px}
+  .cards > div::before{counter-increment:card;content:counter(card, decimal-leading-zero);display:block;margin-bottom:14px;font-family:var(--mono);font-size:var(--fs-caption);letter-spacing:.08em;color:var(--grn)}
   .cards h3{font-size:var(--fs-body);margin:0 0 8px}
   .cards p{margin:0;color:var(--tx2);font-size:var(--fs-ui);text-wrap:pretty}
-  /* on the cards' column lines: no column gap, the gutter trails each figure instead */
+  /* on the cards' columns, each figure inset like the card text above it (the cards' 1px
+     border and 22px padding), so it sits under its card's number; no column gap, the
+     gutter trails each figure instead */
   .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 0;margin:40px 0 0;padding:0}
   @media(max-width:700px){.stats{grid-template-columns:minmax(0,1fr)}}
-  .stats div{margin:0;padding-inline-end:var(--gutter)}
+  .stats div{margin:0;padding-inline:23px var(--gutter)}
   .stats dd{margin:0;font-size:var(--fs-kpi);font-weight:500;letter-spacing:-.02em;line-height:1.1}
   .stats dd small{font-size:var(--fs-small);font-weight:400;color:var(--tx2);letter-spacing:0;margin-inline-start:.3em}
   .stats dt{order:2;margin-top:6px;font-size:var(--fs-small);color:var(--tx2)}
   .stats div{display:flex;flex-direction:column}
+  .stats div::before{content:"";order:-1;width:24px;height:2px;margin-bottom:14px;background:var(--grn)}
   .steps{margin:0;padding:0;list-style:none;counter-reset:s}
   .steps li{counter-increment:s;display:grid;grid-template-columns:2em minmax(0,1fr);padding:0 0 22px}
-  .steps li::before{content:counter(s);font-family:var(--mono);color:var(--tx3);font-size:var(--fs-small);padding-top:2px}
+  .steps li::before{content:counter(s, decimal-leading-zero);font-family:var(--mono);color:var(--grn);font-size:var(--fs-small);padding-top:2px}
   .steps h3{font-size:var(--fs-body);margin-bottom:4px}
   .steps p{margin:0;color:var(--tx2);font-size:var(--fs-ui);max-width:46ch;text-wrap:pretty}
   .steps b{color:var(--tx);font-weight:500}
@@ -682,7 +689,7 @@
 <!-- ================= UNDER THE HOOD ================= -->
 <section class="ref" id="ref" aria-labelledby="refH"><div class="wrap">
   <div class="ref-hd">
-    <h2 id="refH">Under the hood</h2>
+    <h2 id="refH"><svg class="glyph" aria-hidden="true"><use href="#g-outage-replay"/></svg>Under the hood</h2>
     <div class="tabs" role="tablist" aria-labelledby="refH">
       <button type="button" role="tab" id="t-why" aria-controls="why" aria-selected="true">Why</button>
       <button type="button" role="tab" id="t-how" aria-controls="how" aria-selected="false" tabindex="-1">How it works</button>
@@ -692,7 +699,7 @@
   </div>
 
   <div role="tabpanel" id="why" aria-labelledby="t-why" tabindex="0">
-    <p class="lead">A status page is a press release with a clock on it. It fails the way any published spec does: optimistically.</p>
+    <p class="lead"><span>A status page is a press release with a clock on it.</span> It fails the way any published spec does: optimistically.</p>
     <div class="cards">
       <div><h3>It is written, not measured</h3><p>Nothing on a status page is emitted by the failing system. A person decides the blast radius is now large enough to admit to, writes a sentence and gets it approved. That pipeline has a floor of several minutes on its best day.</p></div>
       <div><h3>It often shares fate with the outage</h3><p>In December 2021 AWS posted that the incident was “affecting some of our monitoring and incident response tooling, which is delaying our ability to provide updates.” The instrument was downstream of the thing it measured. That is not rare.</p></div>
@@ -706,7 +713,7 @@
   </div>
 
   <div role="tabpanel" id="how" aria-labelledby="t-how" tabindex="0" hidden>
-    <p class="lead">Two clocks and one subtraction. The example follows whichever incident you are replaying.</p>
+    <p class="lead"><span>Two clocks and one subtraction.</span> The example follows whichever incident you are replaying.</p>
     <div class="two">
       <ol class="steps">
         <li><div><h3>The first clock: when customers started failing</h3><p>Taken from the provider’s own retrospective, written afterwards with internal telemetry. It is the earliest honest number anyone publishes, and nobody outside could have known it on the day.</p></div></li>
@@ -724,7 +731,7 @@
   </div>
 
   <div role="tabpanel" id="incidents" aria-labelledby="t-incidents" tabindex="0" hidden>
-    <p class="lead">Each has a published retrospective that states when impact began, the number nobody can reconstruct from outside. Incidents where that timestamp was never published are not here, however famous.</p>
+    <p class="lead"><span>Each has a published retrospective that states when impact began, the number nobody can reconstruct from outside.</span> Incidents where that timestamp was never published are not here, however famous.</p>
     <div class="tscroll" tabindex="0" role="region" aria-label="Incident table, scrolls sideways on narrow screens">
       <table class="ref-t">
         <caption class="sr-only">Every incident replayed by this tool, with its detection gap, total impact and source</caption>
@@ -735,7 +742,7 @@
   </div>
 
   <div role="tabpanel" id="method" aria-labelledby="t-method" tabindex="0" hidden>
-    <p class="lead">Every timestamp, and where it came from. The model is five lines.</p>
+    <p class="lead"><span>Every timestamp, and where it came from.</span> The model is five lines.</p>
     <div class="two">
       <dl class="eq">
         <div><dt>Gap</dt><dd>first public status post − first customer impact</dd></div>
