@@ -170,6 +170,6 @@ MIT. See [LICENSE](LICENSE).
 
 ---
 
-Built by [Adrian Mucha](https://portfolio-repo-gilt.vercel.app), a product designer
+Built by [Adrian Mucha](https://adrianmucha.us), a product designer
 working on the software most designers avoid: data centers, AI tooling, and operator
 consoles where a wrong click costs real money.
