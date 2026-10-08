@@ -359,19 +359,23 @@
   /* ---------- under the hood ---------- */
   .ref{padding-block:72px 88px;border-top:1px solid var(--line)}
   .ref-hd{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 40px;border-bottom:1px solid var(--line);margin-bottom:40px}
-  .ref-hd h2{padding-bottom:14px}
+  .ref-hd h2{display:flex;align-items:center;gap:12px;padding-bottom:14px}
+  .ref-hd h2 .glyph{width:20px;height:20px}
   .tabs{display:flex;gap:28px;overflow-x:auto;scrollbar-width:none}
   .tabs button{background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:12px 0;font:inherit;font-size:var(--fs-ui);color:var(--tx2);cursor:pointer;white-space:nowrap}
   .tabs button:hover{color:var(--tx)}
-  .tabs button[aria-selected="true"]{color:var(--tx);border-bottom-color:var(--tx)}
+  .tabs button[aria-selected="true"]{color:var(--tx);border-bottom-color:var(--grn)}
   .tabs button:focus-visible{outline-offset:-2px}
   [role=tabpanel]:focus-visible{outline-offset:8px}
   .two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);column-gap:var(--col-gap);row-gap:48px}
   @media(max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
-  .lead{margin:0 0 28px;color:var(--tx2);max-width:50ch;text-wrap:pretty}
+  .lead{margin:0 0 28px;font-size:var(--fs-lead);line-height:1.5;color:var(--tx2);max-width:50ch;text-wrap:pretty}
+  .lead span{color:var(--tx)}
   .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
   @media(max-width:900px){.cards{grid-template-columns:minmax(0,1fr)}}
+  .cards{counter-reset:card}
   .cards > div{background:var(--bg2);padding:20px 22px}
+  .cards > div::before{counter-increment:card;content:counter(card, decimal-leading-zero);display:block;margin-bottom:14px;font-family:var(--mono);font-size:var(--fs-caption);letter-spacing:.08em;color:var(--grn)}
   .cards h3{font-size:var(--fs-body);margin:0 0 8px}
   .cards p{margin:0;color:var(--tx2);font-size:var(--fs-ui);text-wrap:pretty}
   /* on the cards' column lines: no column gap, the gutter trails each figure instead */
@@ -382,9 +386,10 @@
   .stats dd small{font-size:var(--fs-small);font-weight:400;color:var(--tx2);letter-spacing:0;margin-inline-start:.3em}
   .stats dt{order:2;margin-top:6px;font-size:var(--fs-small);color:var(--tx2)}
   .stats div{display:flex;flex-direction:column}
+  .stats div::before{content:"";order:-1;width:24px;height:2px;margin-bottom:14px;background:var(--grn)}
   .steps{margin:0;padding:0;list-style:none;counter-reset:s}
   .steps li{counter-increment:s;display:grid;grid-template-columns:2em minmax(0,1fr);padding:0 0 22px}
-  .steps li::before{content:counter(s);font-family:var(--mono);color:var(--tx3);font-size:var(--fs-small);padding-top:2px}
+  .steps li::before{content:counter(s, decimal-leading-zero);font-family:var(--mono);color:var(--grn);font-size:var(--fs-small);padding-top:2px}
   .steps h3{font-size:var(--fs-body);margin-bottom:4px}
   .steps p{margin:0;color:var(--tx2);font-size:var(--fs-ui);max-width:46ch;text-wrap:pretty}
   .steps b{color:var(--tx);font-weight:500}
@@ -648,7 +653,7 @@
 <!-- ================= UNDER THE HOOD ================= -->
 <section class="ref" id="ref" aria-labelledby="refH"><div class="wrap">
   <div class="ref-hd">
-    <h2 id="refH">Under the hood</h2>
+    <h2 id="refH"><svg class="glyph" aria-hidden="true"><use href="#g-power-map"/></svg>Under the hood</h2>
     <div class="tabs" role="tablist" aria-labelledby="refH">
       <button type="button" role="tab" id="t-why" aria-controls="why" aria-selected="true">Why</button>
       <button type="button" role="tab" id="t-how" aria-controls="how" aria-selected="false" tabindex="-1">How it works</button>
@@ -658,7 +663,7 @@
   </div>
 
   <div role="tabpanel" id="why" aria-labelledby="t-why" tabindex="0">
-    <p class="lead">Ten years ago you picked land and ordered power. Now you pick power and the land follows, because the grid, not the building, is the long pole on every schedule.</p>
+    <p class="lead"><span>Ten years ago you picked land and ordered power.</span> Now you pick power and the land follows, because the grid, not the building, is the long pole on every schedule.</p>
     <div class="cards">
       <div><h3>The queue is not a pipeline</h3><p>Over 2,000 gigawatts sit in US interconnection queues, more than the entire installed grid, and historically only about one queued megawatt in eight reaches commercial operation. A queue position is a lottery ticket, not a delivery date.</p></div>
       <div><h3>Time to power beat price per kilowatt</h3><p>PJM’s capacity price rose ninefold in one auction and hit the regulatory cap in the next, with data center load named as the reason. Expensive power hurts; power that arrives three years late kills the project. The date is the number to shop.</p></div>
@@ -672,7 +677,7 @@
   </div>
 
   <div role="tabpanel" id="how" aria-labelledby="t-how" tabindex="0" hidden>
-    <p class="lead">Each region is carried through the same four steps. The example follows whatever is at the top of your ranking.</p>
+    <p class="lead"><span>Each region is carried through the same four steps.</span> The example follows whatever is at the top of your ranking.</p>
     <div class="two">
       <ol class="steps">
         <li><div><h3>Start from what each region admits to</h3><p>Every region has a band of years between a large-load request and energization, assembled from utility filings, regulator dockets and trade press. ERCOT connects loads in <b>2 to 4 years</b>; a constrained coastal market can take <b>6 to 8</b>.</p></div></li>
@@ -690,7 +695,7 @@
   </div>
 
   <div role="tabpanel" id="regions" aria-labelledby="t-regions" tabindex="0" hidden>
-    <p class="lead">The lead-time bands the screener starts from, with the queue depth, grid carbon and industrial power price behind each. The bands are the model’s biggest judgement call, so they are printed here in full.</p>
+    <p class="lead"><span>The lead-time bands the screener starts from, with the queue depth, grid carbon and industrial power price behind each.</span> The bands are the model’s biggest judgement call, so they are printed here in full.</p>
     <div class="tscroll" tabindex="0" role="region" aria-label="Region table, scrolls sideways on narrow screens">
       <table class="ref-t">
         <caption class="sr-only">The ten regions the screener ranks, with large-load lead-time bands, active interconnection queue capacity, average grid carbon intensity, industrial electricity price, and whether on-site bridging is practical</caption>
@@ -701,7 +706,7 @@
   </div>
 
   <div role="tabpanel" id="method" aria-labelledby="t-method" tabindex="0" hidden>
-    <p class="lead">This is the whole model. If you disagree with a constant, you know exactly which one to argue with, and the two that matter most are in Assumptions.</p>
+    <p class="lead"><span>This is the whole model.</span> If you disagree with a constant, you know exactly which one to argue with, and the two that matter most are in Assumptions.</p>
     <div class="two">
       <dl class="eq">
         <div><dt>Lead band</dt><dd>per region, published years from large-load request to energization</dd></div>

@@ -264,19 +264,23 @@
   /* ---------- under the hood ---------- */
   .ref{padding-block:72px 88px;border-top:1px solid var(--line)}
   .ref-hd{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 40px;border-bottom:1px solid var(--line);margin-bottom:40px}
-  .ref-hd h2{padding-bottom:14px}
+  .ref-hd h2{display:flex;align-items:center;gap:12px;padding-bottom:14px}
+  .ref-hd h2 .glyph{width:20px;height:20px}
   .tabs{display:flex;gap:28px;overflow-x:auto;scrollbar-width:none}
   .tabs button{background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:12px 0;font:inherit;font-size:var(--fs-ui);color:var(--tx2);cursor:pointer;white-space:nowrap}
   .tabs button:hover{color:var(--tx)}
-  .tabs button[aria-selected="true"]{color:var(--tx);border-bottom-color:var(--tx)}
+  .tabs button[aria-selected="true"]{color:var(--tx);border-bottom-color:var(--grn)}
   .tabs button:focus-visible{outline-offset:-2px}
   [role=tabpanel]:focus-visible{outline-offset:8px}
   .two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);column-gap:var(--col-gap);row-gap:48px}
   @media(max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
-  .lead{margin:0 0 28px;color:var(--tx2);max-width:50ch;text-wrap:pretty}
+  .lead{margin:0 0 28px;font-size:var(--fs-lead);line-height:1.5;color:var(--tx2);max-width:50ch;text-wrap:pretty}
+  .lead span{color:var(--tx)}
   .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
   @media(max-width:900px){.cards{grid-template-columns:minmax(0,1fr)}}
+  .cards{counter-reset:card}
   .cards > div{background:var(--bg2);padding:20px 22px}
+  .cards > div::before{counter-increment:card;content:counter(card, decimal-leading-zero);display:block;margin-bottom:14px;font-family:var(--mono);font-size:var(--fs-caption);letter-spacing:.08em;color:var(--grn)}
   .cards h3{font-size:var(--fs-body);margin:0 0 8px}
   .cards p{margin:0;color:var(--tx2);font-size:var(--fs-ui);text-wrap:pretty}
   /* on the cards' column lines: no column gap, the gutter trails each figure instead */
@@ -287,9 +291,10 @@
   .stats dd small{font-size:var(--fs-small);font-weight:400;color:var(--tx2);letter-spacing:0;margin-inline-start:.3em}
   .stats dt{order:2;margin-top:6px;font-size:var(--fs-small);color:var(--tx2)}
   .stats div{display:flex;flex-direction:column}
+  .stats div::before{content:"";order:-1;width:24px;height:2px;margin-bottom:14px;background:var(--grn)}
   .steps{margin:0;padding:0;list-style:none;counter-reset:s}
   .steps li{counter-increment:s;display:grid;grid-template-columns:2em minmax(0,1fr);padding:0 0 22px}
-  .steps li::before{content:counter(s);font-family:var(--mono);color:var(--tx3);font-size:var(--fs-small);padding-top:2px}
+  .steps li::before{content:counter(s, decimal-leading-zero);font-family:var(--mono);color:var(--grn);font-size:var(--fs-small);padding-top:2px}
   .steps h3{font-size:var(--fs-body);margin-bottom:4px}
   .steps p{margin:0;color:var(--tx2);font-size:var(--fs-ui);max-width:46ch;text-wrap:pretty}
   .steps b{color:var(--tx);font-weight:500}
@@ -657,7 +662,7 @@
 <!-- ================= UNDER THE HOOD ================= -->
 <section class="ref" id="ref" aria-labelledby="refH"><div class="wrap">
   <div class="ref-hd">
-    <h2 id="refH">Under the hood</h2>
+    <h2 id="refH"><svg class="glyph" aria-hidden="true"><use href="#g-rack-budget"/></svg>Under the hood</h2>
     <div class="tabs" role="tablist" aria-labelledby="refH">
       <button type="button" role="tab" id="t-why" aria-controls="why" aria-selected="true">Why</button>
       <button type="button" role="tab" id="t-how" aria-controls="how" aria-selected="false" tabindex="-1">How it works</button>
@@ -667,7 +672,7 @@
   </div>
 
   <div role="tabpanel" id="why" aria-labelledby="t-why" tabindex="0">
-    <p class="lead">Capacity used to be a floor-area question. It is now power first, heat second and floor last, and most planning conversations still run in the old order.</p>
+    <p class="lead"><span>Capacity used to be a floor-area question.</span> It is now power first, heat second and floor last, and most planning conversations still run in the old order.</p>
     <div class="cards">
       <div><h3>Density broke the rule of thumb</h3><p>A hall planned at 10 kW a rack and one planned at 130 kW are different buildings. Any estimate carried over from the old number is off by ten times.</p></div>
       <div><h3>Power became the unit of account</h3><p>Nobody buys square feet any more, they buy megawatts, and PUE plus held-back capacity eat the difference before a single GPU turns on.</p></div>
@@ -681,7 +686,7 @@
   </div>
 
   <div role="tabpanel" id="how" aria-labelledby="t-how" tabindex="0" hidden>
-    <p class="lead">Four inputs, in the order they actually get decided. The example follows whatever you have set above.</p>
+    <p class="lead"><span>Four inputs, in the order they actually get decided.</span> The example follows whatever you have set above.</p>
     <div class="two">
       <ol class="steps">
         <li><div><h3>Which end do you know?</h3><p><b>The power</b> is the siting conversation: a fixed service, and you need to know what it holds. <b>The fleet</b> is procurement: the racks are decided, and you need the megawatts before you promise a date.</p></div></li>
@@ -699,7 +704,7 @@
   </div>
 
   <div role="tabpanel" id="archetypes" aria-labelledby="t-archetypes" tabindex="0" hidden>
-    <p class="lead">Published figures for the systems halls are being planned around. Air-cooled numbers are practical ceilings, not hard limits.</p>
+    <p class="lead"><span>Published figures for the systems halls are being planned around.</span> Air-cooled numbers are practical ceilings, not hard limits.</p>
     <div class="tscroll" tabindex="0" role="region" aria-label="Rack profiles, scrolls sideways on narrow screens">
       <table class="ref-t">
         <caption class="sr-only">Every rack profile this tool sizes, with its power, GPU count, cooling and notes</caption>
@@ -710,7 +715,7 @@
   </div>
 
   <div role="tabpanel" id="method" aria-labelledby="t-method" tabindex="0" hidden>
-    <p class="lead">A sizing tool that hides its assumptions is a sales tool. Here is the whole model, so you know exactly which constant to argue with.</p>
+    <p class="lead"><span>A sizing tool that hides its assumptions is a sales tool.</span> Here is the whole model, so you know exactly which constant to argue with.</p>
     <div class="two">
       <dl class="eq">
         <div><dt>IT capacity</dt><dd>facility MW / PUE</dd></div>

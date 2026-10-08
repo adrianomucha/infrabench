@@ -360,19 +360,21 @@
   /* ---------- under the hood: one tab at a time ---------- */
   .ref{padding-block:72px 88px;border-top:1px solid var(--line)}
   .ref-hd{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 40px;border-bottom:1px solid var(--line);margin-bottom:40px}
-  .ref-hd h2{padding-bottom:14px}
+  .ref-hd h2{display:flex;align-items:center;gap:12px;padding-bottom:14px}
+  .ref-hd h2 .glyph{width:20px;height:20px}
   .tabs{display:flex;gap:28px;overflow-x:auto;scrollbar-width:none}
   .tabs button{background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:12px 0;font:inherit;font-size:var(--fs-ui);color:var(--tx2);cursor:pointer;white-space:nowrap}
   .tabs button:hover{color:var(--tx)}
-  .tabs button[aria-selected="true"]{color:var(--tx);border-bottom-color:var(--tx)}
+  .tabs button[aria-selected="true"]{color:var(--tx);border-bottom-color:var(--grn)}
   .tabs button:focus-visible{outline-offset:-2px}
   [role=tabpanel]:focus-visible{outline-offset:8px}
   .two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);column-gap:var(--col-gap);row-gap:48px}
   @media(max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
-  .lead{margin:0 0 28px;color:var(--tx2);max-width:50ch;text-wrap:pretty}
+  .lead{margin:0 0 28px;font-size:var(--fs-lead);line-height:1.5;color:var(--tx2);max-width:50ch;text-wrap:pretty}
+  .lead span{color:var(--tx)}
   .steps{margin:0;padding:0;list-style:none;counter-reset:s}
   .steps li{counter-increment:s;display:grid;grid-template-columns:2em minmax(0,1fr);padding:0 0 22px}
-  .steps li::before{content:counter(s);font-family:var(--mono);color:var(--tx3);font-size:var(--fs-small);padding-top:2px}
+  .steps li::before{content:counter(s, decimal-leading-zero);font-family:var(--mono);color:var(--grn);font-size:var(--fs-small);padding-top:2px}
   .steps h3{font-size:var(--fs-body);margin-bottom:4px}
   .steps p{margin:0;color:var(--tx2);font-size:var(--fs-ui);max-width:46ch;text-wrap:pretty}
   .ex{margin:0;align-self:start;background:var(--bg2);border:1px solid var(--line);padding:22px 26px}
@@ -667,7 +669,7 @@
 <!-- ================= UNDER THE HOOD ================= -->
 <section class="ref" id="ref" aria-labelledby="refH"><div class="wrap">
   <div class="ref-hd">
-    <h2 id="refH">Under the hood</h2>
+    <h2 id="refH"><svg class="glyph" aria-hidden="true"><use href="#g-crash-cart"/></svg>Under the hood</h2>
     <div class="tabs" role="tablist" aria-labelledby="refH">
       <button type="button" role="tab" id="t-how" aria-controls="how" aria-selected="true">How it works</button>
       <button type="button" role="tab" id="t-data" aria-controls="data" aria-selected="false" tabindex="-1">Drive data</button>
@@ -676,7 +678,7 @@
   </div>
 
   <div role="tabpanel" id="how" aria-labelledby="t-how" tabindex="0">
-    <p class="lead">Each row of the pull list is one batch of drives carried through the same four steps. The example follows whatever is at the top of your list.</p>
+    <p class="lead"><span>Each row of the pull list is one batch of drives carried through the same four steps.</span> The example follows whatever is at the top of your list.</p>
     <div class="two">
       <ol class="steps">
         <li><div><h3>Start from the published rate</h3><p>Every model begins at its lifetime failure rate from Backblaze Drive Stats, with the drive days behind it, so a thin record shows as a wide interval rather than false certainty.</p></div></li>
@@ -703,7 +705,7 @@
   </div>
 
   <div role="tabpanel" id="data" aria-labelledby="t-data" tabindex="0" hidden>
-    <p class="lead" id="refSum">Every model the tool can queue, with its published lifetime failure rate, the 95 percent interval on it, and the record behind it.</p>
+    <p class="lead" id="refSum"><span>Every model the tool can queue,</span> with its published lifetime failure rate, the 95 percent interval on it, and the record behind it.</p>
     <div class="tscroll" tabindex="0" role="region" aria-label="Drive models, scrolls sideways on narrow screens">
       <table class="ref-t">
         <caption class="sr-only">Drive models with published lifetime annualized failure rates, 95 percent intervals and drive days observed, from Backblaze Drive Stats</caption>
@@ -715,7 +717,7 @@
   </div>
 
   <div role="tabpanel" id="method" aria-labelledby="t-method" tabindex="0" hidden>
-    <p class="lead">This is the whole model. If you disagree with a constant, you know exactly which one to argue with.</p>
+    <p class="lead"><span>This is the whole model.</span> If you disagree with a constant, you know exactly which one to argue with.</p>
     <div class="two">
       <dl class="eq">
         <div><dt>Annual rate</dt><dd>lifetime rate &times; age multiplier &times; evidence ratio</dd></div>
