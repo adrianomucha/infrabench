@@ -334,7 +334,7 @@
   .calc .c span{font-size:var(--fs-micro);color:var(--tx3)}
   .calc .c.out{border-color:var(--tx3)}
   .calc .op{color:var(--tx3);font-family:var(--mono);font-size:var(--fs-small);padding:0 2px}
-  .qd .note{margin:10px 0 0;color:var(--tx3);font-size:var(--fs-caption);max-width:54ch;text-wrap:pretty}
+  .qd .note{margin:10px 0 0;color:var(--tx3);font-size:var(--fs-caption);text-wrap:pretty}
 
   /* below about 840px of its own width the table's five columns squeeze the names; the
      rows stack instead, wherever the panel happens to be that narrow */
@@ -369,17 +369,17 @@
   .tabs button:focus-visible{outline-offset:-2px}
   [role=tabpanel]:focus-visible{outline-offset:8px}
   .two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);column-gap:var(--col-gap);row-gap:48px}
-  @media(max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
-  .lead{margin:0 0 28px;font-size:var(--fs-lead);line-height:1.5;color:var(--tx2);max-width:50ch;text-wrap:pretty}
+  @media(max-width:900px){.two{grid-template-columns:minmax(0,1fr)}.lead{max-width:none}}
+  .lead{margin:0 0 28px;font-size:var(--fs-lead);line-height:1.5;color:var(--tx2);max-width:calc((100% - var(--col-gap)) * 5 / 11);text-wrap:pretty}
   .lead span{color:var(--tx)}
   .steps{margin:0;padding:0;list-style:none;counter-reset:s}
   .steps li{counter-increment:s;display:grid;grid-template-columns:2em minmax(0,1fr);padding:0 0 22px}
   .steps li::before{content:counter(s, decimal-leading-zero);font-family:var(--mono);color:var(--grn);font-size:var(--fs-small);padding-top:2px}
   .steps h3{font-size:var(--fs-body);margin-bottom:4px}
-  .steps p{margin:0;color:var(--tx2);font-size:var(--fs-ui);max-width:46ch;text-wrap:pretty}
+  .steps p{margin:0;color:var(--tx2);font-size:var(--fs-ui);text-wrap:pretty}
   .ex{margin:0;align-self:start;background:var(--bg2);border:1px solid var(--line);padding:22px 26px}
   .ex figcaption{font-size:var(--fs-caption);color:var(--tx3);margin:0 0 12px}
-  .ex .q{font-size:var(--fs-body);color:var(--tx);margin:0 0 12px;text-wrap:balance}
+  .ex .q{font-size:var(--fs-body);color:var(--tx);margin:0 0 12px;text-wrap:pretty}
   .chain{margin:0;padding:0;list-style:none;font-size:var(--fs-small);line-height:1.55;color:var(--tx2)}
   .chain li{display:grid;grid-template-columns:1.6em minmax(0,1fr);padding:3px 0}
   .chain li::before{content:"\2192";color:var(--tx3);font-family:var(--mono)}
@@ -400,7 +400,11 @@
   .ref-t tbody th{color:var(--tx)}
   .ref-t .m{font-variant-numeric:tabular-nums;white-space:nowrap}
   .ref-t .ci{display:block;color:var(--tx3);font-size:var(--fs-caption)}
-  .ref-t .nt{display:block;max-width:40ch;text-wrap:pretty}   /* on the text, since table cells ignore max-width */
+  /* Only the notes wrap. Every other column holds its line, so the notes column takes the
+     rest of the table and its text runs to the table's edge rather than stopping short. */
+  .ref-t th,.ref-t td{white-space:nowrap}
+  .ref-t td:last-child{white-space:normal;width:100%}
+  .ref-t .nt{display:block;text-wrap:pretty}
   .profs{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1px;margin:48px 0 0;background:var(--line);border:1px solid var(--line)}
   .profs div{background:var(--bg2);padding:18px 20px}
   .profs dt{font-size:var(--fs-ui);font-weight:500;color:var(--tx)}
@@ -415,7 +419,7 @@
   dl.eq dd i{font-family:var(--sans);font-style:normal;color:var(--tx3)}
   dl.eq var{font-style:normal;color:var(--tx)}
   @media(max-width:560px){dl.eq div{grid-template-columns:minmax(0,1fr)}}
-  .calls p{margin:0 0 16px;color:var(--tx2);max-width:50ch;text-wrap:pretty}
+  .calls p{margin:0 0 16px;color:var(--tx2);text-wrap:pretty}
   .calls p b{color:var(--tx);font-weight:500}
 
   /* ---------- about and footer ----------
@@ -433,7 +437,7 @@
   .so-half{grid-row:span 3;display:grid;grid-template-rows:subgrid}
   .so-label{margin:0 0 20px;font-family:var(--mono);font-size:var(--fs-caption);font-weight:500;letter-spacing:.12em;
     line-height:20px;text-transform:uppercase;color:var(--tx2)}
-  .so-line{margin:0;font-size:var(--fs-heading);font-weight:500;letter-spacing:-.02em;line-height:1.35;color:var(--tx);text-wrap:balance}
+  .so-line{margin:0;font-size:var(--fs-heading);font-weight:500;letter-spacing:-.02em;line-height:1.35;color:var(--tx);text-wrap:pretty}
   .so-line span{color:var(--tx2)}
   .so-rows{align-self:start;list-style:none;margin:32px 0 0;padding:0;border-bottom:1px solid var(--line)}
   .so-rows li > *{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:14px;padding:12px 0;
@@ -450,7 +454,7 @@
   footer{padding:0 0 56px;font-size:var(--fs-small);color:var(--tx3)}
   footer .wrap{row-gap:14px}
   footer .wrap::before{content:"";grid-column:1 / -1;border-top:1px solid var(--line);margin-bottom:22px}
-  footer p{margin:0;max-width:58ch;text-wrap:pretty}
+  footer p{margin:0;text-wrap:pretty}
   footer .fine{color:var(--tx2)}
   footer .fine:first-of-type{grid-row:span 2}
   /* stacked, the author comes first */
