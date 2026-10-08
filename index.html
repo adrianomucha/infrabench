@@ -224,30 +224,51 @@
     .ex{transition:border-color .18s ease}
   }
 
-  /* ---------- about ---------- */
-  .about{display:grid;grid-template-columns:var(--cols);gap:56px var(--col-gap);padding-block:112px 120px;scroll-margin-top:24px}
-  @media(max-width:900px){.about{grid-template-columns:minmax(0,1fr);padding-block:72px 80px}}
-  .about h2{font-size:var(--fs-heading);font-weight:500;letter-spacing:-.02em;line-height:1.2;margin:0 0 20px}
-  .about p{font-size:var(--fs-body);color:var(--tx2);margin:0 0 16px;max-width:54ch;text-wrap:pretty}
-  .about p b{color:var(--tx);font-weight:500}
-  .acts{display:flex;flex-wrap:wrap;align-items:center;gap:12px 28px;margin-top:28px}
-  .btn{display:inline-flex;align-items:center;padding:13px 22px;background:var(--action-bg);color:var(--action-fg);
-    font-size:var(--fs-ui);font-weight:500;text-decoration:none;border:1px solid var(--action-bg)}
-  .btn:hover{background:var(--action-bg-hover);border-color:var(--action-bg-hover)}
-  .lnk{font-size:var(--fs-ui);font-weight:500;color:var(--tx);text-decoration:none;padding:12px 0}
-  .lnk:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
-
-  /* ---------- footer ---------- */
+  /* ---------- about and footer ----------
+     The page's sign-off, built the way the tool pages end theirs, so the suite closes the
+     same everywhere: a full-bleed band one step up from the page, and two mirrored halves,
+     each a label in the wordmark's voice, a two-tone line and three rows. The halves share
+     their rows through a subgrid, so the labels, the lines and the lists start level
+     whatever the lines' lengths. The footer keeps the halves: the disclaimer on the left,
+     the credit on the right. */
+  .about{margin-top:96px;padding-block:96px;background:var(--bg2);border-top:1px solid var(--line);scroll-margin-top:24px}
+  footer{background:var(--bg2)}
+  .about .wrap,footer .wrap{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:var(--col-gap)}
+  .about .wrap{grid-template-rows:repeat(3,auto)}
+  .so-half{grid-row:span 3;display:grid;grid-template-rows:subgrid}
+  .so-label{margin:0 0 20px;font-family:var(--mono);font-size:var(--fs-caption);font-weight:500;letter-spacing:.12em;
+    line-height:20px;text-transform:uppercase;color:var(--tx2)}
+  .so-line{margin:0;font-size:var(--fs-heading);font-weight:500;letter-spacing:-.02em;line-height:1.35;color:var(--tx);text-wrap:balance}
+  .so-line span{color:var(--tx2)}
+  .so-rows{align-self:start;list-style:none;margin:32px 0 0;padding:0;border-bottom:1px solid var(--line)}
+  .so-rows li > *{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:14px;padding:12px 0;
+    border-top:1px solid var(--line);color:var(--tx2);text-decoration:none}
+  .so-rows .glyph{width:18px;height:18px;color:var(--tx3)}
+  .so-name{display:block;font-size:var(--fs-ui);font-weight:500;line-height:1.4;color:var(--tx)}
+  .so-what{display:block;font-size:var(--fs-small);line-height:1.4;color:var(--tx3)}
+  .so-end{font-size:var(--fs-small);color:var(--tx3)}
+  /* the links light up on hover; availability is a status, so its glyph stays green */
+  .so-rows a:hover .glyph,.so-open .glyph{color:var(--grn)}
+  .so-rows a:hover .so-end{color:var(--tx)}
   footer{padding:0 0 56px;font-size:var(--fs-small);color:var(--tx3)}
   /* the rule sits inside the content edge, like the rules between the tool rows */
-  footer .wrap::before{content:"";display:block;border-top:1px solid var(--line);margin-bottom:36px}
+  footer .wrap::before{content:"";grid-column:1 / -1;border-top:1px solid var(--line);margin-bottom:22px}
   footer p{margin:0;max-width:58ch;text-wrap:pretty}
   /* the disclaimer is three lines of reading, so it takes the body grey (Lc 75); the
-     one-line credit under it stays on the caption grey (Lc 60) */
+     credit beside it stays on the caption grey (Lc 60) */
   footer .fine{color:var(--tx2)}
-  footer .meta{margin-top:14px;max-width:none}
   /* the credit wraps where it must; the short items after it never split */
   footer .meta span + span{white-space:nowrap}
+  /* stacked, the author comes first */
+  @media(max-width:900px){
+    .about{margin-top:64px;padding-block:64px}
+    .about .wrap,footer .wrap{grid-template-columns:minmax(0,1fr)}
+    .about .wrap{grid-template-rows:none;row-gap:64px}
+    .so-half{grid-row:auto;display:block}
+    .about .me{order:-1}
+    .so-line{font-size:var(--fs-sub)}
+    footer .wrap{row-gap:14px}
+  }
   /* color alone sets these 1.75:1 from the fine print around them; the underline makes them links */
   footer a{color:var(--tx2);white-space:nowrap;text-decoration:underline;text-decoration-thickness:1px;
     text-underline-offset:.3em;text-decoration-color:var(--link-underline)}
@@ -278,11 +299,9 @@
     .ex figcaption{margin-bottom:12px}
     .ex dl div,.ex dt,.ex dd{padding-block:8px}
     .ex .out dt,.ex .out dd{padding-top:18px}
-    .about{padding-block:136px 144px}
-    .about h2{margin-bottom:24px}
-    .btn{padding:15px 26px}
+    .about{margin-top:120px;padding-block:120px}
     footer{padding:0 0 72px}
-    footer .wrap::before{margin-bottom:44px}
+    footer .wrap::before{margin-bottom:28px}
   }
   @media(min-width:2200px){.wrap{max-width:1720px}}
 
@@ -309,6 +328,12 @@
   <symbol id="g-crash-cart" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="5" width="6" height="6" fill="currentColor"/><rect x="5" y="13" width="6" height="6" fill="currentColor"/><rect x="13" y="13" width="6" height="6" fill="currentColor"/><rect x="13.75" y="5.75" width="4.5" height="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
   <symbol id="g-power-map" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><line x1="5" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="0.8" opacity="0.5"/><line x1="15" y1="5" x2="15" y2="19" stroke="currentColor" stroke-width="0.8" opacity="0.5"/><rect x="13" y="7" width="4" height="4" fill="currentColor"/></symbol>
   <symbol id="g-outage-replay" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="9" width="14" height="4" fill="currentColor"/><rect x="5" y="15" width="14" height="4" fill="currentColor"/></symbol>
+  <symbol id="g-public" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><path d="M12 5.5v8M8.5 10.5 12 14l3.5-3.5M6.5 17.5h11" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
+  <symbol id="g-const" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><path d="M7 9.5h10M7 14.5h10" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
+  <symbol id="g-decide" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><path d="M7 12.5l3.2 3.2L17 8.8" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
+  <symbol id="g-mail" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><path d="M5.5 8.5 12 13l6.5-4.5" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
+  <symbol id="g-out" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><path d="M8 16 16 8M10 8h6v6" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
+  <symbol id="g-open" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="12" cy="12" r="4" fill="currentColor"/></symbol>
 </svg>
 
 <header class="wrap top">
@@ -439,19 +464,25 @@
   </ol>
 </div>
 
-<section class="wrap about" id="about" aria-label="About">
-  <div>
-    <h2>How the tools are built</h2>
-    <p><b>Public data only.</b> Every input is something you could download yourself. Nothing proprietary, nothing behind an NDA, nothing you have to take on trust.</p>
-    <p><b>Every constant on the page.</b> Each tool states its assumptions and shows the arithmetic behind every number. If you disagree with a constant, you know exactly which one to argue with.</p>
-    <p><b>One decision out.</b> Each tool ends by naming the thing that will actually stop you, because that is the part someone has to act on.</p>
-  </div>
-  <div>
-    <h2>Built by Adrian Mucha</h2>
-    <p>A product designer for the software most designers avoid: data center tools, AI tooling and operator consoles where a wrong click costs real money. Based in Los Angeles and open to new work.</p>
-    <div class="acts">
-      <a class="btn" href="mailto:adrianomucha@gmail.com?subject=Operator%20software">Email Adrian</a>
-      <a class="lnk" href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener">See the portfolio <span class="arr" aria-hidden="true">&#8599;</span></a>
+<section class="about" id="about" aria-label="About">
+  <div class="wrap">
+    <div class="so-half rules">
+      <h2 class="so-label">How the tools are built</h2>
+      <p class="so-line">Free tools for the people who build data centers, <span>on public data with every constant on the page.</span></p>
+      <ul class="so-rows" aria-label="The rules every tool follows">
+        <li><div><svg class="glyph" aria-hidden="true"><use href="#g-public"/></svg><span><span class="so-name">Public data only</span><span class="so-what">every input is something you could download yourself</span></span></div></li>
+        <li><div><svg class="glyph" aria-hidden="true"><use href="#g-const"/></svg><span><span class="so-name">Every constant on the page</span><span class="so-what">the assumptions and the arithmetic behind every number</span></span></div></li>
+        <li><div><svg class="glyph" aria-hidden="true"><use href="#g-decide"/></svg><span><span class="so-name">One decision out</span><span class="so-what">each tool ends by naming what will actually stop you</span></span></div></li>
+      </ul>
+    </div>
+    <div class="so-half me">
+      <h2 class="so-label">Built by Adrian Mucha</h2>
+      <p class="so-line">A product designer for the software most designers avoid: <span>data center tools, AI tooling and operator consoles where a wrong click costs real money.</span></p>
+      <ul class="so-rows" aria-label="Contact">
+        <li><a href="mailto:adrianomucha@gmail.com?subject=Operator%20software"><svg class="glyph" aria-hidden="true"><use href="#g-mail"/></svg><span><span class="so-name">Email Adrian</span><span class="so-what">adrianomucha@gmail.com</span></span><span class="so-end" aria-hidden="true">&rarr;</span></a></li>
+        <li><a href="https://portfolio-repo-gilt.vercel.app" target="_blank" rel="noopener"><svg class="glyph" aria-hidden="true"><use href="#g-out"/></svg><span><span class="so-name">See the portfolio</span><span class="so-what">portfolio-repo-gilt.vercel.app</span></span><span class="so-end" aria-hidden="true">&#8599;</span></a></li>
+        <li><div class="so-open"><svg class="glyph" aria-hidden="true"><use href="#g-open"/></svg><span><span class="so-name">Open to new work</span><span class="so-what">Based in Los Angeles</span></span></div></li>
+      </ul>
     </div>
   </div>
 </section>
