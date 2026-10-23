@@ -457,13 +457,15 @@
   @media (prefers-reduced-motion: no-preference){ .wf .t .b{transition:left .3s ease-out,width .3s ease-out} }
   .dragging .wf .t .b,.dragging .bar i,.dragging .split i{transition:none}
 
-  /* the step to the next tool: find a grid for this load, or the grid it is priced on */
+  /* the steps to the next tools: find a grid for this load, or the grid it is priced on, and
+     how much of the fleet's GPUs would actually train */
   .handoff{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:var(--fs-small);color:var(--tx2);text-wrap:pretty}
   .handoff b{color:var(--tx);font-weight:500}
   .handoff a,.handoff button{font:inherit;color:var(--tx);background:none;border:0;padding:0;cursor:pointer;
     text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em;text-decoration-color:var(--link-underline)}
   .handoff a:hover,.handoff button:hover{text-decoration-color:currentColor}
   .handoff .sep{color:var(--tx3);margin:0 .4em}
+  .handoff .next{display:block;margin-top:6px}
 
   /* ---------- every rack at the same budget ---------- */
   .pl .pick{display:block;padding:0;margin:0;background:none;border:0;font:inherit;color:inherit;text-align:start;cursor:pointer}
@@ -1291,6 +1293,16 @@
       a2.textContent = "Find a grid that can energize " + mwText(Math.max(mw, 0.1)) + " →";
       el.appendChild(a2);
       el.appendChild(document.createTextNode(" and price the power here."));
+    }
+    // Goodput takes the fleet's GPUs, and the whole sizing, grid included, so it can link back
+    if(r.gpus){
+      var g = new URLSearchParams(); g.set("g", r.gpus); g.set("rb", stateParams(true).toString());
+      var nx = document.createElement("span"); nx.className = "next";
+      var a3 = document.createElement("a"); a3.href = "/goodput/#" + g.toString();
+      a3.textContent = "How much of " + fmt(r.gpus) + NB + "GPUs actually trains? →";
+      nx.appendChild(a3);
+      nx.appendChild(document.createTextNode(" Failures, restarts and checkpoints, on published rates."));
+      el.appendChild(nx);
     }
   }
 

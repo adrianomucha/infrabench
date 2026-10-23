@@ -463,6 +463,10 @@
   .what a:hover{color:var(--tx);text-decoration-color:currentColor}
   .vizw{container:viz / inline-size}
   @container viz (max-width:700px){ .what{grid-template-columns:minmax(0,1fr)} }
+  /* the step back to Rack Budget: the hall these GPUs came from, or a hall for this many */
+  .handoff{margin:0;padding:11px var(--pad) 13px;border-top:1px solid var(--line);font-size:var(--fs-small);color:var(--tx2);text-wrap:pretty}
+  .handoff a{color:var(--tx);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em;text-decoration-color:var(--link-underline)}
+  .handoff a:hover{text-decoration-color:currentColor}
 
   /* ---------- the causes, scaled to your job ---------- */
   .pl .nm::after{content:none}
@@ -669,6 +673,7 @@
         <div class="tip" id="curveTip" hidden aria-hidden="true"></div>
       </div>
       <div class="what"><p id="what"></p><p class="src" id="whatSrc"></p></div>
+      <p class="handoff" id="handoff"></p>
     </div>
   </div>
 
@@ -1249,6 +1254,31 @@
       : "<b>The decision.</b> Checkpoint every " + spanT(r.tau) + " and hold " + r.spares + " spare " + pl(r.spares, "node") + ". " + lever;
     $("whatSrc").innerHTML = 'Rate: <a href="' + p.src + '" target="_blank" rel="noopener">' + esc(p.srcName) + '</a>';
   }
+
+  /* Arriving from Rack Budget, its whole sizing rides along in rb, so the way back lands on the
+     hall you left. Change the GPU count here and the link sizes a hall for the new count. */
+  var RB = null, RB_G = null;
+  var RACK_SCALE = { gb200:1, gb300:1, vr72:1, vr144:1, kyber:1 };
+  function fromRack(){ return !!RB && state.g === RB_G; }
+  function rackHref(){
+    if(fromRack()) return "/rack-budget/#" + RB;
+    var u = new URLSearchParams(RB || "");
+    u.set("m", "C"); u.set("gp", state.g); u.delete("mw"); u.delete("r");
+    return "/rack-budget/#" + u.toString();
+  }
+  function renderHandoff(){
+    var el = $("handoff"), a = document.createElement("a"), rack = RB ? new URLSearchParams(RB).get("p") : null;
+    el.textContent = ""; a.href = rackHref();
+    if(fromRack()){
+      el.appendChild(document.createTextNode("These GPUs came from your Rack Budget hall. "));
+      a.textContent = "Back to the hall →"; el.appendChild(a);
+      if(RACK_SCALE[rack]) el.appendChild(document.createTextNode(" Its racks are rack-scale, and no fleet has published a failure rate for those yet; the rates here come from 8-GPU nodes."));
+    } else {
+      a.textContent = (RB ? "Size a hall for " + fmt(state.g) + NB + "GPUs" : "What hall do " + fmt(state.g) + NB + "GPUs need? Size it") + " in Rack Budget →";
+      el.appendChild(a);
+      el.appendChild(document.createTextNode(" Power, cooling and floor for the same fleet."));
+    }
+  }
   function renderWorked(r){
     var s = r.s, L = [], nodes = s.g / GPN;
     $("wxQ").textContent = "How much of a " + fmt(s.g) + "-GPU job trains, at the " + r.p.name + " failure rate?";
@@ -1325,6 +1355,7 @@
     $("lgCur").textContent = byId(state.f).name;
     renderCauses(r);
     renderWhat(r);
+    renderHandoff();
     renderWorked(r);
     renderTry();
     renderMini(r);
@@ -1415,6 +1446,7 @@
     if(state.rd !== DEFAULTS.rd) u.set("rd", state.rd);
     if(state.cost) u.set("c", state.cost);
     if(state.seed !== 1) u.set("d", state.seed);
+    if(RB) u.set("rb", RB);
     try{ history.replaceState(null, "", "#" + u.toString()); }
     catch(e){ try{ location.hash = u.toString(); }catch(e2){} }
   }
@@ -1432,6 +1464,8 @@
     if((v = num(u, "rd", 0.5, 60)) !== null) state.rd = v;
     if((v = num(u, "c", 0, 1000)) !== null) state.cost = Math.round(v * 100) / 100;
     if((v = num(u, "d", 1, 1e6)) !== null) state.seed = Math.round(v);
+    var rb = u.get("rb");
+    if(rb && /^[A-Za-z0-9=&._%+-]{1,600}$/.test(rb)){ RB = rb; RB_G = state.g; }
     return true;
   }
 
