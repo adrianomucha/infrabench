@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Goodput · Infrabench</title>
+<meta name="description" content="How much of a GPU cluster actually trains. Published failure rates from Meta's Llama 3 run and research clusters, scaled to your job: how often it stops, the checkpoint interval that loses least, the GPU-hours that never reach a checkpoint, and the spare nodes to hold. Every constant on the page.">
+<meta property="og:title" content="Goodput · What a GPU cluster actually trains">
+<meta property="og:description" content="At 16,384 GPUs something breaks every three hours. Published failure rates, scaled to your job: the checkpoint interval that loses least, and how many of the GPU-hours you paid for make it into the model.">
+<meta property="og:type" content="website">
+<!-- Falls back to the suite card until /goodput/og.png is cut. A card that 404s
+     unfurls as nothing and fails silently, which is worse than a generic one. -->
+<meta property="og:image" content="/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://www.googletagmanager.com">
+<script src="/assets/analytics.js"></script>
+<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-B4K7J0G5X6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-B4K7J0G5X6');
+</script>
+<style>
+  /* Goodput as a working console, on the suite's tokens and type scale and the same panel
+     system as the other tools. Size the job and pick a published failure rate in the rail;
+     to the right, five figures, a simulated day of the job with the expected split beside
+     it, goodput against job size, and the published failure causes scaled to your job.
+     Explanation lives in tabs below. Status colours always travel with their word. */
+  :root{
+    color-scheme:dark;
+    --bg:#0A0C0E;          /* page surface */
+    --bg2:#0E1114;         /* panels, one step up */
+    --bg3:#14181C;         /* floating readouts */
+    --line:#1C2126;        /* hairline */
+    --line2:#2A3037;       /* stronger rule */
+    --tx:#EEF1F3;          /* primary text */
+    --tx2:#C4CDD5;         /* secondary text, APCA Lc 75 */
+    --tx3:#AAB3BD;         /* fine print, APCA Lc 60 */
+    --grn:#3FE0A0;         /* the brand glyph and focus */
+    /* Verdicts. Checked on #0E1114 with every pair: worst dE 10.5 under protan, 19.9
+       normal vision. Fills and marks only; the word always rides along. */
+    --v-make:#3FE0A0;
+    --v-slip:#FFEA6B;
+    --v-miss:#FF5B5B;
+    --better:#3FE0A0; --worse:#FF9A8C;   /* change chips, always with an arrow and words */
+    --action-bg:#EEF1F3; --action-bg-hover:#FFFFFF; --action-fg:#0A0C0E;
+    --control-border:#2A3037; --control-border-hover:#7B838D;
+    --link-underline:rgba(168,176,184,.45);
+    --fs-micro:12px; --fs-caption:13px; --fs-small:14px; --fs-ui:15px; --fs-body:16px; --fs-lead:18px;
+    --fs-sub:20px; --fs-heading:22px; --fs-title:28px; --fs-kpi:30px; --fs-hero:48px;
+    --col-gap:80px; --gutter:56px; --gap:16px; --rail:296px; --pad:18px;
+    --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media(max-width:700px){:root{--fs-lead:17px;--fs-kpi:26px;--fs-hero:40px;--pad:16px}}
+  @media(min-width:1680px){:root{--fs-micro:13px;--fs-caption:14px;--fs-small:15px;--fs-ui:16px;--fs-body:17px;--fs-lead:20px;
+    --fs-sub:23px;--fs-heading:26px;--fs-title:34px;--fs-kpi:36px;--fs-hero:56px;--col-gap:112px;--gap:20px;--rail:336px;--pad:22px}}
+  @media(min-width:2200px){:root{--fs-small:16px;--fs-body:18px;--fs-lead:21px;--fs-sub:24px;--fs-title:36px;--fs-kpi:40px;--fs-hero:60px;--col-gap:136px;--rail:360px}}
+
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:var(--fs-body);line-height:1.6;
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+  .wrap{max-width:1440px;margin:0 auto;padding:0 32px}
+  @media(max-width:640px){.wrap{padding:0 16px}}
+  @media(min-width:1680px){.wrap{max-width:1640px}}
+  @media(min-width:2200px){.wrap{max-width:1840px}}
+  a{color:inherit}
+  :focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  .skip{position:absolute;inset-inline-start:-9999px;top:0;z-index:20;padding:12px 18px;background:var(--action-bg);color:var(--action-fg);font-weight:600;font-size:var(--fs-ui)}
+  .skip:focus{inset-inline-start:0}
+  .glyph{color:var(--grn);flex:none;display:block}
+  h2{font-size:var(--fs-heading);font-weight:500;letter-spacing:-.02em;line-height:1.2;margin:0}
+  h3{font-size:var(--fs-ui);font-weight:500;line-height:1.3;margin:0}
+  .num,.tn,.dash,.mini{font-variant-numeric:tabular-nums}
+
+  /* ---------- header ---------- */
+  .top{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:68px}
+  .crumb{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand{display:inline-flex;align-items:center;gap:11px;text-decoration:none;
+    font-family:var(--mono);font-size:var(--fs-caption);font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+  .brand .glyph{width:20px;height:20px}
+  .crumb .sep{color:var(--line2)}
+  .crumb .here{font-size:var(--fs-ui);color:var(--tx2);white-space:nowrap}
+  .top nav{display:flex;gap:28px}
+  .top nav a{font-size:var(--fs-ui);color:var(--tx2);text-decoration:none;padding:12px 0;white-space:nowrap}
+  .top nav a:hover{color:var(--tx)}
+  @media(max-width:680px){.top nav{display:none}}
+
+  /* ---------- title bar ---------- */
+  .tbar{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-block:20px 22px}
+  .tbar h1{font-size:var(--fs-title);font-weight:500;letter-spacing:-.025em;line-height:1.15;margin:0;text-wrap:balance}
+  .tbar h1 span{color:var(--tx2)}
+  .tbar .src{font-size:var(--fs-caption);color:var(--tx3);margin:6px 0 0}
+  .tbar .acts{display:flex;gap:10px}
+  .tbar .acts .btn{padding-inline-start:14px}   /* the icon side, optically even with the text side */
+
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;background:var(--action-bg);color:var(--action-fg);
+    font:inherit;font-size:var(--fs-small);font-weight:500;line-height:1.3;text-decoration:none;border:1px solid var(--action-bg);cursor:pointer;white-space:nowrap}
+  .btn:hover{background:var(--action-bg-hover);border-color:var(--action-bg-hover)}
+  .btn.ghost{background:none;color:var(--tx);border-color:var(--control-border)}
+  .btn.ghost:hover{border-color:var(--control-border-hover)}
+  .btn svg{width:14px;height:14px;flex:none}
+
+  /* ---------- the console ---------- */
+  .pn{background:var(--bg2);border:1px solid var(--line);min-width:0}
+  .pn-hd{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 16px}
+  .pn-hd h2{font-size:var(--fs-ui);font-weight:500;letter-spacing:0;line-height:1.3}
+  .pn-hd .meta{font-size:var(--fs-caption);color:var(--tx3)}
+
+  /* The rail spans every row; the empty last row takes whatever height it has over the
+     panels, so a short list never stretches the rows above it. */
+  .dash{display:grid;grid-template-columns:var(--rail) minmax(0,1fr);grid-template-rows:auto auto auto 1fr;
+    grid-template-areas:"rail kpi" "rail viz" "rail list" "rail .";gap:var(--gap);padding-bottom:88px}
+  .rail{grid-area:rail;align-self:start;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto;scrollbar-width:thin}
+  .rail.more-below{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 56px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 56px),transparent)}
+  .kpiw{grid-area:kpi;container-type:inline-size;min-width:0}
+  .vizw{grid-area:viz;container-type:inline-size;min-width:0}
+  .listw{grid-area:list;min-width:0;container:list / inline-size}
+  @media(max-width:1180px){:root{--rail:264px}}
+  @media(max-width:900px){
+    .dash{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"kpi" "rail" "viz" "list";padding-bottom:64px}
+    .rail{position:static;max-height:none;overflow:visible}
+  }
+
+  /* ---------- inputs ---------- */
+  .rail .grp{border:0;margin:0;padding:12px var(--pad);min-width:0}
+  .rail > .grp:first-child{padding-top:16px}
+  .rail > .grp:nth-child(2){padding-bottom:18px}
+  .grp > legend,.grp-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;width:100%;
+    padding:0;margin:0 0 8px;font-size:var(--fs-small);font-weight:500;color:var(--tx)}
+  .rail fieldset.grp > legend{float:left}
+  .rail fieldset.grp > legend + *{clear:both}
+  .grp-h label{cursor:pointer}
+  .grp output{font-size:var(--fs-small);font-weight:500;color:var(--tx);white-space:nowrap}
+  .hint{font-size:var(--fs-caption);line-height:1.45;color:var(--tx3);margin:8px 0 0;text-wrap:pretty}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{position:relative;display:inline-flex}
+  .chip input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+  .chip span{display:inline-block;padding:5px 10px;border:1px solid var(--control-border);font-size:var(--fs-small);line-height:1.4;
+    color:var(--tx2);white-space:nowrap;cursor:pointer}
+  .chip input:hover + span{border-color:var(--control-border-hover);color:var(--tx)}
+  .chip input:checked + span{border-color:var(--tx);color:var(--action-fg);background:var(--tx)}
+  .chip input:focus-visible + span{outline:2px solid var(--grn);outline-offset:2px}
+
+  input[type=range]{-webkit-appearance:none;appearance:none;display:block;width:100%;height:26px;margin:0;background:transparent;cursor:pointer;--fill:50%}
+  input[type=range]::-webkit-slider-runnable-track{height:3px;background:linear-gradient(to right,var(--tx) var(--fill),var(--line2) var(--fill))}
+  input[type=range]:dir(rtl)::-webkit-slider-runnable-track{background:linear-gradient(to left,var(--tx) var(--fill),var(--line2) var(--fill))}
+  input[type=range]::-moz-range-track{height:3px;background:var(--line2)}
+  input[type=range]::-moz-range-progress{height:3px;background:var(--tx)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-7.5px;border-radius:50%;background:var(--tx);border:3px solid var(--bg2);transition:transform .12s ease}
+  input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--tx);border:3px solid var(--bg2)}
+  input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
+  input[type=range]:focus-visible{outline:none}
+  input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 2px var(--grn)}
+  input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 2px var(--grn)}
+  .scale{display:flex;justify-content:space-between;font-size:var(--fs-micro);color:var(--tx3);margin-top:1px}
+
+  details.more{border-top:1px solid var(--line)}
+  details.more > summary{display:flex;align-items:baseline;gap:12px;cursor:pointer;list-style:none;padding:11px var(--pad);font-size:var(--fs-small);font-weight:500;color:var(--tx2)}
+  details.more > summary .sv{margin-inline-start:auto;font-size:var(--fs-caption);font-weight:400;color:var(--tx3);white-space:nowrap}
+  details.more[open] > summary .sv{visibility:hidden}
+  details.more > summary::-webkit-details-marker{display:none}
+  details.more > summary::before{content:"+";display:inline-block;width:1.2em;margin-inline-end:-12px;color:var(--tx3);font-family:var(--mono)}
+  details.more[open] > summary::before{content:"\2212"}
+  details.more > summary:hover{color:var(--tx)}
+  details.more .grp{padding-top:4px}
+
+  .whatif{padding:14px var(--pad) 16px;border-top:1px solid var(--line)}
+  /* a figure you can also type, as in Rack Budget */
+  .nin{display:inline-flex;align-items:baseline;gap:4px;font-size:var(--fs-small);font-weight:500;color:var(--tx);white-space:nowrap}
+  .nin input{width:9.5ch;padding:0 0 1px;margin:0;background:none;border:0;border-bottom:1px dashed var(--control-border-hover);border-radius:0;
+    font:inherit;color:var(--tx);text-align:end;font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield}
+  .nin input::-webkit-outer-spin-button,.nin input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .nin input::placeholder{color:var(--tx3)}
+  .nin input:hover{border-bottom-style:solid}
+  .nin input:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  .nin span{font-weight:400;color:var(--tx2)}
+  .rail .seg{display:flex} .rail .seg button{flex:1 1 0;padding-inline:6px}
+  .whatif h2{font-size:var(--fs-small);font-weight:500;margin:0 0 8px}
+  .whatif div{display:flex;flex-wrap:wrap;gap:8px}
+  .whatif button{font:inherit;font-size:var(--fs-small);line-height:1.4;color:var(--tx);background:none;border:1px dashed var(--control-border-hover);padding:5px 10px;cursor:pointer;white-space:nowrap}
+  .whatif button:hover{border-style:solid;border-color:var(--tx)}
+  .whatif button:disabled{color:var(--tx3);border-color:var(--line2);cursor:default;border-style:dashed}
+
+  /* ---------- the five figures ---------- */
+  .kpis{display:grid;grid-template-columns:1.4fr 1.1fr 1fr 1fr 1fr;gap:1px;margin:0;background:var(--line)}
+  /* each tile spans four rows of the strip, so labels, values, changes and notes line up across it */
+  .kpi{position:relative;display:grid;grid-row:span 4;grid-template-rows:subgrid;row-gap:0;margin:0;padding:14px var(--pad) 16px;background:var(--bg2);min-width:0}
+  .kpi dt{font-size:var(--fs-small);color:var(--tx2);line-height:1.35}
+  .kpi dd{margin:0}
+  .kpi .v{align-self:end;display:flex;align-items:baseline;flex-wrap:wrap;column-gap:.3em;margin-top:6px;font-size:var(--fs-kpi);font-weight:500;letter-spacing:-.02em;line-height:1.1}
+  .kpi .v b{font-weight:500;white-space:nowrap}
+  .kpi .v small{font-size:var(--fs-small);font-weight:400;color:var(--tx2);letter-spacing:0}
+  .kpi.main .v{font-size:var(--fs-hero)}
+  .kpi.main .v b{color:var(--grn)}
+  .kpi.main.none .v b{color:var(--tx)}
+  .kpi .d{display:flex;align-items:center;gap:5px;min-height:1.5em;margin-top:6px;font-size:var(--fs-caption);font-weight:500;color:var(--tx3);white-space:nowrap}
+  .kpi .d.good{color:var(--better)} .kpi .d.bad{color:var(--worse)}
+  .kpi .d i{font-style:normal;font-size:.75em}
+  .kpi .s{margin-top:2px;font-size:var(--fs-caption);color:var(--tx3);line-height:1.45;text-wrap:pretty}
+  .kpi.hit{animation:kflash .7s ease-out}
+  @keyframes kflash{from{background:#1A2026}to{background:var(--bg2)}}
+  .alert{display:flex;align-items:center;gap:10px;margin:0;padding:10px var(--pad);background:var(--bg2);border:1px solid var(--line);border-top:0;font-size:var(--fs-small);line-height:1.45;color:var(--tx);text-wrap:pretty}
+  .alert .ic{width:10px;height:10px;flex:none}
+  .alert.warn .ic{background:var(--v-slip)} .alert.bad .ic{background:var(--v-miss)} .alert.ok .ic{background:var(--grn)}
+  @container (max-width:860px){
+    .kpis{grid-template-columns:repeat(6,minmax(0,1fr))}
+    .kpi{grid-column:span 2} .kpi.main,.kpi.you{grid-column:span 3}
+  }
+  @container (max-width:520px){
+    .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .kpi,.kpi.you{grid-column:span 1} .kpi.main{grid-column:1 / -1}
+  }
+
+  /* floating readouts lift with a ring and a shadow rather than a solid border, so they sit
+     cleanly over whatever colour is underneath */
+  .tip{position:absolute;z-index:5;pointer-events:none;min-width:210px;max-width:290px;padding:9px 12px;background:var(--bg3);
+    font-size:var(--fs-caption);line-height:1.45;color:var(--tx2);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 8px 24px rgba(0,0,0,.45)}
+  .tip b{display:block;color:var(--tx);font-weight:500;font-size:var(--fs-small)}
+  .tip .k{display:flex;align-items:center;gap:7px;margin-top:5px;color:var(--tx)}
+  .tip .row{display:flex;justify-content:space-between;gap:16px;margin-top:3px}
+  .tip .row span:last-child{color:var(--tx)}
+
+  /* ---------- the ranked list ---------- */
+  .listw .pn-hd{align-items:center;padding:12px var(--pad)}
+  .listw .pn-hd .r{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+  .seg{display:inline-flex;border:1px solid var(--control-border)}
+  .seg button{font:inherit;font-size:var(--fs-small);line-height:1.4;padding:5px 12px;background:none;border:0;color:var(--tx2);cursor:pointer;white-space:nowrap}
+  .seg button + button{border-inline-start:1px solid var(--control-border)}
+  .seg button:hover{color:var(--tx)}
+  .seg button[aria-pressed="true"]{background:var(--tx);color:var(--action-fg)}
+  .seg button:focus-visible{outline-offset:-2px}
+  table.pl{width:100%;border-collapse:collapse;font-size:var(--fs-small)}
+  .pl th{font-size:var(--fs-caption);font-weight:400;color:var(--tx3);text-align:start;padding:8px 12px;border-top:1px solid var(--line);white-space:nowrap}
+  .pl th[aria-sort]{color:var(--tx)}
+  .pl td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:middle;background:var(--bg2)}
+  .pl th:first-child,.pl td:first-child{padding-inline-start:var(--pad)}
+  .pl th:last-child,.pl td:last-child{padding-inline-end:var(--pad)}
+  .pl .rk{width:2.6em;color:var(--tx3)}
+  .pl th.n,.pl td.n{text-align:end}
+  .pl td.n{white-space:nowrap}
+  .pl .exp{display:block;padding:0;margin:0;background:none;border:0;font:inherit;color:inherit;text-align:start;cursor:pointer}
+  .pl .nm{display:block;color:var(--tx);font-size:var(--fs-ui)}
+  .pl .nm::after{content:"+";font-family:var(--mono);color:var(--tx3);margin-inline-start:.5em}
+  .pl .exp[aria-expanded="true"] .nm::after{content:"\2212"}
+  .pl .exp:hover .nm{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
+  .pl .ar{display:block;font-size:var(--fs-caption);color:var(--tx3);margin-top:1px}
+  .pl .win{font-size:var(--fs-ui);font-weight:500;white-space:nowrap}
+  .pl .vd{display:flex;align-items:center;gap:6px;font-size:var(--fs-caption);color:var(--tx2);margin-top:2px;white-space:nowrap}
+  .pl .vd .br{color:var(--tx3)}
+  .bar{display:inline-block;width:52px;height:4px;margin-inline-end:10px;background:var(--line2);vertical-align:middle}
+  .bar i{display:block;height:100%;background:var(--tx3)}
+  .pl .sorted .bar i{background:var(--tx)}
+  .pl tr.qr.lit td{background:#12161A}
+  .pl tr.qd td{padding:2px 12px 18px;border-top:0}
+  @media (prefers-reduced-motion: no-preference){ .bar i{transition:width .3s ease} }
+
+  /* ---------- under the hood ---------- */
+  .ref{padding-block:72px 88px;border-top:1px solid var(--line)}
+  .ref-hd{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 40px;border-bottom:1px solid var(--line);margin-bottom:40px}
+  .ref-hd h2{display:flex;align-items:center;gap:12px;padding-bottom:14px}
+  .ref-hd h2 .glyph{width:20px;height:20px}
+  .tabs{display:flex;gap:28px;overflow-x:auto;scrollbar-width:none}
+  .tabs button{background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:12px 0;font:inherit;font-size:var(--fs-ui);color:var(--tx2);cursor:pointer;white-space:nowrap}
+  .tabs button:hover{color:var(--tx)}
+  .tabs button[aria-selected="true"]{color:var(--tx);border-bottom-color:var(--grn)}
+  .tabs button:focus-visible{outline-offset:-2px}
+  [role=tabpanel]:focus-visible{outline-offset:8px}
+  .two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);column-gap:var(--col-gap);row-gap:48px}
+  @media(max-width:900px){.two{grid-template-columns:minmax(0,1fr)}.lead{max-width:none}}
+  .lead{margin:0 0 28px;font-size:var(--fs-lead);line-height:1.5;color:var(--tx2);max-width:calc((100% - var(--col-gap)) * 5 / 11);text-wrap:pretty}
+  .lead span{color:var(--tx)}
+  .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+  @media(max-width:900px){.cards{grid-template-columns:minmax(0,1fr)}}
+  .cards{counter-reset:card}
+  .cards > div{background:var(--bg2);padding:20px 22px}
+  .cards > div::before{counter-increment:card;content:counter(card, decimal-leading-zero);display:block;margin-bottom:14px;font-family:var(--mono);font-size:var(--fs-caption);letter-spacing:.08em;color:var(--grn)}
+  .cards h3{font-size:var(--fs-body);margin:0 0 8px}
+  .cards p{margin:0;color:var(--tx2);font-size:var(--fs-ui);text-wrap:pretty}
+  /* on the cards' columns, each figure inset like the card text above it (the cards' 1px
+     border and 22px padding), so it sits under its card's number; no column gap, the
+     gutter trails each figure instead */
+  .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 0;margin:40px 0 0;padding:0}
+  @media(max-width:700px){.stats{grid-template-columns:minmax(0,1fr)}}
+  .stats div{margin:0;padding-inline:23px var(--gutter)}
+  .stats dd{margin:0;font-size:var(--fs-kpi);font-weight:500;letter-spacing:-.02em;line-height:1.1}
+  .stats dd small{font-size:var(--fs-small);font-weight:400;color:var(--tx2);letter-spacing:0;margin-inline-start:.3em}
+  .stats dt{order:2;margin-top:6px;font-size:var(--fs-small);color:var(--tx2)}
+  .stats div{display:flex;flex-direction:column}
+  .stats div::before{content:"";order:-1;width:24px;height:2px;margin-bottom:14px;background:var(--grn)}
+  .steps{margin:0;padding:0;list-style:none;counter-reset:s}
+  .steps li{counter-increment:s;display:grid;grid-template-columns:2em minmax(0,1fr);padding:0 0 22px}
+  .steps li::before{content:counter(s, decimal-leading-zero);font-family:var(--mono);color:var(--grn);font-size:var(--fs-small);padding-top:2px}
+  .steps h3{font-size:var(--fs-body);margin-bottom:4px}
+  .steps p{margin:0;color:var(--tx2);font-size:var(--fs-ui);text-wrap:pretty}
+  .steps b{color:var(--tx);font-weight:500}
+  .ex{margin:0;align-self:start;background:var(--bg2);border:1px solid var(--line);padding:22px 26px}
+  .ex figcaption{font-size:var(--fs-caption);color:var(--tx3);margin:0 0 12px}
+  .ex .q{font-size:var(--fs-body);color:var(--tx);margin:0 0 12px;text-wrap:pretty}
+  .ex .out{margin:14px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:var(--fs-small);color:var(--tx2);text-wrap:pretty}
+  .chain{margin:0;padding:0;list-style:none;font-size:var(--fs-small);line-height:1.55;color:var(--tx2)}
+  .chain li{display:grid;grid-template-columns:1.6em minmax(0,1fr);padding:3px 0}
+  .chain li::before{content:"\2192";color:var(--tx3);font-family:var(--mono)}
+  .chain li:first-child::before{content:""}
+  .chain b{color:var(--tx);font-weight:500}
+
+  .tscroll{overflow-x:auto}
+  .tscroll.more-end{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 56px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 56px),transparent)}
+  table.ref-t{width:100%;border-collapse:collapse;font-size:var(--fs-small);min-width:860px}
+  .ref-t th{font-weight:400;color:var(--tx3);text-align:start;padding:8px 16px 10px 0;border-bottom:1px solid var(--line2);font-size:var(--fs-caption)}
+  .ref-t td,.ref-t tbody th{padding:12px 16px 12px 0;border-bottom:1px solid var(--line);vertical-align:top;text-align:start;font-weight:400;color:var(--tx2)}
+  .ref-t tbody th{color:var(--tx)}
+  .ref-t .m{white-space:nowrap}
+  .ref-t .ci{display:block;color:var(--tx3);font-size:var(--fs-caption)}
+  /* Only the notes wrap. Every other column holds its line, so the notes column takes the
+     rest of the table and its text runs to the table's edge rather than stopping short. */
+  .ref-t th,.ref-t td{white-space:nowrap}
+  .ref-t td:last-child{white-space:normal;width:100%}
+  .ref-t .nt{display:block;text-wrap:pretty}
+
+  dl.eq{margin:0}
+  dl.eq div{display:grid;grid-template-columns:minmax(0,9em) minmax(0,1fr);gap:4px 24px;padding:12px 0;border-bottom:1px solid var(--line)}
+  dl.eq div:first-child{border-top:1px solid var(--line)}
+  dl.eq dt{color:var(--tx);font-size:var(--fs-small)}
+  dl.eq dd{margin:0;color:var(--tx2);font-size:var(--fs-small);font-family:var(--mono);line-height:1.6}
+  @media(max-width:560px){dl.eq div{grid-template-columns:minmax(0,1fr)}}
+  .calls p{margin:0 0 16px;color:var(--tx2);text-wrap:pretty}
+  .calls p b{color:var(--tx);font-weight:500}
+
+  /* ---------- about and footer ----------
+     The page's sign-off, on its own full-bleed band one step up from the page, so it reads
+     as the suite and the author rather than more of the tool. Two mirrored halves: each
+     gets a label in the wordmark's voice, a two-tone line and three rows, and the halves
+     share their rows through a subgrid, so the labels, the lines and the lists start level
+     whatever the lines' lengths. The footer keeps the halves: the sources on the left, the
+     caveat and the credit on the right. */
+  .sec{padding-block:96px;border-top:1px solid var(--line)}
+  @media(max-width:700px){.sec{padding-block:64px}.ref{padding-block:56px 64px}}
+  .about,footer{background:var(--bg2)}
+  .about .wrap,footer .wrap{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:var(--col-gap)}
+  .about .wrap{grid-template-rows:repeat(3,auto)}
+  .so-half{grid-row:span 3;display:grid;grid-template-rows:subgrid}
+  .so-label{margin:0 0 20px;font-family:var(--mono);font-size:var(--fs-caption);font-weight:500;letter-spacing:.12em;
+    line-height:20px;text-transform:uppercase;color:var(--tx2)}
+  .so-line{margin:0;font-size:var(--fs-heading);font-weight:500;letter-spacing:-.02em;line-height:1.35;color:var(--tx);text-wrap:pretty}
+  .so-line span{color:var(--tx2)}
+  .so-rows{align-self:start;list-style:none;margin:32px 0 0;padding:0;border-bottom:1px solid var(--line)}
+  .so-rows li > *{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:14px;padding:12px 0;
+    border-top:1px solid var(--line);color:var(--tx2);text-decoration:none}
+  .so-rows .glyph{width:18px;height:18px;color:var(--tx3)}
+  .so-name{display:block;font-size:var(--fs-ui);font-weight:500;line-height:1.4;color:var(--tx)}
+  .so-what{display:block;font-size:var(--fs-small);line-height:1.4;color:var(--tx3)}
+  .so-end{font-size:var(--fs-small);color:var(--tx3)}
+  /* the links light up on hover; availability is a status, so its glyph stays green */
+  /* the contact row is a button that opens the form, dressed as the rows around it */
+  .so-rows button{width:100%;margin:0;background:none;border:0;border-top:1px solid var(--line);font:inherit;text-align:start;cursor:pointer}
+  .so-rows :is(a,button):hover .glyph,.so-open .glyph{color:var(--grn)}
+  .so-rows :is(a,button):hover .so-end{color:var(--tx)}
+  footer{padding:0 0 56px;font-size:var(--fs-small);color:var(--tx3)}
+  footer .wrap{row-gap:14px}
+  footer .wrap::before{content:"";grid-column:1 / -1;border-top:1px solid var(--line);margin-bottom:22px}
+  footer p{margin:0;text-wrap:pretty}
+  footer .fine{color:var(--tx2)}
+  footer .fine:first-of-type{grid-row:span 2}
+  /* stacked, the author comes first */
+  @media(max-width:900px){
+    .about .wrap,footer .wrap{grid-template-columns:minmax(0,1fr)}
+    .about .wrap{grid-template-rows:none;row-gap:64px}
+    .so-half{grid-row:auto;display:block}
+    .about .me{order:-1}
+    .so-line{font-size:var(--fs-sub)}
+    footer .fine:first-of-type{grid-row:auto}
+  }
+  footer a{color:var(--tx2);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em;text-decoration-color:var(--link-underline)}
+  footer a:hover{color:var(--tx);text-decoration-color:currentColor}
+
+  .mini{position:fixed;inset-inline:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:15;display:none;align-items:center;justify-content:space-between;gap:12px;
+    padding:12px 16px;background:var(--bg3);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.5);font-size:var(--fs-small);color:var(--tx2)}
+  .mini b{color:var(--tx);font-weight:500;font-size:var(--fs-ui)}
+  .mini.on{display:flex}
+  @media(min-width:901px){.mini.on{display:none}}
+
+  .toast{position:fixed;bottom:24px;inset-inline-start:50%;transform:translate(-50%,8px);z-index:30;padding:10px 16px;background:var(--action-bg);color:var(--action-fg);
+    font-size:var(--fs-small);font-weight:500;opacity:0;pointer-events:none}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  @media (prefers-reduced-motion: no-preference){
+    html{scroll-behavior:smooth}
+    /* the toast leaves faster and softer than it arrived */
+    .toast{transition:opacity .15s ease-out,transform .15s ease-out}
+    .toast.on{transition-duration:.2s}
+    /* a press gives way a little; joined segments, tabs and text links stay still */
+    .btn,.whatif button,.chip span{transition:scale .15s ease-out}
+    .btn:active:not(:disabled),.whatif button:active:not(:disabled),.chip input:active + span{scale:.96}
+  }
+  /* ---------- Goodput's own parts ---------- */
+  #day text,#curve text{font-size:var(--fs-micro);font-variant-numeric:tabular-nums}
+  /* the strip's own weights, only while it is one row; narrower, the shared stacking takes over */
+  @container (min-width:861px){ .kpis{grid-template-columns:1.3fr 1fr 1fr 1.1fr 1fr} }
+
+  /* the three published fleets, as radio rows that show how often each would stop your job */
+  .profs{display:grid;gap:6px}
+  .prof{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;row-gap:1px;padding:7px 10px 8px;
+    border:1px solid var(--control-border);cursor:pointer}
+  .prof input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;cursor:pointer}
+  .prof .nm{font-size:var(--fs-small);color:var(--tx);line-height:1.35}
+  .prof .dt{grid-column:1;font-size:var(--fs-caption);color:var(--tx3);line-height:1.35}
+  .prof .g{grid-row:1 / span 2;grid-column:2;align-self:center;font-size:var(--fs-small);font-weight:500;color:var(--tx2);white-space:nowrap}
+  .prof:hover{border-color:var(--control-border-hover)}
+  .prof.on{border-color:var(--tx);background:var(--bg3)}
+  .prof.on .g{color:var(--tx)}
+  .prof:has(input:focus-visible){outline:2px solid var(--grn);outline-offset:2px}
+  @media (prefers-reduced-motion: no-preference){ .prof{transition:scale .15s ease-out} .prof:active{scale:.96} }
+  .rail .seg + input[type=range]{margin-top:8px}
+
+  /* ---------- the day, the split and the curve ---------- */
+  .viz-hd{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 20px;padding:14px var(--pad) 4px}
+  .viz-hd h2{font-size:var(--fs-ui);font-weight:500;letter-spacing:0;line-height:1.3}
+  .viz-hd h2 span{color:var(--tx3);font-weight:400}
+  .viz-hd.sub{border-top:1px solid var(--line);margin-top:4px}
+  .legend{display:flex;flex-wrap:wrap;gap:4px 16px;margin:0;padding:0;list-style:none;font-size:var(--fs-caption);color:var(--tx2)}
+  .legend li{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+  .sw{width:12px;height:10px;flex:none;border-radius:1px}
+  /* chart green for the work that counts; the verdict red and yellow for what it cost */
+  .sw.tr{background:#12A97A} .sw.ck{background:#AAB3BD} .sw.rs{background:var(--v-slip)}
+  .sw.lo{background:repeating-linear-gradient(135deg,rgba(255,91,91,.9) 0 2px,rgba(255,91,91,.25) 2px 5px)}
+  .sw.ln{height:0;border-top:2px solid #12A97A} .sw.lo2{height:0;border-top:1.5px dashed var(--tx3)}
+  .sw.ring{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--tx)}
+  .daybox,.curvebox{position:relative;padding:4px var(--pad) 6px}
+  #day{display:block;width:100%;overflow:visible}
+  #curve{display:block;width:100%;overflow:visible;touch-action:pan-y;cursor:ew-resize}
+
+  .split{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px 14px;align-items:center;margin:0;padding:6px var(--pad) 12px;font-size:var(--fs-caption);color:var(--tx2)}
+  .split dt{white-space:nowrap}
+  .split dd{margin:0}
+  .split .sb{display:flex;height:10px;background:var(--line)}
+  .split .sb i{display:block;height:100%}
+  .split .sb .tr{background:#12A97A} .split .sb .ck{background:#AAB3BD} .split .sb .rs{background:var(--v-slip)}
+  .split .sb .lo{background:repeating-linear-gradient(135deg,rgba(255,91,91,.9) 0 2px,rgba(255,91,91,.25) 2px 5px)}
+  .split .v{font-size:var(--fs-small);font-weight:500;color:var(--tx);text-align:end;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .split .v small{font-size:var(--fs-caption);font-weight:400;color:var(--tx3)}
+  @media (prefers-reduced-motion: no-preference){ .split .sb i{transition:flex-basis .3s ease} }
+
+  .player{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:10px var(--pad);border-top:1px solid var(--line)}
+  .player .st{font-size:var(--fs-caption);color:var(--tx2);text-wrap:pretty}
+  .what{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 24px;align-items:baseline;padding:12px var(--pad) 14px;border-top:1px solid var(--line)}
+  .what p{margin:0;font-size:var(--fs-small);color:var(--tx2);text-wrap:pretty}
+  .what p b{color:var(--tx);font-weight:500}
+  .what .src{font-size:var(--fs-caption);color:var(--tx3)}
+  .what a{color:var(--tx2);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em;text-decoration-color:var(--link-underline)}
+  .what a:hover{color:var(--tx);text-decoration-color:currentColor}
+  .vizw{container:viz / inline-size}
+  @container viz (max-width:700px){ .what{grid-template-columns:minmax(0,1fr)} }
+
+  /* ---------- the causes, scaled to your job ---------- */
+  .pl .nm::after{content:none}
+  .pl td.share{white-space:nowrap;color:var(--tx2)}
+  .pl td.share .bar i{background:var(--tx)}
+  .pl .ct{color:var(--tx);font-variant-numeric:tabular-nums}
+  .pl tr.qr.more{display:none}
+  .pl.all tr.qr.more{display:table-row}
+  @container list (max-width:760px){
+    .pl thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+    .pl tr.qr{position:relative;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:16px;row-gap:4px;
+      padding:12px var(--pad) 14px calc(var(--pad) + 2em);border-top:1px solid var(--line)}
+    .pl tr.qr.more{display:none}
+    .pl.all tr.qr.more{display:flex}
+    .pl tr.qr td{border:0;padding:0;background:none}
+    .pl td.rk{position:absolute;inset-inline-start:var(--pad);top:13px;width:auto}
+    .pl td.who{flex:1 1 100%}
+    .pl td.n{text-align:start}
+    .pl td.n .bar{display:none}
+    .pl td.lost::after{content:" lost a day";color:var(--tx3)}
+  }
+  .alert.info .ic{background:var(--tx3)}
+  .ref-t + h3,.tscroll + h3{margin:48px 0 16px}
+  .ref h3.tt{font-size:var(--fs-body);margin:0 0 16px}
+
+  @media print{
+    :root{--bg:#fff;--bg2:#fff;--bg3:#fff;--line:#c7cdd5;--line2:#a8b1bc;--tx:#12161b;--tx2:#39424d;--tx3:#5b6470}
+    .top nav,.tbar .acts,.rail,.mini,.toast,.skip,.ref,.sec,.listw .pn-hd .r,.player{display:none}
+    .dash{display:block;padding:0} .kpiw,.vizw{margin-bottom:16px}
+    .pl tr.qr.more{display:table-row}
+    .print-url{display:block;margin-top:14px;font-family:var(--mono);font-size:11px;word-break:break-all}
+  }
+  .print-url{display:none}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#console">Skip to the tool</a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="g-infrabench" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="9" width="14" height="10" fill="currentColor"/></symbol>
+  <symbol id="g-rack-budget" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="16.2" width="14" height="2.8" fill="currentColor"/><rect x="5" y="12.6" width="14" height="2.8" fill="currentColor"/><rect x="5" y="9" width="14" height="2.8" fill="currentColor"/></symbol>
+  <symbol id="g-crash-cart" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="5" width="6" height="6" fill="currentColor"/><rect x="5" y="13" width="6" height="6" fill="currentColor"/><rect x="13" y="13" width="6" height="6" fill="currentColor"/><rect x="13.75" y="5.75" width="4.5" height="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+  <symbol id="g-power-map" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><line x1="5" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="0.8" opacity="0.5"/><line x1="15" y1="5" x2="15" y2="19" stroke="currentColor" stroke-width="0.8" opacity="0.5"/><rect x="13" y="7" width="4" height="4" fill="currentColor"/></symbol>
+  <symbol id="g-outage-replay" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="9" width="14" height="4" fill="currentColor"/><rect x="5" y="15" width="14" height="4" fill="currentColor"/></symbol>
+  <symbol id="g-goodput" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="9" width="9.5" height="10" fill="currentColor"/><rect x="16.25" y="9.75" width="2" height="8.5" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+  <symbol id="g-mail" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><path d="M5.5 8.5 12 13l6.5-4.5" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
+  <symbol id="g-out" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><path d="M8 16 16 8M10 8h6v6" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
+  <symbol id="g-open" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="12" cy="12" r="4" fill="currentColor"/></symbol>
+  <symbol id="i-link" viewBox="0 0 14 14"><path d="M6 8a2.5 2.5 0 0 0 3.5 0l2-2A2.5 2.5 0 0 0 8 2.5l-.8.8M8 6a2.5 2.5 0 0 0-3.5 0l-2 2A2.5 2.5 0 0 0 6 11.5l.8-.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-dice" viewBox="0 0 14 14"><rect x="1.5" y="1.5" width="11" height="11" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="4.75" cy="4.75" r="1.1" fill="currentColor"/><circle cx="7" cy="7" r="1.1" fill="currentColor"/><circle cx="9.25" cy="9.25" r="1.1" fill="currentColor"/></symbol>
+</svg>
+
+<header class="wrap top">
+  <div class="crumb">
+    <a class="brand" href="/"><svg class="glyph" aria-hidden="true"><use href="#g-infrabench"/></svg>Infrabench</a>
+    <span class="sep" aria-hidden="true">/</span>
+    <span class="here">Goodput</span>
+  </div>
+  <nav aria-label="Page">
+    <a href="#why" data-tab="why">Why</a>
+    <a href="#how" data-tab="how">How it works</a>
+    <a href="#data" data-tab="data">Data</a>
+    <a href="#method" data-tab="method">Method</a>
+  </nav>
+</header>
+
+<main id="main">
+
+<div class="wrap tbar">
+  <div>
+    <h1>Goodput <span>· what a GPU cluster actually trains</span></h1>
+    <!-- counted off the data block, so it cannot drift from what the tool computes -->
+    <p class="src" id="prov"></p>
+  </div>
+  <div class="acts">
+    <button class="btn ghost" type="button" id="copyLink"><svg aria-hidden="true"><use href="#i-link"/></svg>Copy link to this job</button>
+  </div>
+</div>
+
+<!-- ================= THE CONSOLE ================= -->
+<section class="wrap dash" id="console" aria-label="Goodput">
+  <p class="sr-only" id="srStatus" role="status"></p>
+
+  <!-- inputs -->
+  <div class="rail pn" role="group" aria-label="Your job">
+    <div class="grp">
+      <div class="grp-h"><label for="gpus">GPUs in the job</label>
+        <span class="nin"><input type="text" id="gpus" inputmode="numeric" autocomplete="off" spellcheck="false"></span></div>
+      <label class="sr-only" for="gR">GPUs in the job, on a slider</label>
+      <input type="range" id="gR" min="0" max="1000" step="1">
+      <div class="scale" aria-hidden="true"><span>128</span><span>4K</span><span>131K</span></div>
+      <p class="hint">One synchronous job, 8 GPUs a node. Any failure anywhere stops all of it.</p>
+    </div>
+
+    <fieldset class="grp">
+      <legend>Published failure rate</legend>
+      <div class="profs" id="profs"></div>
+      <p class="hint">The time on the right is how often each fleet would stop a job your size.</p>
+    </fieldset>
+
+    <div class="grp">
+      <div class="grp-h"><label for="wR">A checkpoint stalls training for</label><output id="wOut" for="wR"></output></div>
+      <input type="range" id="wR" min="0" max="1000" step="1">
+      <div class="scale" aria-hidden="true"><span>6 s</span><span>1 min</span><span>30 min</span></div>
+      <p class="hint">Meta’s reliability study assumes 5 minutes. Asynchronous checkpointing gets it under one.</p>
+    </div>
+
+    <div class="grp">
+      <div class="grp-h"><label for="uR">A restart takes</label><output id="uOut" for="uR"></output></div>
+      <input type="range" id="uR" min="1" max="60" step="1">
+      <div class="scale" aria-hidden="true"><span>1</span><span>30</span><span>60 min</span></div>
+      <p class="hint">Detect, drain the bad node, reschedule and reload the last checkpoint. The same study puts it at 5 to 20 minutes.</p>
+    </div>
+
+    <details class="more" id="cpMore">
+      <summary>Checkpoint interval<span class="sv" id="cpSv"></span></summary>
+      <div class="grp">
+        <div class="seg" role="group" aria-label="Checkpoint interval" id="cpSeg">
+          <button type="button" data-cp="auto">Optimal</button><button type="button" data-cp="fixed">Fixed</button>
+        </div>
+        <div class="grp-h" style="margin-top:12px"><label for="cpR">Checkpoint every</label><output id="cpOut" for="cpR"></output></div>
+        <input type="range" id="cpR" min="0" max="1000" step="1">
+        <div class="scale" aria-hidden="true"><span>2</span><span>30</span><span>480 min</span></div>
+        <p class="hint" id="cpNote"></p>
+      </div>
+    </details>
+
+    <details class="more" id="spMore">
+      <summary>Repairs and cost<span class="sv" id="spSv"></span></summary>
+      <div class="grp">
+        <div class="grp-h"><label for="rdR">A failed node is back in</label><output id="rdOut" for="rdR"></output></div>
+        <input type="range" id="rdR" min="1" max="28" step="1">
+        <div class="scale" aria-hidden="true"><span>half a day</span><span>2 weeks</span></div>
+        <p class="hint">Your assumption, not a published figure. Sets how many spare nodes keep the job at full size.</p>
+      </div>
+      <div class="grp">
+        <div class="grp-h"><label for="cost">A GPU-hour costs you</label>
+          <span class="nin"><span>$</span><input type="text" id="cost" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="0"></span></div>
+        <div class="seg" role="group" aria-label="Typical GPU-hour prices" id="costSeg">
+          <button type="button" data-c="0">None</button><button type="button" data-c="2">$2</button><button type="button" data-c="3">$3</button><button type="button" data-c="4">$4</button>
+        </div>
+        <p class="hint" id="costNote"></p>
+      </div>
+    </details>
+
+    <div class="whatif" role="group" aria-labelledby="wiH">
+      <h2 id="wiH">What if</h2>
+      <div class="try">
+        <button type="button" data-try="async">Checkpoint in 30 seconds</button>
+        <button type="button" data-try="fast">Restart in 1 minute</button>
+        <button type="button" data-try="big">Scale to 100,000 GPUs</button>
+        <button type="button" data-try="reset">Start over</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- the five figures -->
+  <div class="kpiw" id="answer">
+    <dl class="kpis pn" id="kpis">
+      <div class="kpi main" id="k0"><dt>Goodput</dt><dd class="v"><b id="kv0"></b><small>%</small></dd><dd class="d" id="kd0"></dd><dd class="s" id="ks0"></dd></div>
+      <div class="kpi you" id="k1"><dt>Something breaks every</dt><dd class="v"><b id="kv1"></b><small id="ku1"></small></dd><dd class="d" id="kd1"></dd><dd class="s" id="ks1"></dd></div>
+      <div class="kpi" id="k2"><dt>Checkpoint every</dt><dd class="v"><b id="kv2"></b><small id="ku2"></small></dd><dd class="d" id="kd2"></dd><dd class="s" id="ks2"></dd></div>
+      <div class="kpi" id="k3"><dt>GPU-hours lost a day</dt><dd class="v"><b id="kv3"></b></dd><dd class="d" id="kd3"></dd><dd class="s" id="ks3"></dd></div>
+      <div class="kpi" id="k4"><dt>Spare nodes to hold</dt><dd class="v"><b id="kv4"></b><small>nodes</small></dd><dd class="d" id="kd4"></dd><dd class="s" id="ks4"></dd></div>
+    </dl>
+    <p class="alert" id="alert" hidden><span class="ic" aria-hidden="true"></span><span id="alertT"></span></p>
+  </div>
+
+  <!-- the day, and the curve -->
+  <div class="vizw">
+    <div class="viz pn">
+      <div class="viz-hd">
+        <h2 id="dayTitle"></h2>
+        <ul class="legend" aria-label="Key">
+          <li><span class="sw tr" aria-hidden="true"></span>Training kept</li>
+          <li><span class="sw ck" aria-hidden="true"></span>Checkpoint write</li>
+          <li><span class="sw lo" aria-hidden="true"></span>Rolled back</li>
+          <li><span class="sw rs" aria-hidden="true"></span>Restarting</li>
+        </ul>
+      </div>
+      <div class="daybox">
+        <svg id="day" role="img"></svg>
+        <div class="tip" id="dayTip" hidden aria-hidden="true"></div>
+      </div>
+      <dl class="split" id="split">
+        <dt>Expected</dt><dd class="sb" id="sbE"></dd><dd class="v" id="svE"></dd>
+        <dt>This day</dt><dd class="sb" id="sbD"></dd><dd class="v" id="svD"></dd>
+      </dl>
+      <div class="player">
+        <button class="btn ghost" type="button" id="roll"><svg aria-hidden="true"><use href="#i-dice"/></svg>Roll another day</button>
+        <span class="st" id="dayStat"></span>
+      </div>
+      <div class="viz-hd sub">
+        <h2>Goodput against job size <span>· press or drag to resize the job</span></h2>
+        <ul class="legend" aria-label="Key">
+          <li><span class="sw ln" aria-hidden="true"></span><span id="lgCur"></span></li>
+          <li><span class="sw lo2" aria-hidden="true"></span>The other two fleets</li>
+          <li><span class="sw ring" aria-hidden="true"></span>Meta’s reported Llama 3 figure</li>
+        </ul>
+      </div>
+      <div class="curvebox">
+        <svg id="curve" role="img"></svg>
+        <div class="tip" id="curveTip" hidden aria-hidden="true"></div>
+      </div>
+      <div class="what"><p id="what"></p><p class="src" id="whatSrc"></p></div>
+    </div>
+  </div>
+
+  <!-- the causes -->
+  <div class="listw pn">
+    <div class="pn-hd">
+      <h2>What stops it, at your size <span class="meta" id="listMeta"></span></h2>
+      <div class="r">
+        <button class="btn ghost" type="button" id="showAll" aria-controls="causeT" aria-expanded="false"></button>
+        <button class="btn ghost" type="button" id="copySummary">Copy goodput brief</button>
+      </div>
+    </div>
+    <table class="pl" id="causeT">
+      <caption class="sr-only">The published causes of job interruptions, ranked by how often they occurred, scaled to your job size and failure rate, with the job time each costs a day.</caption>
+      <thead><tr><th scope="col"><span class="sr-only">Rank</span></th><th scope="col">Cause</th><th scope="col">Share</th><th scope="col" class="n">At your size</th><th scope="col" class="n">Job time lost a day</th></tr></thead>
+      <tbody id="causes"></tbody>
+    </table>
+    <div class="print-url" id="printUrl"></div>
+  </div>
+</section>
+
+<!-- ================= UNDER THE HOOD ================= -->
+<section class="ref" id="ref" aria-labelledby="refH"><div class="wrap">
+  <div class="ref-hd">
+    <h2 id="refH"><svg class="glyph" aria-hidden="true"><use href="#g-goodput"/></svg>Under the hood</h2>
+    <div class="tabs" role="tablist" aria-labelledby="refH">
+      <button type="button" role="tab" id="t-why" aria-controls="why" aria-selected="true">Why</button>
+      <button type="button" role="tab" id="t-how" aria-controls="how" aria-selected="false" tabindex="-1">How it works</button>
+      <button type="button" role="tab" id="t-data" aria-controls="data" aria-selected="false" tabindex="-1">Data</button>
+      <button type="button" role="tab" id="t-method" aria-controls="method" aria-selected="false" tabindex="-1">Method</button>
+    </div>
+  </div>
+
+  <div role="tabpanel" id="why" aria-labelledby="t-why" tabindex="0">
+    <p class="lead"><span>A cluster is sold by the GPU-hour. A model is trained by the GPU-hours that made it into a checkpoint.</span> The difference is published, and it never appears on the quote.</p>
+    <div class="cards">
+      <div><h3>Failures scale with the job</h3><p>In a synchronous job every GPU is a single point of failure. A part that fails once in six years on one GPU stops a 16,384-GPU job every three hours, and a 100,000-GPU job every half hour.</p></div>
+      <div><h3>Every failure is paid twice</h3><p>Once in the restart, while the bad node is drained and the job reloads, and again in the work since the last checkpoint, which is thrown away and done over. Neither shows up as an outage on any dashboard.</p></div>
+      <div><h3>The checkpoint interval is the dial</h3><p>Checkpoint often and the job stalls writing. Checkpoint rarely and each failure throws away more. The interval that loses least has been known since 1974: the square root of twice the stall times the time between failures.</p></div>
+    </div>
+    <dl class="stats" aria-label="The Llama 3 run">
+      <div><dt>Between interruptions, Llama 3 on 16,384 H100s</dt><dd id="stMtbf"></dd></div>
+      <div><dt>Of those interruptions traced to the GPU itself</dt><dd id="stGpu"></dd></div>
+      <div><dt>Between failures for any one GPU on that run</dt><dd id="stOne"></dd></div>
+    </dl>
+  </div>
+
+  <div role="tabpanel" id="how" aria-labelledby="t-how" tabindex="0" hidden>
+    <p class="lead"><span>One rate, one square root, one ratio.</span> The example follows whatever job you have set up.</p>
+    <div class="two">
+      <ol class="steps">
+        <li><div><h3>How often the job stops</h3><p>A published rate of interruptions per thousand node-days, times the nodes in your job. The rates come from whole fleets over months, so they already include the bad batches and the bad weeks.</p></div></li>
+        <li><div><h3>How often to checkpoint</h3><p>Young’s first-order optimum: <b>√(2 × stall × time between failures)</b>. It balances the time spent writing against the work lost when a failure lands mid-interval, which is half an interval on average.</p></div></li>
+        <li><div><h3>What each failure costs</h3><p>The restart, plus half an interval of work rolled back. Both stop the whole job, so they are paid on every GPU at once.</p></div></li>
+        <li><div><h3>What is left</h3><p>The time between failures minus what failures cost, divided by the checkpoint stall. That is goodput, the share of paid GPU-hours that reaches a checkpoint. Meta calls it effective training time.</p></div></li>
+      </ol>
+      <figure class="ex">
+        <figcaption>Worked example, from the job you have set up</figcaption>
+        <p class="q" id="wxQ"></p>
+        <ol class="chain" id="wx"></ol>
+        <p class="out" id="wxOut"></p>
+      </figure>
+    </div>
+  </div>
+
+  <div role="tabpanel" id="data" aria-labelledby="t-data" tabindex="0" hidden>
+    <p class="lead"><span>Three published failure rates and one published breakdown of causes.</span> Fleets that never published a rate per node are not here, however large.</p>
+    <h3 class="tt">The fleets</h3>
+    <div class="tscroll" tabindex="0" role="region" aria-label="Fleet table, scrolls sideways on narrow screens">
+      <table class="ref-t">
+        <caption class="sr-only">Each published failure rate, with what it would mean at 16,384 GPUs and where it comes from</caption>
+        <thead><tr><th scope="col">Fleet</th><th scope="col">Hardware</th><th scope="col">Per thousand node-days</th><th scope="col">At 16,384 GPUs</th><th scope="col">Evidence</th></tr></thead>
+        <tbody id="profTable"></tbody>
+      </table>
+    </div>
+    <h3 class="tt" style="margin-top:48px">The causes, Llama 3 Table 5</h3>
+    <div class="tscroll" tabindex="0" role="region" aria-label="Cause table, scrolls sideways on narrow screens">
+      <table class="ref-t">
+        <caption class="sr-only">The 419 unexpected interruptions in the Llama 3 405B pretraining run, by root cause</caption>
+        <thead><tr><th scope="col">Cause</th><th scope="col">Category</th><th scope="col">Interruptions</th><th scope="col">Share</th><th scope="col">Note</th></tr></thead>
+        <tbody id="causeTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div role="tabpanel" id="method" aria-labelledby="t-method" tabindex="0" hidden>
+    <p class="lead"><span>Every constant, and where it came from.</span> The model is six lines.</p>
+    <div class="two">
+      <dl class="eq">
+        <div><dt>Failure rate</dt><dd>λ = GPUs ÷ 8 × rate per node-day</dd></div>
+        <div><dt>Between failures</dt><dd>M = 1 ÷ λ</dd></div>
+        <div><dt>Interval</dt><dd>τ = √(2 × stall × M)   (Young, 1974)</dd></div>
+        <div><dt>Goodput</dt><dd>(1 − λ × (restart + τ ÷ 2)) ÷ (1 + stall ÷ τ)</dd></div>
+        <div><dt>Lost a day</dt><dd>GPUs × 24 h × (1 − goodput)</dd></div>
+        <div><dt>Spares</dt><dd>99th percentile of Poisson(λ × node share × repair days)</dd></div>
+      </dl>
+      <div class="calls">
+        <p><b>It assumes one synchronous job across the whole cluster</b>, which is how frontier pretraining runs. Many small jobs on the same cluster lose far less, because a failure stops only the job it lands in.</p>
+        <p><b>Failures arrive at a constant rate.</b> No burn-in, no wear-out, no bad weeks; the published rates average all of those in. The Llama 3 rate counts only the 419 unexpected interruptions, not the 47 planned ones.</p>
+        <p><b>It is first order.</b> The goodput formula is the one Meta’s reliability study uses, and it holds while restart plus half an interval is small against the time between failures. It ignores failures during a restart, so below about half goodput it flatters the job.</p>
+        <p><b>The cause mix is Llama 3’s, applied to every fleet.</b> It is the only per-component breakdown published at this scale. The paper prints 30.1 percent for faulty GPUs; 148 of 419 is 35.3, and the page uses the counts.</p>
+        <p><b>Spares count only the causes that take a node out</b>: GPU, host and unplanned host maintenance, 77 percent of the total. Software, network fabric and unknown causes restart the job without losing hardware. The repair turnaround is your number, not a published one.</p>
+        <p><b>These are A100 and H100 fleets.</b> Rack-scale systems like GB200 NVL72 change the failure domain from a node to a rack, and no fleet has published a rate for them at scale yet.</p>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<section class="sec about" aria-label="About">
+  <div class="wrap">
+    <div class="so-half suite">
+      <h2 class="so-label">Part of Infrabench</h2>
+      <p class="so-line">Free tools for the people who build data centers, <span>on public data with every constant on the page.</span></p>
+      <ul class="so-rows" aria-label="The other Infrabench tools">
+        <li><a href="/rack-budget/"><svg class="glyph" aria-hidden="true"><use href="#g-rack-budget"/></svg><span><span class="so-name">Rack Budget</span><span class="so-what">what actually fits in your megawatts</span></span><span class="so-end" aria-hidden="true">&rarr;</span></a></li>
+        <li><a href="/crash-cart/"><svg class="glyph" aria-hidden="true"><use href="#g-crash-cart"/></svg><span><span class="so-name">Crash Cart</span><span class="so-what">which drives to pull this week</span></span><span class="so-end" aria-hidden="true">&rarr;</span></a></li>
+        <li><a href="/where-the-power-is/"><svg class="glyph" aria-hidden="true"><use href="#g-power-map"/></svg><span><span class="so-name">Where the power is</span><span class="so-what">which grid can energize you first</span></span><span class="so-end" aria-hidden="true">&rarr;</span></a></li>
+        <li><a href="/outage-replay/"><svg class="glyph" aria-hidden="true"><use href="#g-outage-replay"/></svg><span><span class="so-name">Outage replay</span><span class="so-what">how long the status page stayed green</span></span><span class="so-end" aria-hidden="true">&rarr;</span></a></li>
+      </ul>
+    </div>
+    <div class="so-half me">
+      <h2 class="so-label">Built by Adrian Mucha</h2>
+      <p class="so-line">A product designer for the software most designers avoid: <span>data center tools, AI tooling and operator consoles where a wrong click costs real money.</span></p>
+      <ul class="so-rows" aria-label="Contact">
+        <li><button type="button" data-contact aria-haspopup="dialog"><svg class="glyph" aria-hidden="true"><use href="#g-mail"/></svg><span><span class="so-name">Write to Adrian</span><span class="so-what">Opens a short form</span></span><span class="so-end" aria-hidden="true">&rarr;</span></button></li>
+        <li><a href="https://adrianmucha.us" target="_blank" rel="noopener"><svg class="glyph" aria-hidden="true"><use href="#g-out"/></svg><span><span class="so-name">See the portfolio</span><span class="so-what">adrianmucha.us</span></span><span class="so-end" aria-hidden="true">&#8599;</span></a></li>
+        <li><div class="so-open"><svg class="glyph" aria-hidden="true"><use href="#g-open"/></svg><span><span class="so-name">Open to new work</span><span class="so-what">Based in Los Angeles</span></span></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="fine">Failure rates come from Meta’s <a href="https://arxiv.org/abs/2407.21783" target="_blank" rel="noopener">The Llama 3 Herd of Models</a> (section 3.3.4 and Table 5) and Kokolis et al., <a href="https://arxiv.org/abs/2410.21680" target="_blank" rel="noopener">Revisiting Reliability in Large-Scale Machine Learning Research Clusters</a>. The checkpoint interval is J. W. Young’s <a href="https://dl.acm.org/doi/10.1145/361147.361115" target="_blank" rel="noopener">first order approximation to the optimum checkpoint interval</a> (1974), refined by J. T. Daly’s <a href="https://doi.org/10.1016/j.future.2004.11.016" target="_blank" rel="noopener">higher order estimate</a> (2006).</p>
+    <p class="fine">A planning model for one synchronous job, not a measurement of your fleet. Your own interruption log beats every number here.</p>
+    <p class="meta">Goodput is part of <a href="/">Infrabench</a> by <a href="https://adrianmucha.us" target="_blank" rel="noopener">Adrian Mucha</a> / FruitBat Design, Los&nbsp;Angeles &middot; MIT licensed &middot; <a href="https://github.com/adrianomucha/infrabench" target="_blank" rel="noopener">Source&nbsp;on&nbsp;GitHub</a></p>
+  </div>
+</footer>
+
+<div class="mini" id="mini" aria-hidden="true"><span><b id="miniN"></b></span><span id="miniW"></span></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================================
+     THE DATA. Three published failure rates and one published breakdown of causes.
+     Everything else on the page is derived from this block, so correcting it is a single
+     edit here.
+       rate   unexpected job interruptions per thousand node-days, at 8 GPUs a node
+       at     the evidence behind the rate, in words
+     ========================================================================= */
+  var GPN = 8;
+  var PROFILES = [
+    {
+      id:"llama3", name:"Llama 3 405B pretraining", hw:"H100, one 16,384-GPU job", when:"Meta, 2024",
+      rate:419 / (54 * 16384 / GPN) * 1000,
+      at:"419 unexpected interruptions in a 54-day snapshot of one synchronous job on 16,384 H100s. Meta reports over 90 percent effective training time.",
+      src:"https://arxiv.org/abs/2407.21783", srcName:"The Llama 3 Herd of Models, section 3.3.4"
+    },
+    {
+      id:"rsc1", name:"Meta research cluster RSC-1", hw:"A100, 16k GPUs, shared", when:"Meta, 2024",
+      rate:6.50,
+      at:"Eleven months of a general research cluster. With RSC-2, about 4 million jobs and over 150 million A100 hours.",
+      src:"https://arxiv.org/abs/2410.21680", srcName:"Revisiting Reliability in Large-Scale ML Research Clusters"
+    },
+    {
+      id:"rsc2", name:"Meta research cluster RSC-2", hw:"A100, 8k GPUs, shared", when:"Meta, 2024",
+      rate:2.34,
+      at:"The same study’s vision cluster, over the same eleven months.",
+      src:"https://arxiv.org/abs/2410.21680", srcName:"Revisiting Reliability in Large-Scale ML Research Clusters"
+    }
+  ];
+  /* Llama 3, Table 5: the 419 unexpected interruptions by root cause, categories as printed.
+     node marks the causes whose fix takes a node out of the job until it is repaired. */
+  var CAUSES = [
+    ["Faulty GPU", "GPU", 148], ["GPU HBM3 memory", "GPU", 72], ["Software bug", "Dependency", 54],
+    ["Network switch or cable", "Network", 35], ["Host maintenance", "Unplanned maintenance", 32],
+    ["GPU SRAM memory", "GPU", 19], ["GPU system processor", "GPU", 17], ["NIC", "Host", 7],
+    ["NCCL watchdog timeout", "Unknown", 7], ["Silent data corruption", "GPU", 6],
+    ["GPU thermal interface and sensor", "GPU", 6], ["SSD", "Host", 3], ["Power supply", "Host", 3],
+    ["Server chassis", "Host", 2], ["IO expansion board", "Host", 2], ["Dependency", "Dependency", 2],
+    ["CPU", "Host", 2], ["System memory", "Host", 2]
+  ].map(function(c){ return { name:c[0], cat:c[1], n:c[2], node:c[1] === "GPU" || c[1] === "Host" || c[1] === "Unplanned maintenance" }; });
+  var NCAUSE = CAUSES.reduce(function(a, c){ return a + c.n; }, 0);
+  var NODE_SHARE = CAUSES.reduce(function(a, c){ return a + (c.node ? c.n : 0); }, 0) / NCAUSE;
+
+  var DAY = 1440;   // minutes
+  var DEFAULTS = { g:16384, f:"llama3", w:5, u:5, cp:0, rd:3, cost:0, seed:1 };
+  var state = {};
+  for(var k0 in DEFAULTS) state[k0] = DEFAULTS[k0];
+
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+  function byId(id){
+    for(var i = 0; i < PROFILES.length; i++){ if(PROFILES[i].id === id) return PROFILES[i]; }
+    return PROFILES[0];
+  }
+
+  /* ---------- the model ---------- */
+  // job interruptions a minute, for a job of g GPUs on fleet p
+  function lam(g, p){ return g / GPN * p.rate / 1000 / DAY; }
+  // Young's first-order optimum
+  function optTau(w, l){ return clamp(Math.sqrt(2 * w / l), 1, DAY); }
+  /* Each paid minute, split four ways. Per interval of tau minutes of training the job also
+     writes for w, and each failure costs the restart u and on average half an interval rolled
+     back. This is the ratio in Meta's reliability study, Eq. 2, broken into its parts. */
+  function split(l, w, u, tau){
+    var ck = w / tau, rs = l * u, rw = l * tau / 2, kept = 1 - rs - rw, D = 1 + ck;
+    if(kept <= 0){ var s = ck + rs + rw; return { E:0, ck:ck / s, rs:rs / s, rw:rw / s, dead:true }; }
+    return { E:kept / D, ck:ck / D, rs:rs / D, rw:rw / D, dead:false };
+  }
+  // the 99th percentile of a Poisson count: spares that cover 99 days in 100
+  function poisQ(m, q){
+    if(m <= 0) return 0;
+    if(m > 400) return Math.ceil(m + 2.326 * Math.sqrt(m));
+    var p = Math.exp(-m), c = p, n = 0;
+    while(c < q){ n++; p *= m / n; c += p; }
+    return n;
+  }
+  function compute(over){
+    var s = {}, k;
+    for(k in state) s[k] = state[k];
+    if(over) for(k in over) s[k] = over[k];
+    var p = byId(s.f), l = lam(s.g, p), opt = optTau(s.w, l), tau = s.cp || opt;
+    var sp = split(l, s.w, s.u, tau), spOpt = split(l, s.w, s.u, opt);
+    var perDay = l * DAY, inRepair = perDay * NODE_SHARE * s.rd;
+    return {
+      s:s, p:p, lam:l, M:1 / l, opt:opt, tau:tau, sp:sp, E:sp.E, Eopt:spOpt.E,
+      perDay:perDay, perFail:s.u + tau / 2,
+      gpuh:s.g * 24, lost:s.g * 24 * (1 - sp.E),
+      inRepair:inRepair, spares:poisQ(inRepair, 0.99)
+    };
+  }
+
+  /* A day of the job, simulated: failures arrive at random at the model's rate, training runs
+     in intervals of tau with a stall of w after each, and a failure throws away everything since
+     the last completed checkpoint and then pays the restart. Seeded, so a link replays the
+     same day. */
+  function rng(seed){
+    var a = seed >>> 0;
+    return function(){
+      a = (a + 0x6D2B79F5) >>> 0; var t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function simDay(l, w, u, tau, seed){
+    var r = rng(seed * 2654435761), segs = [], fails = [], pend = [], since = 0, t = 0;
+    function next(){ return t - Math.log(1 - r()) / l; }
+    var tf = next();
+    function fail(){
+      pend.forEach(function(i){ segs[i].k = "lo"; });
+      pend = []; since = 0; fails.push(t);
+      var e = Math.min(t + u, DAY);
+      segs.push({ a:t, b:e, k:"rs" }); t = e; tf = next();
+    }
+    while(t < DAY){
+      var e = Math.min(t + tau - since, tf, DAY);
+      if(e > t){ segs.push({ a:t, b:e, k:"tr" }); pend.push(segs.length - 1); since += e - t; t = e; }
+      if(t >= DAY) break;
+      if(t >= tf){ fail(); continue; }
+      e = Math.min(t + w, tf, DAY);
+      segs.push({ a:t, b:e, k:"ck" }); pend.push(segs.length - 1); t = e;
+      if(t >= DAY) break;
+      if(t >= tf){ fail(); continue; }
+      pend = []; since = 0;
+    }
+    var tot = { tr:0, ck:0, lo:0, rs:0 };
+    segs.forEach(function(sg){ tot[sg.k] += sg.b - sg.a; });
+    return { segs:segs, fails:fails, tot:tot };
+  }
+
+  /* ===== MODEL END: everything above is the data and the model; everything below draws it ===== */
+
+  var NB = " ";
+  var reduce = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches:false };
+  function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function q(el, sel){ return el.querySelector(sel); }
+  function fmt(n){ return Math.round(n).toLocaleString("en-US"); }
+  function f1(n){ return (Math.round(n * 10) / 10).toFixed(1); }
+  function ease(k){ return 1 - Math.pow(1 - k, 3); }
+  function pct(f){ return (100 * clamp(f, 0, 1)).toFixed(2) + "%"; }
+  function pl(n, one, many){ return n === 1 ? one : (many || one + "s"); }
+  // three figures at most: 940, 91.2K, 1.45M
+  function compact(n){
+    if(n >= 999500) return (n / 1e6 >= 99.95 ? fmt(n / 1e6) : (n / 1e6).toFixed(n / 1e6 >= 9.995 ? 1 : 2)) + "M";
+    if(n >= 999.5) return (n / 1e3 >= 99.95 ? fmt(n / 1e3) : (n / 1e3).toFixed(1)) + "K";
+    return fmt(n);
+  }
+  function money(n){
+    var v, s;
+    if(n >= 9995e5){ v = n / 1e9; s = "B"; } else if(n >= 999500){ v = n / 1e6; s = "M"; }
+    else return n >= 9999.5 ? "$" + fmt(n / 1e3) + "K" : "$" + fmt(n);
+    return "$" + (v >= 99.95 ? fmt(v) : v.toFixed(1)) + s;
+  }
+  function price(c){ return "$" + (c % 1 ? c.toFixed(2) : c); }
+  // a span of minutes as [number, unit]: 43 min, 3.1 hours, 2.3 days
+  function span(m){
+    if(m < 1) return [fmt(m * 60), "s"];
+    if(m < 99.5) return [m < 9.95 ? f1(m).replace(/\.0$/, "") : fmt(m), "min"];
+    if(m < 2880) return [f1(m / 60), "hours"];
+    if(m < 365 * DAY) return [f1(m / DAY), "days"];
+    return [f1(m / DAY / 365), "years"];
+  }
+  function spanT(m){ var s = span(m); return s[0] + NB + s[1]; }
+  function stallT(w){ return w < 1 ? fmt(w * 60) + NB + "s" : (w % 1 ? f1(w) : w) + NB + "min"; }
+  function daysT(d){ return d === 0.5 ? "half a day" : (d % 1 ? f1(d) : d) + NB + pl(d, "day"); }
+  function dayAdj(d){ return d === 0.5 ? "half-day" : (d % 1 ? f1(d) : d) + "-day"; }
+  // how often, in words: 4.4 a day, every 3.2 days
+  function often(perDay){
+    if(perDay >= 0.995) return f1(perDay).replace(/\.0$/, "") + " a day";
+    var d = 1 / perDay;
+    return d < 365 ? "every " + (d < 99.5 ? f1(d).replace(/\.0$/, "") : fmt(d)) + NB + "days" : "every " + f1(d / 365).replace(/\.0$/, "") + NB + "years";
+  }
+  function pts(d){ return f1(Math.abs(d * 100)) + NB + "pts"; }
+
+  /* ---------- numbers that count to their new value ---------- */
+  var tw = {}, dragging = false;
+  function tweenText(id, to, f){
+    var el = $(id), st = tw[id];
+    if(!st || reduce.matches || dragging || !isFinite(to) || !isFinite(st.shown)){
+      if(st) cancelAnimationFrame(st.raf);
+      tw[id] = { shown:to, to:to, raf:0 }; el.textContent = f(to); return;
+    }
+    if(st.to === to) return;
+    cancelAnimationFrame(st.raf);
+    var from = st.shown, t0 = null; st.to = to;
+    (function step(ts){
+      if(t0 === null) t0 = ts;
+      var k = Math.min((ts - t0) / 320, 1);
+      st.shown = k < 1 ? from + (to - from) * ease(k) : to;
+      el.textContent = f(st.shown);
+      if(k < 1) st.raf = requestAnimationFrame(step);
+    })(performance.now());
+  }
+  function setText(id, s){ if(tw[id]){ cancelAnimationFrame(tw[id].raf); delete tw[id]; } $(id).textContent = s; }
+  function flash(el){ if(reduce.matches) return; el.classList.remove("hit"); void el.offsetWidth; el.classList.add("hit"); }
+  function chip(id, dir, text, tone){
+    var el = $(id); el.className = "d" + (tone ? " " + tone : "");
+    el.innerHTML = text ? (dir ? '<i aria-hidden="true">' + (dir > 0 ? "▲" : "▼") + '</i>' : "") + text : "";
+  }
+
+  /* ---------- the five figures, each saying how it moved ---------- */
+  var kpiBase = null, lastR = null, lastShown = null, dragShown = null;
+  function vals(r){ return [r.E, r.M, r.tau, r.lost, r.spares]; }
+  function renderKpis(r){
+    var v = vals(r), b = kpiBase, sp;
+
+    tweenText("kv0", r.E * 100, function(n){ return f1(n); });
+    $("ks0").textContent = r.sp.dead ? "the job never reaches a checkpoint" : "of every paid GPU-hour reaches a checkpoint";
+    if(b && Math.abs(b[0] - v[0]) >= 0.0005) chip("kd0", v[0] > b[0] ? 1 : -1, pts(v[0] - b[0]), v[0] > b[0] ? "good" : "bad");
+    else chip("kd0", 0, "");
+
+    sp = span(r.M);
+    setText("kv1", sp[0]); $("ku1").textContent = sp[1];
+    $("ks1").textContent = (r.perDay >= 0.995 ? f1(r.perDay).replace(/\.0$/, "") + " interruptions a day" : "one interruption " + often(r.perDay)) + " on " + fmt(r.s.g / GPN) + " nodes";
+    if(b && Math.abs(b[1] - v[1]) > 0.01) chip("kd1", v[1] > b[1] ? 1 : -1, "was " + spanT(b[1]), v[1] > b[1] ? "good" : "bad");
+    else chip("kd1", 0, "");
+
+    sp = span(r.tau);
+    setText("kv2", sp[0]); $("ku2").textContent = sp[1];
+    $("ks2").textContent = state.cp ? (r.Eopt - r.E >= 0.0005 ? "the optimum, " + spanT(r.opt) + ", keeps " + pts(r.Eopt - r.E) + " more" : "at the optimum, " + spanT(r.opt)) : "Young’s optimum for a " + stallT(state.w) + " stall";
+    if(b && Math.abs(b[2] - v[2]) > 0.01) chip("kd2", 0, "was " + spanT(b[2]), ""); else chip("kd2", 0, "");
+
+    tweenText("kv3", r.lost, function(n){ return compact(n); });
+    $("ks3").textContent = state.cost ? money(r.lost * state.cost) + " a day at " + price(state.cost) + " a GPU-hour" : "of " + compact(r.gpuh) + " paid for";
+    if(b && Math.abs(b[3] - v[3]) >= 1) chip("kd3", v[3] > b[3] ? 1 : -1, compact(Math.abs(v[3] - b[3])) + (v[3] > b[3] ? " more" : " fewer"), v[3] > b[3] ? "bad" : "good");
+    else chip("kd3", 0, "");
+
+    tweenText("kv4", r.spares, function(n){ return fmt(n); });
+    $("ks4").textContent = "covers 99 days in 100 at a " + dayAdj(state.rd) + " repair";
+    if(b && b[4] !== v[4]) chip("kd4", v[4] > b[4] ? 1 : -1, Math.abs(v[4] - b[4]) + (v[4] > b[4] ? " more" : " fewer"), "");
+    else chip("kd4", 0, "");
+
+    var shown = [f1(r.E * 100), spanT(r.M), spanT(r.tau), compact(r.lost), String(r.spares)];
+    if(lastShown && !dragging){ for(var i = 0; i < 5; i++) if(lastShown[i] !== shown[i]) flash($("k" + i)); }
+    lastShown = shown;
+  }
+
+  /* one line, only when something deserves saying */
+  function renderAlert(r){
+    var a = null;
+    if(r.sp.dead) a = ["bad", "At " + fmt(state.g) + " GPUs a restart plus half an interval (" + spanT(r.perFail) + ") outlasts the time between failures (" + spanT(r.M) + "). The job loses ground faster than it checkpoints."];
+    else if(r.E < 0.5) a = ["warn", "Below half, the first-order model flatters the job: it does not count failures that land during a restart. Split the job or cut restarts before buying more GPUs."];
+    else if(state.cp && r.Eopt - r.E >= 0.01) a = ["warn", "Checkpointing every " + spanT(r.tau) + " costs " + pts(r.Eopt - r.E) + " against the optimum of " + spanT(r.opt) + ", or " + compact((r.Eopt - r.E) * r.gpuh) + " GPU-hours a day."];
+    $("alert").hidden = !a;
+    if(a){ $("alert").className = "alert " + a[0]; $("alertT").textContent = a[1]; }
+  }
+
+  /* ---------- the fleets in the rail ---------- */
+  function buildProfs(){
+    $("profs").innerHTML = PROFILES.map(function(p){
+      return '<label class="prof" data-id="' + p.id + '"><input type="radio" name="prof" value="' + p.id + '">' +
+        '<span class="nm">' + esc(p.name) + '</span><span class="dt">' + esc(p.hw) + '</span>' +
+        '<span class="g"></span></label>';
+    }).join("");
+  }
+
+  /* ---------- the day ---------- */
+  var INK = null;
+  function ink(){
+    if(!INK) INK = { tr:"#12A97A", ck:"#AAB3BD", rs:cssVar("--v-slip"), imp:cssVar("--v-miss"), tx:cssVar("--tx"), tx2:cssVar("--tx2"), tx3:cssVar("--tx3"),
+                     rule:cssVar("--line"), rule2:cssVar("--line2"), surf:cssVar("--bg2"), bg:cssVar("--bg") };
+    return INK;
+  }
+  function txt(x, y, s, anchor, fill, extra){
+    return '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="' + anchor + '" fill="' + fill + '" font-size="12" font-family="Archivo, sans-serif"' + (extra || "") + '>' + s + '</text>';
+  }
+  function boxW(svg){
+    var p = svg.parentNode;
+    return Math.max(280, p.clientWidth - (parseFloat(getComputedStyle(p).paddingLeft) * 2 || 0) || 700);
+  }
+  var day = { sim:null, g:null };
+  function runDay(r){ day.sim = simDay(r.lam, state.w, state.u, r.tau, state.seed); }
+  function drawDay(){
+    if(!lastR || !day.sim) return;
+    var svg = $("day"), K = ink(), W = boxW(svg), H = 92, L = 0, R = 0, pw = W - L - R, o = [], s = day.sim;
+    var yF = 22, yB = 30, bh = 30, ax = 70;
+    day.g = { W:W, L:L, pw:pw, yB:yB, bh:bh };
+    function X(m){ return L + m / DAY * pw; }
+    o.push('<defs><pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="rgba(255,91,91,.25)"/><line x1="0" y1="0" x2="0" y2="5" stroke="rgba(255,91,91,.9)" stroke-width="2"/></pattern></defs>');
+    o.push('<rect x="' + L + '" y="' + yB + '" width="' + pw + '" height="' + bh + '" fill="' + K.rule + '"/>');
+    var col = { tr:K.tr, ck:K.ck, rs:K.rs, lo:"url(#hatch)" };
+    s.segs.forEach(function(sg){
+      var x0 = X(sg.a), w = Math.max(sg.k === "tr" ? 0 : 0.8, X(sg.b) - x0);
+      if(w > 0) o.push('<rect x="' + x0.toFixed(2) + '" y="' + yB + '" width="' + w.toFixed(2) + '" height="' + bh + '" fill="' + col[sg.k] + '"/>');
+    });
+    // each failure, as a red tick over the bar; past sixty they would only be a smear
+    if(s.fails.length <= 60) s.fails.forEach(function(f){
+      var x = X(f);
+      o.push('<rect x="' + (x - 1).toFixed(1) + '" y="' + (yF - 8) + '" width="2" height="' + (bh + 12) + '" fill="' + K.imp + '"/>');
+    });
+    o.push('<line x1="' + L + '" y1="' + ax + '" x2="' + (L + pw) + '" y2="' + ax + '" stroke="' + K.rule2 + '"/>');
+    var stepH = W < 520 ? 6 : 3;
+    for(var h = 0; h <= 24; h += stepH){
+      var x = X(h * 60), a = h === 0 ? "start" : h === 24 ? "end" : "middle";
+      o.push('<line x1="' + x.toFixed(1) + '" y1="' + ax + '" x2="' + x.toFixed(1) + '" y2="' + (ax + 4) + '" stroke="' + K.rule2 + '"/>');
+      o.push(txt(x, ax + 18, h + "h", a, K.tx3));
+    }
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H); svg.setAttribute("height", H);
+    svg.innerHTML = o.join("");
+    var t = s.tot;
+    svg.setAttribute("aria-label", "A simulated day on " + fmt(state.g) + " GPUs: " + s.fails.length + " " + pl(s.fails.length, "failure") + ". " +
+      spanT(t.tr) + " of training kept, " + spanT(t.ck) + " writing checkpoints, " + spanT(t.lo) + " rolled back and " + spanT(t.rs) + " restarting.");
+  }
+  function dayTip(ev){
+    var tip = $("dayTip"), G = day.g; if(!G || !day.sim) return;
+    var rect = $("day").getBoundingClientRect(), sc = rect.width / G.W, px = (ev.clientX - rect.left) / sc, py = (ev.clientY - rect.top) / sc;
+    if(px < G.L || px > G.L + G.pw || py < G.yB - 14 || py > G.yB + G.bh + 4){ tip.hidden = true; return; }
+    var m = (px - G.L) / G.pw * DAY, sg = null;
+    day.sim.segs.forEach(function(x){ if(m >= x.a && m < x.b) sg = x; });
+    if(!sg){ tip.hidden = true; return; }
+    var NAME = { tr:"Training, kept", ck:"Writing a checkpoint", lo:"Training, rolled back", rs:"Restarting after a failure" };
+    function hm(v){ var hh = Math.floor(v / 60), mm = Math.floor(v % 60); return hh + ":" + (mm < 10 ? "0" : "") + mm; }
+    tip.textContent = "";
+    var b = document.createElement("b"); b.textContent = NAME[sg.k]; tip.appendChild(b);
+    var d = document.createElement("div"); d.className = "row";
+    var s1 = document.createElement("span"); s1.textContent = hm(sg.a) + " to " + hm(sg.b);
+    var s2 = document.createElement("span"); s2.textContent = spanT(sg.b - sg.a);
+    d.appendChild(s1); d.appendChild(s2); tip.appendChild(d);
+    tip.hidden = false;
+    var box = tip.parentNode.getBoundingClientRect(), x = ev.clientX - box.left, y = ev.clientY - box.top, w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = clamp(x + 14, 0, Math.max(0, box.width - w)) + "px";
+    tip.style.top = (y - h - 12 < -30 ? y + 18 : y - h - 12) + "px";
+  }
+  function sb(el, parts){
+    el.innerHTML = parts.map(function(p){ return '<i class="' + p[0] + '" style="flex:0 0 ' + pct(p[1]) + '"></i>'; }).join("");
+  }
+  function renderDay(r){
+    var s = day.sim, t = s.tot, n = s.fails.length;
+    $("dayTitle").innerHTML = "A simulated day on " + fmt(state.g) + " GPUs <span>· " + n + " " + pl(n, "failure") + ", day " + state.seed + "</span>";
+    sb($("sbE"), [["tr", r.sp.E], ["ck", r.sp.ck], ["lo", r.sp.rw], ["rs", r.sp.rs]]);
+    sb($("sbD"), [["tr", t.tr / DAY], ["ck", t.ck / DAY], ["lo", t.lo / DAY], ["rs", t.rs / DAY]]);
+    $("svE").innerHTML = f1(r.E * 100) + "% <small>kept</small>";
+    $("svD").innerHTML = f1(t.tr / DAY * 100) + "% <small>kept</small>";
+    $("dayStat").textContent = n ? "Expected " + f1(r.perDay).replace(/\.0$/, "") + " a day. This one lost " + spanT(t.lo) + " to rework and " + spanT(t.rs) + " to restarts." :
+      "No failures today. At this size expect one " + often(r.perDay) + ".";
+    drawDay();
+  }
+
+  /* ---------- goodput against job size ---------- */
+  var cv = { g:null, down:false };
+  var GMIN = 128, GMAX = 131072;
+  function curveGeo(){ var W = boxW($("curve")); return { W:W, H:220, L:40, R:W < 520 ? 10 : 16, T:14, B:30 }; }
+  function goodAt(g, p){ var l = lam(g, p), tau = state.cp || optTau(state.w, l); return split(l, state.w, state.u, tau).E; }
+  function drawCurve(){
+    if(!lastR) return;
+    var svg = $("curve"), K = ink(), G = curveGeo(), pw = G.W - G.L - G.R, ph = G.H - G.T - G.B, o = [];
+    cv.g = G;
+    function X(g){ return G.L + (Math.log2(g) - Math.log2(GMIN)) / (Math.log2(GMAX) - Math.log2(GMIN)) * pw; }
+    function Y(e){ return G.T + (1 - e) * ph; }
+    [0, .25, .5, .75, 1].forEach(function(e){
+      o.push('<line x1="' + G.L + '" y1="' + Y(e).toFixed(1) + '" x2="' + (G.L + pw) + '" y2="' + Y(e).toFixed(1) + '" stroke="' + (e ? K.rule : K.rule2) + '"/>');
+      o.push(txt(G.L - 8, Y(e) + 4, (e * 100) + "%", "end", K.tx3));
+    });
+    var ticks = G.W < 520 ? [[128,"128"],[1024,"1K"],[8192,"8K"],[65536,"64K"]] : [[128,"128"],[512,"512"],[2048,"2K"],[8192,"8K"],[32768,"32K"],[131072,"131K"]];
+    ticks.forEach(function(t){
+      var x = X(t[0]);
+      o.push('<line x1="' + x.toFixed(1) + '" y1="' + (G.T + ph) + '" x2="' + x.toFixed(1) + '" y2="' + (G.T + ph + 4) + '" stroke="' + K.rule2 + '"/>');
+      o.push(txt(x, G.T + ph + 18, t[1], t[0] === GMIN ? "start" : t[0] === GMAX ? "end" : "middle", K.tx3));
+    });
+    function path(p){
+      var d = [];
+      for(var i = 0; i <= 80; i++){ var g = GMIN * Math.pow(GMAX / GMIN, i / 80); d.push((i ? "L" : "M") + X(g).toFixed(1) + " " + Y(goodAt(g, p)).toFixed(1)); }
+      return d.join(" ");
+    }
+    PROFILES.forEach(function(p){ if(p.id !== state.f) o.push('<path d="' + path(p) + '" fill="none" stroke="' + K.tx3 + '" stroke-width="1.25" stroke-dasharray="4 4"/>'); });
+    o.push('<path d="' + path(byId(state.f)) + '" fill="none" stroke="' + K.tr + '" stroke-width="2.5"/>');
+    // Meta's own figure for the Llama 3 run, so the model can be checked against it
+    var mx = X(16384), my = Y(0.9);
+    o.push('<circle cx="' + mx.toFixed(1) + '" cy="' + my.toFixed(1) + '" r="5" fill="none" stroke="' + K.tx + '" stroke-width="1.5"/>');
+    var rl = mx + 130 > G.W;
+    o.push(txt(rl ? mx - 9 : mx + 9, my - 7, "over 90%, reported", rl ? "end" : "start", K.tx2));
+    // you
+    var cx = X(clamp(state.g, GMIN, GMAX)), cy = Y(lastR.E), lab = f1(lastR.E * 100) + "% at " + fmt(state.g);
+    o.push('<line x1="' + cx.toFixed(1) + '" y1="' + G.T + '" x2="' + cx.toFixed(1) + '" y2="' + (G.T + ph) + '" stroke="' + K.tx + '" stroke-width="1.5" stroke-dasharray="4 4"/>');
+    o.push('<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="5" fill="' + K.tx + '" stroke="' + K.surf + '" stroke-width="2"/>');
+    var right = cx < G.L + pw * 0.62, lw = lab.length * 6.6 + 14, lx = right ? cx + 10 : cx - 10 - lw, ly = clamp(cy - 30, G.T, G.T + ph - 22);
+    if(Math.abs(ly - (my - 20)) < 20 && Math.abs(cx - mx) < 160) ly = clamp(cy + 10, G.T, G.T + ph - 22);
+    o.push('<rect x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" width="' + lw.toFixed(1) + '" height="20" rx="2" fill="' + K.tx + '"/>');
+    o.push(txt(lx + lw / 2, ly + 14, lab, "middle", K.bg, ' font-weight="500"'));
+    svg.setAttribute("viewBox", "0 0 " + G.W + " " + G.H); svg.setAttribute("height", G.H);
+    svg.innerHTML = o.join("");
+    svg.setAttribute("aria-label", "Goodput against job size for " + byId(state.f).name + ", from " + f1(goodAt(GMIN, byId(state.f)) * 100) + " percent at 128 GPUs to " +
+      f1(goodAt(GMAX, byId(state.f)) * 100) + " percent at 131,072. Your job, " + fmt(state.g) + " GPUs, is at " + f1(lastR.E * 100) + " percent.");
+  }
+  // a GPU count from a position on the curve: powers of two stick, the rest round to two figures
+  function niceG(g){
+    var l2 = Math.log2(g);
+    if(Math.abs(l2 - Math.round(l2)) < 0.07) return Math.pow(2, Math.round(l2));
+    var mag = Math.pow(10, Math.floor(Math.log10(g)) - 1);
+    return Math.max(GPN, Math.round(Math.round(g / mag) * mag / GPN) * GPN);
+  }
+  function curveG(ev){
+    var G = cv.g, rect = $("curve").getBoundingClientRect(), sc = rect.width / G.W, px = (ev.clientX - rect.left) / sc;
+    var f = clamp((px - G.L) / (G.W - G.L - G.R), 0, 1);
+    return niceG(GMIN * Math.pow(GMAX / GMIN, f));
+  }
+
+  /* ---------- the causes, scaled to your job ---------- */
+  var showAll = false;
+  function buildCauses(){
+    var max = CAUSES[0].n;
+    $("causes").innerHTML = CAUSES.map(function(c, i){
+      return '<tr class="qr' + (i >= 8 ? " more" : "") + '"><td class="rk">' + (i + 1) + '</td>' +
+        '<td class="who"><span class="nm">' + esc(c.name) + '</span><span class="ar">' + esc(c.cat) + (c.node ? " · takes a node out" : "") + '</span></td>' +
+        '<td class="share"><span class="bar" aria-hidden="true"><i style="width:' + pct(c.n / max) + '"></i></span>' + f1(100 * c.n / NCAUSE) + '%</td>' +
+        '<td class="n ct"></td><td class="n lost"></td></tr>';
+    }).join("");
+  }
+  function renderCauses(r){
+    var rows = $("causes").children;
+    CAUSES.forEach(function(c, i){
+      var pd = r.perDay * c.n / NCAUSE;
+      q(rows[i], ".ct").textContent = often(pd);
+      q(rows[i], ".lost").textContent = r.sp.dead ? "all of it" : spanT(pd * r.perFail);
+    });
+    $("listMeta").textContent = " · Llama 3’s cause mix at the " + (state.f === "llama3" ? "Llama 3" : byId(state.f).name.replace("Meta research cluster ", "")) + " rate";
+    $("causeT").classList.toggle("all", showAll);
+    $("showAll").textContent = showAll ? "Show the top 8" : "Show all " + CAUSES.length;
+    $("showAll").setAttribute("aria-expanded", showAll ? "true" : "false");
+  }
+
+  /* ---------- the decision, in words ---------- */
+  function renderWhat(r){
+    var p = r.p, a = compute({ w:state.w / 2 }), b = compute({ u:state.u / 2 }), da = a.E - r.E, db = b.E - r.E;
+    var lever = da > db
+      ? "Halving the checkpoint stall to " + stallT(state.w / 2) + " buys back " + pts(da) + "; halving restarts buys " + pts(db) + ". Spend on checkpointing first."
+      : "Halving restarts to " + stallT(state.u / 2) + " buys back " + pts(db) + "; halving the checkpoint stall buys " + pts(da) + ". Spend on recovery first.";
+    $("what").innerHTML = r.sp.dead
+      ? "<b>The decision.</b> Split the job, or bring restarts and checkpoint stalls down until a checkpoint lands between failures. At this size no interval works."
+      : "<b>The decision.</b> Checkpoint every " + spanT(r.tau) + " and hold " + r.spares + " spare " + pl(r.spares, "node") + ". " + lever;
+    $("whatSrc").innerHTML = 'Rate: <a href="' + p.src + '" target="_blank" rel="noopener">' + esc(p.srcName) + '</a>';
+  }
+  function renderWorked(r){
+    var s = r.s, L = [], nodes = s.g / GPN;
+    $("wxQ").textContent = "How much of a " + fmt(s.g) + "-GPU job trains, at the " + r.p.name + " failure rate?";
+    L.push(fmt(s.g) + " GPUs ÷ 8 = <b>" + fmt(nodes) + " nodes</b>");
+    L.push(fmt(nodes) + " × " + r.p.rate.toFixed(2) + " per thousand node-days = <b>" + f1(r.perDay) + " interruptions a day</b>, one every " + spanT(r.M));
+    L.push(state.cp ? "checkpoint every <b>" + spanT(r.tau) + "</b>, set by hand (the optimum is " + spanT(r.opt) + ")"
+                    : "√(2 × " + stallT(s.w) + " × " + fmt(r.M) + " min) = checkpoint every <b>" + spanT(r.tau) + "</b>");
+    L.push("each failure costs " + stallT(s.u) + " restarting + " + spanT(r.tau / 2) + " rolled back = <b>" + spanT(r.perFail) + "</b>");
+    L.push(r.sp.dead ? "that outlasts the " + spanT(r.M) + " between failures: <b>goodput 0%</b>"
+      : "(1 − " + fmt(r.perFail) + " ÷ " + fmt(r.M) + ") ÷ (1 + " + stallT(s.w).replace(NB + "min", "") + " ÷ " + fmt(r.tau) + ") = <b>" + f1(r.E * 100) + "% goodput</b>");
+    $("wx").innerHTML = L.map(function(t){ return "<li><span>" + t + "</span></li>"; }).join("");
+    $("wxOut").textContent = "Of " + fmt(r.gpuh) + " GPU-hours paid for each day, " + fmt(r.lost) + " never reach a checkpoint" +
+      (state.cost ? ", " + money(r.lost * state.cost) + " at " + price(state.cost) + " a GPU-hour." : ".");
+  }
+
+  /* ---------- controls ---------- */
+  // GPUs on a log track, 128 to 131,072; the stall and the interval on two-piece log tracks
+  function gFromPos(t){ return niceG(GMIN * Math.pow(GMAX / GMIN, t / 1000)); }
+  function posFromG(g){ return Math.round(1000 * clamp(Math.log(g / GMIN) / Math.log(GMAX / GMIN), 0, 1)); }
+  function logPiece(t, a, m, b){ return t <= 500 ? a * Math.pow(m / a, t / 500) : m * Math.pow(b / m, (t - 500) / 500); }
+  function posPiece(v, a, m, b){ return Math.round(v <= m ? 500 * Math.log(v / a) / Math.log(m / a) : 500 + 500 * Math.log(v / m) / Math.log(b / m)); }
+  function wFromPos(t){ var w = logPiece(t, 0.1, 1, 30); return w < 1 ? Math.max(0.1, Math.round(w * 12) / 12) : w < 10 ? Math.round(w * 2) / 2 : Math.round(w); }
+  function cpFromPos(t){ var c = logPiece(t, 2, 30, 480); return c < 30 ? Math.round(c) : Math.round(c / 5) * 5; }
+  function setFill(el){ var mn = +el.min, mx = +el.max; el.style.setProperty("--fill", (mx > mn ? 100 * (el.value - mn) / (mx - mn) : 0) + "%"); }
+  function syncControls(r){
+    var held = document.activeElement;
+    if($("gpus") !== held) $("gpus").value = fmt(state.g);
+    if($("gR") !== held) $("gR").value = posFromG(state.g);
+    if($("wR") !== held) $("wR").value = posPiece(state.w, 0.1, 1, 30);
+    if($("uR") !== held) $("uR").value = state.u;
+    if($("cpR") !== held) $("cpR").value = posPiece(clamp(Math.round(state.cp || r.opt), 2, 480), 2, 30, 480);
+    if($("rdR") !== held) $("rdR").value = state.rd * 2;
+    if($("cost") !== held) $("cost").value = state.cost ? String(state.cost) : "";
+    ["gR","wR","uR","cpR","rdR"].forEach(function(id){ setFill($(id)); });
+    $("gR").setAttribute("aria-valuetext", fmt(state.g) + " GPUs");
+    $("wOut").textContent = stallT(state.w);
+    $("wR").setAttribute("aria-valuetext", stallT(state.w).replace(NB + "s", " seconds").replace(NB + "min", " minutes"));
+    $("uOut").textContent = stallT(state.u);
+    $("uR").setAttribute("aria-valuetext", state.u + " " + pl(state.u, "minute"));
+    $("cpOut").textContent = spanT(r.tau);
+    $("cpR").setAttribute("aria-valuetext", "every " + spanT(r.tau));
+    $("cpSv").textContent = state.cp ? "Every " + spanT(state.cp) : "Optimal";
+    $("cpNote").textContent = state.cp ? "Fixed by hand. The optimum here is " + spanT(r.opt) + "; drag to see what straying costs." : "Following Young’s optimum, which moves with the job. Pick Fixed to set your own.";
+    document.querySelectorAll("#cpSeg button").forEach(function(b){ b.setAttribute("aria-pressed", (b.getAttribute("data-cp") === "fixed") === !!state.cp ? "true" : "false"); });
+    $("rdOut").textContent = daysT(state.rd);
+    $("rdR").setAttribute("aria-valuetext", daysT(state.rd));
+    $("spSv").textContent = dayAdj(state.rd) + " repair" + (state.cost ? ", " + price(state.cost) : "");
+    document.querySelectorAll("#costSeg button").forEach(function(b){ b.setAttribute("aria-pressed", +b.getAttribute("data-c") === state.cost ? "true" : "false"); });
+    $("costNote").textContent = state.cost ? compact(r.lost) + " GPU-hours lost a day: " + money(r.lost * state.cost) + ", or " + money(r.lost * state.cost * 365) + " a year."
+      : "Optional: prices the GPU-hours that never reach a checkpoint";
+    document.querySelectorAll("#profs .prof").forEach(function(l){
+      var p = byId(l.getAttribute("data-id")), on = p.id === state.f;
+      l.classList.toggle("on", on); q(l, "input").checked = on;
+      q(l, ".g").textContent = spanT(1 / lam(state.g, p));
+    });
+  }
+  function isDefault(){ for(var k in DEFAULTS) if(k !== "seed" && state[k] !== DEFAULTS[k]) return false; return true; }
+  function renderTry(){
+    document.querySelectorAll(".try button").forEach(function(b){
+      var t = b.getAttribute("data-try");
+      b.disabled = (t === "async" && state.w === 0.5) || (t === "fast" && state.u === 1) || (t === "big" && state.g === 100000) || (t === "reset" && isDefault());
+    });
+  }
+
+  function render(){
+    var r = compute();
+    lastR = r;
+    runDay(r);
+    syncControls(r);
+    renderKpis(r);
+    renderAlert(r);
+    renderDay(r);
+    drawCurve();
+    $("lgCur").textContent = byId(state.f).name;
+    renderCauses(r);
+    renderWhat(r);
+    renderWorked(r);
+    renderTry();
+    renderMini(r);
+    announce(r);
+    writeUrl();
+  }
+  /* A user change. The figures then say how they moved from before it, and a drag counts
+     as one change from where it started. */
+  function change(fn, drag){
+    if(!(drag && dragging)){
+      kpiBase = lastR ? vals(lastR) : null;
+      if(drag) dragShown = lastShown ? lastShown.slice() : null;
+    }
+    dragging = !!drag;
+    fn(); render();
+  }
+  function endDrag(){
+    if(!dragging) return;
+    dragging = false;
+    if(dragShown && lastShown) for(var i = 0; i < 5; i++) if(dragShown[i] !== lastShown[i]) flash($("k" + i));
+    dragShown = null;
+  }
+
+  function renderMini(r){
+    $("miniN").textContent = f1(r.E * 100) + "% goodput";
+    $("miniW").textContent = "Breaks every " + spanT(r.M);
+  }
+  var srTimer;
+  function announce(r){
+    clearTimeout(srTimer);
+    srTimer = setTimeout(function(){
+      $("srStatus").textContent = fmt(state.g) + " GPUs at the " + r.p.name + " rate stop every " + spanT(r.M) + ". Checkpointing every " + spanT(r.tau) +
+        ", goodput is " + f1(r.E * 100) + " percent, and " + compact(r.lost) + " GPU-hours a day never reach a checkpoint.";
+    }, 500);
+  }
+
+  /* ---------- the tables and the figures under the hood ---------- */
+  function buildStatics(){
+    var ll = byId("llama3"), gpu = CAUSES.reduce(function(a, c){ return a + (c.cat === "GPU" ? c.n : 0); }, 0);
+    $("prov").textContent = PROFILES.length + NB + "published failure rates · " + NCAUSE + " interruptions by root cause · one synchronous job, 8 GPUs a node";
+    $("stMtbf").innerHTML = f1(54 * 24 / 419) + "<small>hours</small>";
+    $("stGpu").innerHTML = Math.round(100 * gpu / NCAUSE) + "<small>percent</small>";
+    $("stOne").innerHTML = f1(1000 / ll.rate * GPN / 365) + "<small>years</small>";
+    $("profTable").innerHTML = PROFILES.map(function(p){
+      return '<tr><th scope="row">' + esc(p.name) + '<span class="ci">' + esc(p.when) + '</span></th>' +
+        '<td class="m">' + esc(p.hw) + '</td><td class="m">' + p.rate.toFixed(2) + '</td>' +
+        '<td class="m">every ' + spanT(1 / lam(16384, p)) + '</td>' +
+        '<td><span class="nt">' + esc(p.at) + ' <a href="' + p.src + '" target="_blank" rel="noopener">' + esc(p.srcName) + '</a></span></td></tr>';
+    }).join("");
+    $("causeTable").innerHTML = CAUSES.map(function(c){
+      return '<tr><th scope="row">' + esc(c.name) + '</th><td class="m">' + esc(c.cat) + '</td><td class="m">' + c.n + '</td>' +
+        '<td class="m">' + f1(100 * c.n / NCAUSE) + '%</td><td><span class="nt">' +
+        (c.name === "Faulty GPU" ? "The paper prints 30.1 percent; the page uses the count. " : "") +
+        (c.node ? "Takes a node out until repaired." : "Restarts the job; no hardware lost.") + '</span></td></tr>';
+    }).join("");
+  }
+
+  /* ---------- edges that hide more ---------- */
+  var cues = [];
+  function cue(el, cls, vertical){
+    function upd(){
+      var more = vertical ? el.scrollTop + el.clientHeight < el.scrollHeight - 2
+                          : Math.abs(el.scrollLeft) + el.clientWidth < el.scrollWidth - 2;
+      el.classList.toggle(cls, more);
+    }
+    el.addEventListener("scroll", upd, { passive:true });
+    cues.push(upd); upd();
+  }
+  function recue(){ cues.forEach(function(f){ f(); }); }
+
+  /* ---------- tabs ---------- */
+  var TABS = ["why","how","data","method"];
+  function selectTab(id, focus){
+    TABS.forEach(function(k){
+      var t = $("t-" + k), on = k === id;
+      t.setAttribute("aria-selected", on ? "true" : "false"); t.tabIndex = on ? 0 : -1;
+      $(k).hidden = !on;
+    });
+    if(focus) $("t-" + id).focus();
+    recue();
+  }
+
+  /* ---------- URL state ---------- */
+  function writeUrl(){
+    var u = new URLSearchParams();
+    u.set("g", state.g); u.set("f", state.f); u.set("w", state.w); u.set("u", state.u);
+    if(state.cp) u.set("cp", state.cp);
+    if(state.rd !== DEFAULTS.rd) u.set("rd", state.rd);
+    if(state.cost) u.set("c", state.cost);
+    if(state.seed !== 1) u.set("d", state.seed);
+    try{ history.replaceState(null, "", "#" + u.toString()); }
+    catch(e){ try{ location.hash = u.toString(); }catch(e2){} }
+  }
+  function num(u, k, lo, hi){ var v = parseFloat(u.get(k)); return isFinite(v) ? clamp(v, lo, hi) : null; }
+  function readUrl(){
+    if(!location.hash || location.hash.length < 2) return false;
+    var h = location.hash.slice(1);
+    if(h.indexOf("=") === -1) return false;
+    var u = new URLSearchParams(h), v;
+    if((v = num(u, "g", GPN, 1e6)) !== null) state.g = Math.round(v / GPN) * GPN;
+    for(var i = 0; i < PROFILES.length; i++) if(PROFILES[i].id === u.get("f")) state.f = u.get("f");
+    if((v = num(u, "w", 0.05, 60)) !== null) state.w = v;
+    if((v = num(u, "u", 0.5, 240)) !== null) state.u = v;
+    if((v = num(u, "cp", 1, DAY)) !== null) state.cp = Math.round(v);
+    if((v = num(u, "rd", 0.5, 60)) !== null) state.rd = v;
+    if((v = num(u, "c", 0, 1000)) !== null) state.cost = Math.round(v * 100) / 100;
+    if((v = num(u, "d", 1, 1e6)) !== null) state.seed = Math.round(v);
+    return true;
+  }
+
+  /* ---------- copy actions ---------- */
+  function toast(msg){ var t = $("toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(function(){ t.classList.remove("on"); }, 1600); }
+  function copy(text, msg){
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function(){ toast(msg); }, function(){ fallback(text, msg); });
+    else fallback(text, msg);
+  }
+  function fallback(text, msg){
+    var ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); toast(msg); }catch(e){ toast("Copy failed"); }
+    document.body.removeChild(ta);
+  }
+  function summary(){
+    var r = compute(), L = [], sp = r.sp;
+    L.push("Goodput for a " + fmt(state.g) + "-GPU job at the " + r.p.name + " failure rate");
+    L.push("");
+    L.push("Failure rate        " + r.p.rate.toFixed(2) + " per thousand node-days");
+    L.push("Something breaks    every " + spanT(r.M) + ", " + often(r.perDay));
+    L.push("Checkpoint every    " + spanT(r.tau) + (state.cp ? " (fixed; optimum " + spanT(r.opt) + ")" : " (Young's optimum)"));
+    L.push("Checkpoint stall    " + stallT(state.w) + ", restart " + stallT(state.u));
+    L.push("Goodput             " + f1(r.E * 100) + "%");
+    L.push("GPU-hours lost      " + compact(r.lost) + " a day of " + compact(r.gpuh) + (state.cost ? " (" + money(r.lost * state.cost) + " a day)" : ""));
+    L.push("Spare nodes         " + r.spares + ", for 99 days in 100 at a " + dayAdj(state.rd) + " repair");
+    L.push("");
+    L.push("Where each paid hour goes: " + f1(sp.E * 100) + "% training kept, " + f1(sp.ck * 100) + "% writing checkpoints, " +
+      f1(sp.rw * 100) + "% rolled back, " + f1(sp.rs * 100) + "% restarting.");
+    L.push("");
+    L.push("Top causes at this size (Llama 3 mix):");
+    CAUSES.slice(0, 5).forEach(function(c, i){ L.push((i + 1) + ". " + c.name + ", " + often(r.perDay * c.n / NCAUSE)); });
+    L.push("");
+    L.push("Run your own: " + location.href);
+    return L.join("\n");
+  }
+
+  /* ---------- wiring ---------- */
+  document.addEventListener("DOMContentLoaded", function(){
+    var shared = readUrl(), anchor = /^#(why|how|data|method)$/.test(location.hash) ? location.hash.slice(1) : null;
+    buildStatics(); buildProfs(); buildCauses();
+
+    $("profs").addEventListener("change", function(e){ change(function(){ state.f = e.target.value; }); });
+    $("gR").addEventListener("input", function(){ var el = this; change(function(){ state.g = gFromPos(+el.value); }, true); });
+    $("gpus").addEventListener("input", function(){
+      var v = parseFloat(this.value.replace(/[,\s]/g, ""));
+      if(isFinite(v) && v >= GPN) change(function(){ state.g = Math.min(1e6, Math.round(v / GPN) * GPN); }, true);
+    });
+    $("gpus").addEventListener("change", function(){ endDrag(); this.value = fmt(state.g); });
+    $("wR").addEventListener("input", function(){ var el = this; change(function(){ state.w = wFromPos(+el.value); }, true); });
+    $("uR").addEventListener("input", function(){ var el = this; change(function(){ state.u = +el.value; }, true); });
+    $("cpR").addEventListener("input", function(){ var el = this; change(function(){ state.cp = cpFromPos(+el.value); }, true); });
+    $("rdR").addEventListener("input", function(){ var el = this; change(function(){ state.rd = +el.value / 2; }, true); });
+    ["gR","wR","uR","cpR","rdR"].forEach(function(id){ $(id).addEventListener("change", endDrag); });
+    $("cpSeg").addEventListener("click", function(e){
+      var b = e.target.closest("button"); if(!b) return;
+      var fixed = b.getAttribute("data-cp") === "fixed";
+      if(fixed === !!state.cp) return;
+      change(function(){ state.cp = fixed ? Math.round(lastR.opt) : 0; });
+    });
+    $("cost").addEventListener("input", function(){ var v = parseFloat(this.value.replace(/[$,\s]/g, "")); v = isFinite(v) && v > 0 ? Math.min(1000, Math.round(v * 100) / 100) : 0; change(function(){ state.cost = v; }, true); });
+    $("cost").addEventListener("change", function(){ endDrag(); this.value = state.cost ? String(state.cost) : ""; });
+    $("costSeg").addEventListener("click", function(e){ var b = e.target.closest("button"); if(!b) return; var v = +b.getAttribute("data-c"); if(v !== state.cost) change(function(){ state.cost = v; }); });
+    document.querySelector(".try").addEventListener("click", function(e){
+      var b = e.target.closest("button"); if(!b || b.disabled) return;
+      var t = b.getAttribute("data-try");
+      change(function(){
+        if(t === "async") state.w = 0.5;
+        if(t === "fast") state.u = 1;
+        if(t === "big") state.g = 100000;
+        if(t === "reset") for(var k in DEFAULTS) state[k] = DEFAULTS[k];
+      });
+    });
+    $("roll").addEventListener("click", function(){ state.seed++; render(); });
+    $("day").addEventListener("pointermove", dayTip);
+    $("day").addEventListener("pointerleave", function(){ $("dayTip").hidden = true; });
+
+    // the curve: press or drag anywhere on it to resize the job
+    var svg = $("curve");
+    svg.addEventListener("pointerdown", function(e){
+      if(e.button !== 0 || !cv.g) return;
+      cv.down = true;
+      try{ svg.setPointerCapture(e.pointerId); }catch(x){}
+      var g = curveG(e); if(g !== state.g) change(function(){ state.g = g; }, true);
+    });
+    svg.addEventListener("pointermove", function(e){
+      if(!cv.down) return;
+      var g = curveG(e); if(g !== state.g) change(function(){ state.g = g; }, true);
+    });
+    function up(e){ if(!cv.down) return; cv.down = false; endDrag(); try{ svg.releasePointerCapture(e.pointerId); }catch(x){} }
+    svg.addEventListener("pointerup", up);
+    svg.addEventListener("pointercancel", up);
+
+    $("showAll").addEventListener("click", function(){ showAll = !showAll; renderCauses(lastR); });
+    $("copyLink").addEventListener("click", function(){ copy(location.href, "Link copied"); });
+    $("copySummary").addEventListener("click", function(){ copy(summary(), "Goodput brief copied"); });
+    window.addEventListener("beforeprint", function(){ $("printUrl").textContent = "Reproduce this job: " + location.href; });
+
+    var tlist = document.querySelector("[role=tablist]");
+    tlist.addEventListener("click", function(e){ var t = e.target.closest("[role=tab]"); if(t) selectTab(t.getAttribute("aria-controls")); });
+    tlist.addEventListener("keydown", function(e){
+      var i = TABS.indexOf(document.activeElement.getAttribute("aria-controls")); if(i < 0) return;
+      var n = e.key === "ArrowRight" ? i + 1 : e.key === "ArrowLeft" ? i - 1 : e.key === "Home" ? 0 : e.key === "End" ? TABS.length - 1 : null;
+      if(n === null) return;
+      e.preventDefault(); selectTab(TABS[(n + TABS.length) % TABS.length], true);
+    });
+    document.querySelectorAll("[data-tab]").forEach(function(a){
+      a.addEventListener("click", function(e){ e.preventDefault(); selectTab(a.getAttribute("data-tab")); $("ref").scrollIntoView(); });
+    });
+
+    if(anchor) selectTab(anchor);
+    render();
+    cue(document.querySelector(".rail"), "more-below", true);
+    document.querySelectorAll(".tscroll").forEach(function(el){ cue(el, "more-end", false); });
+    document.querySelectorAll("details.more").forEach(function(d){ d.addEventListener("toggle", recue); });
+
+    var rt; window.addEventListener("resize", function(){ clearTimeout(rt); rt = setTimeout(function(){ drawDay(); drawCurve(); recue(); }, 120); });
+
+    if("IntersectionObserver" in window){
+      var ansVis = true, conVis = false;
+      var upd = function(){ $("mini").classList.toggle("on", !ansVis && conVis); };
+      new IntersectionObserver(function(es){ ansVis = es[0].isIntersecting; upd(); }).observe($("answer"));
+      new IntersectionObserver(function(es){ conVis = es[0].isIntersecting; upd(); }).observe(document.querySelector(".rail"));
+    }
+
+    var html = document.documentElement;
+    if(shared || anchor){
+      html.style.scrollBehavior = "auto";
+      window.scrollTo(0, (anchor ? $("ref") : $("console")).getBoundingClientRect().top + window.pageYOffset - (anchor ? 0 : 12));
+      setTimeout(function(){ html.style.scrollBehavior = ""; }, 60);
+    }
+  });
+})();
+</script>
+<script src="/assets/contact.js" defer></script>
+</body>
+</html>

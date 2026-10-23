@@ -28,7 +28,7 @@
   gtag('config', 'G-B4K7J0G5X6');
 </script>
 <style>
-  /* The index is a table of contents, not a landing page: a statement, the four tools
+  /* The index is a table of contents, not a landing page: a statement, the five tools
      with the answer each one gives, and who made them. Decoration is out; the brand
      glyphs and the worked examples carry the page. Mono is for the wordmark and for
      numbers, never for labels. Green marks the brand and the answer; its one other use is
@@ -202,7 +202,7 @@
   .ex dd{margin:0;margin-inline-start:auto;font-family:var(--mono);font-size:var(--fs-small);color:var(--tx);text-align:end;font-variant-numeric:tabular-nums}
   .ex .out{border-top:1px solid var(--line2);margin-top:10px;padding-top:16px}
   @container (min-width:460px){
-    /* one label track for all four panels (the longest label is 12.4em), so every value
+    /* one label track for all five panels (the longest label is 12.4em), so every value
        column starts on the same edge; a longer label would widen it rather than wrap */
     .ex dl{display:grid;grid-template-columns:minmax(max-content,13em) minmax(0,1fr);align-items:baseline}
     .ex dl div{display:contents}
@@ -330,6 +330,7 @@
   <symbol id="g-crash-cart" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="5" width="6" height="6" fill="currentColor"/><rect x="5" y="13" width="6" height="6" fill="currentColor"/><rect x="13" y="13" width="6" height="6" fill="currentColor"/><rect x="13.75" y="5.75" width="4.5" height="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
   <symbol id="g-power-map" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><line x1="5" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="0.8" opacity="0.5"/><line x1="15" y1="5" x2="15" y2="19" stroke="currentColor" stroke-width="0.8" opacity="0.5"/><rect x="13" y="7" width="4" height="4" fill="currentColor"/></symbol>
   <symbol id="g-outage-replay" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="9" width="14" height="4" fill="currentColor"/><rect x="5" y="15" width="14" height="4" fill="currentColor"/></symbol>
+  <symbol id="g-goodput" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="9" width="9.5" height="10" fill="currentColor"/><rect x="16.25" y="9.75" width="2" height="8.5" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
   <symbol id="g-public" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><path d="M12 5.5v8M8.5 10.5 12 14l3.5-3.5M6.5 17.5h11" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
   <symbol id="g-const" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><path d="M7 9.5h10M7 14.5h10" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
   <symbol id="g-decide" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><path d="M7 12.5l3.2 3.2L17 8.8" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
@@ -461,6 +462,27 @@
         </dl>
       </figure>
       <a class="go" href="/outage-replay/">Open tool<span class="sr-only">: Outage replay</span><span class="arr" aria-hidden="true">&rarr;</span></a>
+    </li>
+
+    <li class="tool">
+      <div class="t-text">
+        <h2 class="t-name"><svg class="glyph" aria-hidden="true"><use href="#g-goodput"/></svg>Goodput</h2>
+        <p class="t-q"><span>Something breaks every three hours.</span> How much actually trains?</p>
+        <p class="t-d">GPU cluster reliability on published failure rates: how often one big training job stops, the checkpoint interval that loses least, and the GPU-hours that never reach the model.</p>
+        <p class="t-src">Data: Meta&rsquo;s Llama 3 run and research cluster reliability study</p>
+      </div>
+      <figure class="ex">
+        <figcaption>Worked example</figcaption>
+        <dl>
+          <div><dt>Job</dt><dd>16,384 GPUs</dd></div>
+          <div><dt>Failure rate</dt><dd>Llama 3 405B, H100</dd></div>
+          <div><dt>Checkpoint stall, restart</dt><dd>5&nbsp;min each</dd></div>
+          <div class="out ans"><dt>Goodput</dt><dd>76.8%</dd></div>
+          <div><dt>Something breaks every</dt><dd>3.1&nbsp;hours</dd></div>
+          <div><dt>Checkpoint every</dt><dd>43&nbsp;min</dd></div>
+        </dl>
+      </figure>
+      <a class="go" href="/goodput/">Open tool<span class="sr-only">: Goodput</span><span class="arr" aria-hidden="true">&rarr;</span></a>
     </li>
 
   </ol>

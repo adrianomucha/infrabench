@@ -32,6 +32,7 @@ with every constant shown on the page. No accounts, no lead forms.
 | 02 | **[Crash Cart](crash-cart/)** | Which drives to pull this week, ranked by risk times blast radius, on 13 years of public fleet telemetry. | **Live** |
 | 03 | **[Where the power is](where-the-power-is/)** | Where you can actually energize a few hundred megawatts before the end of the decade. | **Live** |
 | 04 | **[Outage replay](outage-replay/)** | What the console showed during a real cloud incident, and how long the truth took to surface. | **Live** |
+| 05 | **[Goodput](goodput/)** | How much of a GPU cluster actually trains, once failures, restarts and checkpoints take their share. | **Live** |
 
 ## Rack Budget
 
@@ -102,6 +103,32 @@ what the console showed, and the hatched column between them is the whole argume
 Incidents are included only where a published retrospective states when impact began,
 since that is the one timestamp nobody can reconstruct from outside.
 
+## Goodput
+
+A GPU cluster is sold by the GPU-hour. A model is trained by the GPU-hours that made it
+into a checkpoint. In one synchronous job every GPU is a single point of failure, so the
+failure rate scales with the job, and each failure is paid twice: in the restart, and in
+the work since the last checkpoint, which is thrown away and done over.
+
+```
+16,384 GPUs at the Llama 3 failure rate, 5 min checkpoint stall, 5 min restart
+  -> 2,048 nodes x 3.79 per thousand node-days = 7.8 interruptions a day, one every 3.1 hours
+  -> sqrt(2 x 5 min x 186 min)                = checkpoint every 43 min (Young, 1974)
+  -> each failure: 5 min restart + 22 min rolled back
+  -> (1 - 27/186) / (1 + 5/43)                = 76.8 percent goodput
+  -> 91,300 of 393,000 GPU-hours a day never reach a checkpoint
+```
+
+Meta reports over 90 percent for the real run. The same model gets there with a
+30-second checkpoint stall, which is the point: at this scale the checkpoint path, not
+the GPU count, decides how much you train. Push the job to 100,000 GPUs and something
+breaks every half hour.
+
+A simulated day draws where the hours went, a curve shows goodput falling off with job
+size on all three published fleets, and the failure causes from the Llama 3 paper are
+scaled to your job. The tool ends on the checkpoint interval and the number of spare
+nodes to hold.
+
 ## How these are built
 
 **Public data only.** Every input is something you could download yourself. Nothing
@@ -159,6 +186,12 @@ Incident timings come from each provider's own retrospective: AWS
 [Google Cloud](https://status.cloud.google.com/incidents/ow5i3PPK96RduMcb1SsW),
 [Cloudflare](https://blog.cloudflare.com/18-november-2025-outage/) and
 [Fastly](https://www.fastly.com/blog/summary-of-june-8-outage).
+Failure rates come from Meta's
+[The Llama 3 Herd of Models](https://arxiv.org/abs/2407.21783) (section 3.3.4 and Table 5)
+and [Revisiting Reliability in Large-Scale Machine Learning Research Clusters](https://arxiv.org/abs/2410.21680);
+the checkpoint interval is J. W. Young's
+[first-order optimum](https://dl.acm.org/doi/10.1145/361147.361115), refined by
+[Daly](https://doi.org/10.1016/j.future.2004.11.016).
 Figures are public as of 2026 and change fast.
 
 These are planning heuristics for the first conversation, not engineering
