@@ -457,13 +457,15 @@
   @media (prefers-reduced-motion: no-preference){ .wf .t .b{transition:left .3s ease-out,width .3s ease-out} }
   .dragging .wf .t .b,.dragging .bar i,.dragging .split i{transition:none}
 
-  /* the step to the next tool: find a grid for this load, or the grid it is priced on */
+  /* the steps to the next tools: find a grid for this load, or the grid it is priced on, and
+     how much of the fleet's GPUs would actually train */
   .handoff{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:var(--fs-small);color:var(--tx2);text-wrap:pretty}
   .handoff b{color:var(--tx);font-weight:500}
   .handoff a,.handoff button{font:inherit;color:var(--tx);background:none;border:0;padding:0;cursor:pointer;
     text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em;text-decoration-color:var(--link-underline)}
   .handoff a:hover,.handoff button:hover{text-decoration-color:currentColor}
   .handoff .sep{color:var(--tx3);margin:0 .4em}
+  .handoff .next{display:block;margin-top:6px}
 
   /* ---------- every rack at the same budget ---------- */
   .pl .pick{display:block;padding:0;margin:0;background:none;border:0;font:inherit;color:inherit;text-align:start;cursor:pointer}
@@ -506,6 +508,7 @@
   <symbol id="g-crash-cart" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="5" width="6" height="6" fill="currentColor"/><rect x="5" y="13" width="6" height="6" fill="currentColor"/><rect x="13" y="13" width="6" height="6" fill="currentColor"/><rect x="13.75" y="5.75" width="4.5" height="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
   <symbol id="g-power-map" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><line x1="5" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="0.8" opacity="0.5"/><line x1="15" y1="5" x2="15" y2="19" stroke="currentColor" stroke-width="0.8" opacity="0.5"/><rect x="13" y="7" width="4" height="4" fill="currentColor"/></symbol>
   <symbol id="g-outage-replay" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="9" width="14" height="4" fill="currentColor"/><rect x="5" y="15" width="14" height="4" fill="currentColor"/></symbol>
+  <symbol id="g-goodput" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><rect x="5" y="9" width="9.5" height="10" fill="currentColor"/><rect x="16.25" y="9.75" width="2" height="8.5" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
   <symbol id="g-mail" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><path d="M5.5 8.5 12 13l6.5-4.5" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
   <symbol id="g-out" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><path d="M8 16 16 8M10 8h6v6" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
   <symbol id="g-open" viewBox="0 0 24 24"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="12" cy="12" r="4" fill="currentColor"/></symbol>
@@ -755,6 +758,7 @@
         <li><a href="/crash-cart/"><svg class="glyph" aria-hidden="true"><use href="#g-crash-cart"/></svg><span><span class="so-name">Crash Cart</span><span class="so-what">which drives to pull this week</span></span><span class="so-end" aria-hidden="true">&rarr;</span></a></li>
         <li><a href="/where-the-power-is/"><svg class="glyph" aria-hidden="true"><use href="#g-power-map"/></svg><span><span class="so-name">Where the power is</span><span class="so-what">which grid can energize you first</span></span><span class="so-end" aria-hidden="true">&rarr;</span></a></li>
         <li><a href="/outage-replay/"><svg class="glyph" aria-hidden="true"><use href="#g-outage-replay"/></svg><span><span class="so-name">Outage replay</span><span class="so-what">how long the status page stayed green</span></span><span class="so-end" aria-hidden="true">&rarr;</span></a></li>
+        <li><a href="/goodput/"><svg class="glyph" aria-hidden="true"><use href="#g-goodput"/></svg><span><span class="so-name">Goodput</span><span class="so-what">what a GPU cluster actually trains</span></span><span class="so-end" aria-hidden="true">&rarr;</span></a></li>
       </ul>
     </div>
     <div class="so-half me">
@@ -1289,6 +1293,16 @@
       a2.textContent = "Find a grid that can energize " + mwText(Math.max(mw, 0.1)) + " →";
       el.appendChild(a2);
       el.appendChild(document.createTextNode(" and price the power here."));
+    }
+    // Goodput takes the fleet's GPUs, and the whole sizing, grid included, so it can link back
+    if(r.gpus){
+      var g = new URLSearchParams(); g.set("g", r.gpus); g.set("rb", stateParams(true).toString());
+      var nx = document.createElement("span"); nx.className = "next";
+      var a3 = document.createElement("a"); a3.href = "/goodput/#" + g.toString();
+      a3.textContent = "How much of " + fmt(r.gpus) + NB + "GPUs actually trains? →";
+      nx.appendChild(a3);
+      nx.appendChild(document.createTextNode(" Failures, restarts and checkpoints, on published rates."));
+      el.appendChild(nx);
     }
   }
 
