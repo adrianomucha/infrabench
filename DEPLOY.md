@@ -15,13 +15,14 @@ environment variable, below.
     /where-the-power-is/og.png  tool social card
     /outage-replay/         Outage replay
     /goodput/               Goodput
+    /goodput/og.png         tool social card
     /assets/analytics.js    analytics opt-out hook, Vercel and Google
     /assets/contact.js      the contact form, shared by every page
     /api/contact            contact form endpoint (api/contact.js, a Vercel function)
 
-Outage replay and Goodput have no cards of their own yet, so their `og:image` points
-at the suite card at `/og.png`. Cut `/outage-replay/og.png` and `/goodput/og.png` on the
-template the other three use and change the one meta tag on each page. A card that 404s unfurls as nothing and fails silently,
+Outage replay has no card of its own yet, so its `og:image` points at the suite card
+at `/og.png`. Cut `/outage-replay/og.png` on the template the other tools use and
+change the one meta tag. A card that 404s unfurls as nothing and fails silently,
 which is why it points somewhere real in the meantime.
 
 Every internal link is root-relative, so no configuration file, rewrite rule or
