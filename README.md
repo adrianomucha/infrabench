@@ -82,26 +82,33 @@ practical, which is how the fast paths are actually being built.
 ## Outage replay
 
 A status page is a published spec like any other, and it fails the same way:
-optimistically. Six documented cloud incidents replayed against the provider's own
-retrospective, measuring the one number nobody advertises, which is how long the
-console stayed green after customers started failing.
+optimistically. Fifteen documented incidents from nine providers, replayed against the
+provider's own retrospective, measuring the one number nobody advertises, which is how
+long the console stayed green after customers started failing.
 
 ```
 Google Cloud, 12 June 2025
   -> first customer impact       17:51 UTC   (from Google's own report)
-  -> first public status post    19:05 UTC   (the dashboard moves)
-  -> 19:05 minus 17:51           = 74 minutes dark
-  -> Downdetector spiked 17:56   = the crowd had it 69 minutes earlier
-  -> your monitoring at 15 min   = 59 minutes ahead of the page
+  -> first public status post    18:46 UTC   (the dashboard moves)
+  -> 18:46 minus 17:51           = 55 minutes dark
+  -> your monitoring at 15 min   = 40 minutes ahead of the page
+  -> across all fifteen          = median 36 minutes, over half an hour on 8
+  -> a 99.9 percent month        = 43 minutes of budget, 83 percent gone in the silence
 ```
 
-Set the threshold your own monitoring pages at and the tool ranks all six by whether
-you or the vendor would have told you first. The gaps run from 11 minutes to 101, on
-a median of 48. The timeline draws two lanes, what was actually happening against
-what the console showed, and the hatched column between them is the whole argument.
+Set the threshold your own monitoring pages at, pick the vendors you run on, and the
+tool counts how often you or the vendor would have told you first. The gaps run from
+1 minute to 124, on a median of 36. It then turns the figures into the three lines a
+runbook needs, whether to wait for the vendor, how fast to page, and what the silence
+costs against your availability target, and copies them out as a policy.
+
+The timeline draws two lanes, what was actually happening against what the console
+showed, and the hatched column between them is the whole argument.
 
 Incidents are included only where a published retrospective states when impact began,
-since that is the one timestamp nobody can reconstruct from outside.
+since that is the one timestamp nobody can reconstruct from outside. First posts come
+from the provider's status record where one survives, and are marked reported where
+they do not.
 
 ## Goodput
 
