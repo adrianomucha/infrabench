@@ -113,7 +113,8 @@
   @media(min-width:901px){.intro h1{max-width:none}}
   @media(max-width:900px){
     .intro{grid-template-columns:minmax(0,1fr);grid-template-rows:none;row-gap:44px}
-    .intro-text,.intro .hall{grid-column:auto;grid-row:auto}
+    .intro-text,.intro .log,.intro .hall{grid-column:auto;grid-row:auto}
+    .intro .log{margin-top:-16px}
     .intro .hall{display:block}
   }
   @media(max-width:700px){.intro{padding-block:40px 64px;row-gap:36px}}
@@ -122,6 +123,24 @@
   /* ch is Archivo's 0, about a quarter wider than its average letter: 50ch is ~66 characters */
   .lede{font-size:var(--fs-lead);color:var(--tx2);margin:28px 0 0;text-wrap:pretty}
   @media(max-width:700px){.lede{margin-top:22px}}
+
+  /* The log. The hall's correction again, as the arithmetic: each step of the animation
+     types its lines here, and older lines scroll up and fade out under the mask. It is a
+     fixed six lines tall, so nothing around it moves as it fills, and it sits in the
+     intro's second row, level with the hall's caption. It repeats what the hall's
+     caption already says, so it is hidden from screen readers. Without motion or without
+     script it is the last six lines, still. */
+  .log{grid-column:1;grid-row:2;align-self:start;display:flex;flex-direction:column;justify-content:flex-end;height:calc(6 * 1.7em);margin:18px 0 0;overflow:hidden;
+    font-family:var(--mono);font-size:var(--fs-micro);line-height:1.7;color:var(--tx2);
+    -webkit-mask-image:linear-gradient(to bottom,transparent,#000 70%);mask-image:linear-gradient(to bottom,transparent,#000 70%)}
+  .log p{flex:none;margin:0;white-space:pre;overflow:hidden}
+  .log .h,.log b{font-weight:400;color:var(--tx)}
+  .log .ans{color:var(--grn)}
+  .log p:last-child::after{content:"";display:inline-block;width:.6em;height:1.1em;margin-inline-start:.5em;vertical-align:-.2em;background:var(--tx)}
+  @media (prefers-reduced-motion: no-preference){
+    .log p:last-child::after{animation:blink 1.1s steps(1) infinite}
+    @keyframes blink{50%{opacity:0}}
+  }
 
   /* The hall. 30 MW at 120 kW a rack is 250 racks on paper. PUE 1.2 takes 42 of them
      (25 MW of IT is 208 racks) and a 15 percent margin holds back 31 more, leaving 177.
@@ -298,7 +317,7 @@
     .brand{gap:12px}
     .brand .glyph{width:22px;height:22px}
     .intro{padding-block:88px 120px}
-    .hall figcaption{margin-top:22px}
+    .hall figcaption,.log{margin-top:22px}
     .pp{width:36px;height:36px}
     .pp svg{width:12px;height:12px}
     .lede{margin-top:32px}
@@ -367,6 +386,8 @@
     <h1>Published specs, corrected for reality.</h1>
     <p class="lede">A rack is rated for 600&nbsp;kW, a drive for five years, an interconnection queue in gigawatts. None of it survives contact with a real site. Infrabench is a set of free tools that correct those numbers against public data, with every constant on the page.</p>
   </div>
+  <!-- the script retypes this in step with the hall; these are its closing lines -->
+  <div class="log" id="hallLog" aria-hidden="true"><p>&gt; lost to overhead ..... <b>42 racks</b></p><p class="h">holding back a 15% margin</p><p>&gt; usable for compute ... <b>21.25 MW</b></p><p>&gt; held back ............ <b>31 racks</b></p><p>&gt; racks that fit ....... <b class="ans">177</b></p><p class="h">ready.</p></div>
   <figure class="hall">
     <!-- drawn by the script at the end of the page; its aspect is set in the styles so
          the space is reserved before it runs -->
@@ -781,7 +802,7 @@
   function loop(now){
     raf = requestAnimationFrame(loop);
     clock += then ? Math.min(64, now - then) : 16; then = now;
-    tally();
+    tally(); logTick();
     if(clock > busyUntil && now - drawn < 48) return;
     drawn = now; update(); draw();
   }
@@ -806,11 +827,36 @@
   function label(k){
     for(var i = 0; i < LABELS.length; i++) LABELS[i].classList.toggle("on", i === k);
   }
+  // ---- the log: each step's arithmetic, a line at a time, on the hall's own clock, so a
+  // pause holds it mid-step with everything else. A one-item line is a heading. ----
+  var logEl = document.getElementById("hallLog"), logQ = [], KEEP = 8;
+  var LOG = [
+    [["infrabench / rack-budget"], ["power at the fence", "30 MW"], ["rack", "GB200 NVL72, 120 kW"], ["on paper", "250 racks"]],
+    [["correcting for overhead"], ["divide by PUE 1.20", "25.0 MW of IT"], ["racks it can power", "208"], ["lost to overhead", "42 racks"]],
+    [["holding back a 15% margin"], ["usable for compute", "21.25 MW"], ["held back", "31 racks"], ["racks that fit", "177", true], ["ready."]]
+  ];
+  // paced so a step's last figure lands as its counter does
+  function logStep(k){
+    LOG[k].forEach(function(l, i){ logQ.push({ at: clock + 300 + i * 520, l: l }); });
+  }
+  function logTick(){
+    while(logQ.length && logQ[0].at <= clock){
+      var l = logQ.shift().l, p = document.createElement("p");
+      if(l.length === 1){ p.className = "h"; p.textContent = l[0]; }
+      else {
+        p.textContent = "> " + l[0] + " " + new Array(Math.max(3, 22 - l[0].length)).join(".") + " ";
+        var b = document.createElement("b"); b.textContent = l[1]; if(l[2]) b.className = "ans";
+        p.appendChild(b);
+      }
+      logEl.appendChild(p);
+      while(logEl.children.length > KEEP) logEl.removeChild(logEl.firstChild);
+    }
+  }
   function show(k){
     var from = cur;
     go(k, from);
     fig.setAttribute("data-step", k);
-    label(k);
+    label(k); logStep(k);
     cnt = { from: from < 0 ? 0 : STEPS[from], to: STEPS[k], ms: COUNT[k] };
     cur = k;
   }
@@ -825,7 +871,7 @@
 
   // an empty hall before the first paint, so the answer never flashes ahead of the build
   fig.setAttribute("data-step", 0);
-  num.textContent = 0; label(0);
+  num.textContent = 0; label(0); logEl.textContent = "";
 
   btn.hidden = false;
   btn.addEventListener("click", function(){
