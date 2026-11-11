@@ -34,24 +34,24 @@
      go, and every rack profile sized at the same budget. Explanation lives in tabs below. */
   :root{
     color-scheme:dark;
-    --bg:#0A0C0E;          /* page surface */
-    --bg2:#0E1114;         /* panels, one step up */
-    --bg3:#14181C;         /* floating readouts */
-    --line:#1C2126;        /* hairline */
-    --line2:#2A3037;       /* stronger rule */
-    --tx:#EEF1F3;          /* primary text */
-    --tx2:#C4CDD5;         /* secondary text, APCA Lc 75 */
-    --tx3:#AAB3BD;         /* fine print, APCA Lc 60 */
+    --bg:#161616;          /* page surface */
+    --bg2:#1B1B1B;         /* panels, one step up */
+    --bg3:#222222;         /* floating readouts */
+    --line:#2B2B2B;        /* hairline */
+    --line2:#3F3F3F;       /* stronger rule */
+    --tx:#EDEDED;          /* primary text */
+    --tx2:#CDCDCD;         /* secondary text, APCA Lc 75 */
+    --tx3:#ABABAB;         /* fine print, APCA Lc 60 */
     --grn:#3FE0A0;         /* the brand glyph and focus */
-    /* Verdicts. Checked on #0E1114 with every pair: worst dE 10.5 under protan, 19.9
+    /* Verdicts. Checked on #1B1B1B with every pair: worst dE 10.5 under protan, 19.9
        normal vision. Fills and marks only; the word always rides along. */
     --v-make:#3FE0A0;
     --v-slip:#FFEA6B;
     --v-miss:#FF5B5B;
     --better:#3FE0A0; --worse:#FF9A8C;   /* change chips, always with an arrow and words */
-    --action-bg:#EEF1F3; --action-bg-hover:#FFFFFF; --action-fg:#0A0C0E;
-    --control-border:#2A3037; --control-border-hover:#7B838D;
-    --link-underline:rgba(168,176,184,.45);
+    --action-bg:#EDEDED; --action-bg-hover:#FFFFFF; --action-fg:#161616;
+    --control-border:#5C5C5C; --control-border-hover:#CDCDCD;
+    --link-underline:rgba(205,205,205,.45);
     --fs-micro:12px; --fs-caption:13px; --fs-small:14px; --fs-ui:15px; --fs-body:16px; --fs-lead:18px;
     --fs-sub:20px; --fs-heading:22px; --fs-title:28px; --fs-kpi:30px; --fs-hero:48px;
     --col-gap:80px; --gutter:56px; --gap:16px; --rail:296px; --pad:18px;
@@ -73,11 +73,11 @@
   @media(min-width:1680px){.wrap{max-width:1640px}}
   @media(min-width:2200px){.wrap{max-width:1840px}}
   a{color:inherit}
-  :focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  :focus-visible{outline:2px solid var(--tx);outline-offset:3px}
   .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
   .skip{position:absolute;inset-inline-start:-9999px;top:0;z-index:20;padding:12px 18px;background:var(--action-bg);color:var(--action-fg);font-weight:600;font-size:var(--fs-ui)}
   .skip:focus{inset-inline-start:0}
-  .glyph{color:var(--grn);flex:none;display:block}
+  .glyph{color:var(--tx);flex:none;display:block}
   h2{font-size:var(--fs-heading);font-weight:500;letter-spacing:-.02em;line-height:1.2;margin:0}
   h3{font-size:var(--fs-ui);font-weight:500;line-height:1.3;margin:0}
   .num,.tn,.dash,.mini{font-variant-numeric:tabular-nums}
@@ -151,7 +151,7 @@
     color:var(--tx2);white-space:nowrap;cursor:pointer}
   .chip input:hover + span{border-color:var(--control-border-hover);color:var(--tx)}
   .chip input:checked + span{border-color:var(--tx);color:var(--action-fg);background:var(--tx)}
-  .chip input:focus-visible + span{outline:2px solid var(--grn);outline-offset:2px}
+  .chip input:focus-visible + span{outline:2px solid var(--tx);outline-offset:2px}
 
   input[type=range]{-webkit-appearance:none;appearance:none;display:block;width:100%;height:26px;margin:0;background:transparent;cursor:pointer;--fill:50%}
   input[type=range]::-webkit-slider-runnable-track{height:3px;background:linear-gradient(to right,var(--tx) var(--fill),var(--line2) var(--fill))}
@@ -162,8 +162,8 @@
   input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--tx);border:3px solid var(--bg2)}
   input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
   input[type=range]:focus-visible{outline:none}
-  input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 2px var(--grn)}
-  input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 2px var(--grn)}
+  input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 2px var(--tx)}
+  input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 2px var(--tx)}
   .scale{display:flex;justify-content:space-between;font-size:var(--fs-micro);color:var(--tx3);margin-top:1px}
 
   details.more{border-top:1px solid var(--line)}
@@ -200,7 +200,7 @@
   .kpi .d i{font-style:normal;font-size:.75em}
   .kpi .s{margin-top:2px;font-size:var(--fs-caption);color:var(--tx3);line-height:1.45;text-wrap:pretty}
   .kpi.hit{animation:kflash .7s ease-out}
-  @keyframes kflash{from{background:#1A2026}to{background:var(--bg2)}}
+  @keyframes kflash{from{background:#272727}to{background:var(--bg2)}}
   /* the six incidents in gap order, one segment each */
   .vbar{display:flex;gap:2px;height:6px;margin:2px 0 7px}
   .vbar span{flex:1;background:var(--line2)}
@@ -257,7 +257,7 @@
   .bar{display:inline-block;width:52px;height:4px;margin-inline-end:10px;background:var(--line2);vertical-align:middle}
   .bar i{display:block;height:100%;background:var(--tx3)}
   .pl .sorted .bar i{background:var(--tx)}
-  .pl tr.qr.lit td{background:#12161A}
+  .pl tr.qr.lit td{background:#212121}
   .pl tr.qd td{padding:2px 12px 18px;border-top:0}
   @media (prefers-reduced-motion: no-preference){ .bar i{transition:width .3s ease} }
 
@@ -269,7 +269,7 @@
   .tabs{display:flex;gap:28px;overflow-x:auto;scrollbar-width:none}
   .tabs button{background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:12px 0;font:inherit;font-size:var(--fs-ui);color:var(--tx2);cursor:pointer;white-space:nowrap}
   .tabs button:hover{color:var(--tx)}
-  .tabs button[aria-selected="true"]{color:var(--tx);border-bottom-color:var(--grn)}
+  .tabs button[aria-selected="true"]{color:var(--tx);border-bottom-color:var(--tx)}
   .tabs button:focus-visible{outline-offset:-2px}
   [role=tabpanel]:focus-visible{outline-offset:8px}
   .two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);column-gap:var(--col-gap);row-gap:48px}
@@ -280,7 +280,7 @@
   @media(max-width:900px){.cards{grid-template-columns:minmax(0,1fr)}}
   .cards{counter-reset:card}
   .cards > div{background:var(--bg2);padding:20px 22px}
-  .cards > div::before{counter-increment:card;content:counter(card, decimal-leading-zero);display:block;margin-bottom:14px;font-family:var(--mono);font-size:var(--fs-caption);letter-spacing:.08em;color:var(--grn)}
+  .cards > div::before{counter-increment:card;content:counter(card, decimal-leading-zero);display:block;margin-bottom:14px;font-family:var(--mono);font-size:var(--fs-caption);letter-spacing:.08em;color:var(--tx3)}
   .cards h3{font-size:var(--fs-body);margin:0 0 8px}
   .cards p{margin:0;color:var(--tx2);font-size:var(--fs-ui);text-wrap:pretty}
   /* on the cards' columns, each figure inset like the card text above it (the cards' 1px
@@ -293,10 +293,10 @@
   .stats dd small{font-size:var(--fs-small);font-weight:400;color:var(--tx2);letter-spacing:0;margin-inline-start:.3em}
   .stats dt{order:2;margin-top:6px;font-size:var(--fs-small);color:var(--tx2)}
   .stats div{display:flex;flex-direction:column}
-  .stats div::before{content:"";order:-1;width:24px;height:2px;margin-bottom:14px;background:var(--grn)}
+  .stats div::before{content:"";order:-1;width:24px;height:1px;margin-bottom:14px;background:var(--tx2)}
   .steps{margin:0;padding:0;list-style:none;counter-reset:s}
   .steps li{counter-increment:s;display:grid;grid-template-columns:2em minmax(0,1fr);padding:0 0 22px}
-  .steps li::before{content:counter(s, decimal-leading-zero);font-family:var(--mono);color:var(--grn);font-size:var(--fs-small);padding-top:2px}
+  .steps li::before{content:counter(s, decimal-leading-zero);font-family:var(--mono);color:var(--tx3);font-size:var(--fs-small);padding-top:2px}
   .steps h3{font-size:var(--fs-body);margin-bottom:4px}
   .steps p{margin:0;color:var(--tx2);font-size:var(--fs-ui);text-wrap:pretty}
   .steps b{color:var(--tx);font-weight:500}
@@ -360,7 +360,8 @@
   /* the links light up on hover; availability is a status, so its glyph stays green */
   /* the contact row is a button that opens the form, dressed as the rows around it */
   .so-rows button{width:100%;margin:0;background:none;border:0;border-top:1px solid var(--line);font:inherit;text-align:start;cursor:pointer}
-  .so-rows :is(a,button):hover .glyph,.so-open .glyph{color:var(--grn)}
+  .so-rows :is(a,button):hover .glyph{color:var(--tx)}
+  .so-open .glyph{color:var(--grn)}
   .so-rows :is(a,button):hover .so-end{color:var(--tx)}
   footer{padding:0 0 56px;font-size:var(--fs-small);color:var(--tx3)}
   footer .wrap{row-gap:14px}
@@ -407,7 +408,7 @@
   .nin input.wide{width:9ch}
   .nin input::-webkit-outer-spin-button,.nin input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   .nin input:hover{border-bottom-style:solid}
-  .nin input:focus-visible{outline:2px solid var(--grn);outline-offset:3px}
+  .nin input:focus-visible{outline:2px solid var(--tx);outline-offset:3px}
   .nin span{font-weight:400;color:var(--tx2)}
 
   /* the rack profiles: one compact select here, and all of them side by side in the table */
@@ -415,7 +416,7 @@
   .selw select{display:block;width:100%;padding:8px 34px 8px 10px;margin:0;background:var(--bg3);color:var(--tx);border:1px solid var(--control-border);border-radius:0;
     font:inherit;font-size:var(--fs-small);line-height:1.4;-webkit-appearance:none;appearance:none;cursor:pointer}
   .selw select:hover{border-color:var(--control-border-hover)}
-  .selw select:focus-visible{outline:2px solid var(--grn);outline-offset:2px}
+  .selw select:focus-visible{outline:2px solid var(--tx);outline-offset:2px}
   .selw option,.selw optgroup{background:var(--bg3);color:var(--tx)}
   .selw::after{content:"";position:absolute;inset-inline-end:14px;top:50%;width:6px;height:6px;margin-top:-5px;border:solid var(--tx2);border-width:0 1.5px 1.5px 0;rotate:45deg;pointer-events:none}
   .rail .sub{margin-top:12px}
@@ -446,10 +447,10 @@
   .wf li:first-child{border-top:0;padding-top:2px}
   .wf .l{font-size:var(--fs-small);color:var(--tx);line-height:1.35}
   .wf .l small{margin-inline-start:8px;font-size:var(--fs-caption);color:var(--tx3)}
-  .wf .t{position:relative;grid-column:1 / -1;grid-row:2;height:12px;background:#12161A}
+  .wf .t{position:relative;grid-column:1 / -1;grid-row:2;height:12px;background:#212121}
   .wf .l{grid-column:1;grid-row:1} .wf .v{grid-column:2;grid-row:1}
   .wf .t i{position:absolute;top:0;bottom:0;display:block}
-  .wf .t .b{background:#59626C}
+  .wf .t .b{background:#666666}
   .wf .t .g{border:1px dashed var(--tx3)}
   .wf .fence .b{background:var(--tx3)} .wf .held .b{background:#2A6552} .wf .run .b{background:var(--grn)}
   .wf .v{font-size:var(--fs-small);font-weight:500;text-align:end;white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -473,14 +474,14 @@
   .pl .pick:hover .nm{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em}
   .pl .pick[aria-pressed="true"] .nm{color:var(--grn)}
   .pl .pick:disabled{cursor:default} .pl .pick:disabled .nm{color:var(--tx3)} .pl .pick:disabled:hover .nm{text-decoration:none}
-  .pl tr.cur td{background:#12161A}
+  .pl tr.cur td{background:#212121}
   .pl td.n .none{color:var(--tx3);font-weight:400}
   .pl td.cmp .bar i{background:var(--tx)}
   @container list (max-width:760px){
     .pl thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
     .pl tr.qr{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:16px;row-gap:4px;padding:12px var(--pad) 14px;border-top:1px solid var(--line)}
     .pl tr.qr td{border:0;padding:0;background:none}
-    .pl tr.qr.cur{background:#12161A}
+    .pl tr.qr.cur{background:#212121}
     .pl td.who{flex:1 1 100%}
     .pl td.n{text-align:start}
     .pl td.n .bar{display:none}
@@ -496,6 +497,23 @@
     .print-url{display:block;margin-top:14px;font-family:var(--mono);font-size:11px;word-break:break-all}
   }
   .print-url{display:none}
+
+  /* ---------- terminal dress ----------
+     The suite's shared voice, the same as the index: everything that labels or operates
+     the page is uppercase mono, sentences and figures stay in the sans. Controls are drawn
+     in outline and fill when used. Green is a data colour here, never chrome. */
+  ::selection{background:var(--tx);color:var(--bg)}
+  .top nav a,.crumb .here,.btn,.pn-hd h2,.pn-hd .meta,.grp > legend,.grp-h,.kpi dt,.chip span,.seg button,
+  .whatif h2,.whatif button,.pl th,.tabs button,.scale,details.more > summary,.tbar .src,.so-what,.so-end{
+    font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:.06em;text-transform:uppercase}
+  .grp output,.grp > legend output,.grp-h output{font-family:var(--mono);letter-spacing:0}
+  .tbar h1,h2{font-weight:400}
+  .pn-hd h2{font-weight:500;letter-spacing:.06em}
+  .kpi dt,.tbar .src,.pn-hd .meta{line-height:1.6}
+  .btn{background:none;color:var(--tx);border-color:var(--tx2);letter-spacing:.1em}
+  .btn:hover,.btn.ghost:hover{background:var(--tx);border-color:var(--tx);color:var(--bg)}
+  .btn.ghost{border-color:var(--control-border)}
+  .tabs button{padding-block:14px}
 </style>
 </head>
 <body>
@@ -1056,6 +1074,7 @@
   /* ---------- the hall ---------- */
   /* the hall, drawn isometric: the calculator's own drawing, unchanged */
   function drawHall(n, sqft, liquid){
+    var INK = "#D6D6D6";   // the drawing is hidden-line: dark faces, light edges
     var RW = 0.6, RD = 1.2, RH = 2.0, AISLE = 1.35;   // metres
     var rows = Math.max(1, Math.round(Math.sqrt(n / 2.4)));
     var perRow = Math.ceil(n / rows);
@@ -1086,31 +1105,31 @@
              '" stroke="'+stroke+'" stroke-width="'+sw+'"'+(op!==undefined?' opacity="'+op+'"':'')+'/>';
     }
 
-    // light falls from the upper left, so every face gets its own ramp
+    // faces sit close to the page colour and step down from top to side, so the form still reads
     out.push('<defs>'+
-      '<linearGradient id="gTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#63EEB4"/><stop offset="1" stop-color="#41D294"/></linearGradient>'+
-      '<linearGradient id="gFront" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1D8E69"/><stop offset="1" stop-color="#0E5B43"/></linearGradient>'+
-      '<linearGradient id="gSide" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#136B51"/><stop offset="1" stop-color="#0A3F2F"/></linearGradient>'+
-      '<linearGradient id="gCdu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0F5040"/><stop offset="1" stop-color="#07281F"/></linearGradient>'+
+      '<linearGradient id="gTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E2E2E"/><stop offset="1" stop-color="#262626"/></linearGradient>'+
+      '<linearGradient id="gFront" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1D1D1D"/><stop offset="1" stop-color="#171717"/></linearGradient>'+
+      '<linearGradient id="gSide" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#141414"/><stop offset="1" stop-color="#101010"/></linearGradient>'+
+      '<linearGradient id="gCdu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1A1A1A"/><stop offset="1" stop-color="#121212"/></linearGradient>'+
       '</defs>');
 
     // ---- floor plate + raised-floor tiles ----
-    out.push(poly([iso(0,0,0),iso(hallW,0,0),iso(hallW,hallD,0),iso(0,hallD,0)], "#0F1418", "#1C2126"));
+    out.push(poly([iso(0,0,0),iso(hallW,0,0),iso(hallW,hallD,0),iso(0,hallD,0)], "#181818", "#4A4A4A"));
     if(LOD >= 1){
-      for(var gx = 0.6; gx < hallW; gx += 0.6) out.push(line(iso(gx,0,0), iso(gx,hallD,0), "#161C21", 0.5));
-      for(var gy2 = 0.6; gy2 < hallD; gy2 += 0.6) out.push(line(iso(0,gy2,0), iso(hallW,gy2,0), "#161C21", 0.5));
+      for(var gx = 0.6; gx < hallW; gx += 0.6) out.push(line(iso(gx,0,0), iso(gx,hallD,0), "#202020", 0.5));
+      for(var gy2 = 0.6; gy2 < hallD; gy2 += 0.6) out.push(line(iso(0,gy2,0), iso(hallW,gy2,0), "#202020", 0.5));
     }
     // ---- cold aisles, with perforated tiles at full detail ----
     if(LOD >= 1){
       for(var pr = 1; pr < rows - 1; pr += 2){
         var ay = rowY(pr) + RD, aw = Math.max(rowLen[pr], rowLen[pr+1]) * RW;
         if(ay + AISLE > hallD) break;
-        out.push(poly([iso(ox,ay,0),iso(ox+aw,ay,0),iso(ox+aw,ay+AISLE,0),iso(ox,ay+AISLE,0)], "#132831", "#1E3A44", 0.5));
+        out.push(poly([iso(ox,ay,0),iso(ox+aw,ay,0),iso(ox+aw,ay+AISLE,0),iso(ox,ay+AISLE,0)], "#1E1E1E", "#333333", 0.5));
         if(LOD === 2){
           for(var px = 0.15; px < aw; px += 0.2){
             for(var py = 0.2; py < AISLE; py += 0.2){
               var d = iso(ox+px, ay+py, 0);
-              out.push('<circle cx="'+d[0].toFixed(1)+'" cy="'+d[1].toFixed(1)+'" r="0.9" fill="#2C5766"/>');
+              out.push('<circle cx="'+d[0].toFixed(1)+'" cy="'+d[1].toFixed(1)+'" r="0.9" fill="#3A3A3A"/>');
             }
           }
         }
@@ -1121,7 +1140,7 @@
       for(var sr = 0; sr < rows; sr++){
         var sy = rowY(sr), sw2 = rowLen[sr]*RW, dx = 0.42, dy = 0.42;
         out.push(poly([iso(ox+dx,sy+dy,0),iso(ox+sw2+dx+0.25,sy+dy,0),iso(ox+sw2+dx+0.25,sy+RD+dy,0),iso(ox+dx,sy+RD+dy,0)],
-                 "#05070A", null, 0, 0.55));
+                 "#0C0C0C", null, 0, 0.55));
       }
     }
 
@@ -1133,27 +1152,27 @@
 
     cabs.forEach(function(p){
       var x = p[0]+ox, y = p[1];
-      out.push(poly([iso(x,y,RH),iso(x+RW,y,RH),iso(x+RW,y+RD,RH),iso(x,y+RD,RH)], "url(#gTop)", "#0A0C0E"));
-      out.push(poly([iso(x,y+RD,RH),iso(x+RW,y+RD,RH),iso(x+RW,y+RD,0),iso(x,y+RD,0)], "url(#gFront)", "#0A0C0E"));
-      out.push(poly([iso(x+RW,y,RH),iso(x+RW,y+RD,RH),iso(x+RW,y+RD,0),iso(x+RW,y,0)], "url(#gSide)", "#0A0C0E"));
+      out.push(poly([iso(x,y,RH),iso(x+RW,y,RH),iso(x+RW,y+RD,RH),iso(x,y+RD,RH)], "url(#gTop)", INK, 0.4));
+      out.push(poly([iso(x,y+RD,RH),iso(x+RW,y+RD,RH),iso(x+RW,y+RD,0),iso(x,y+RD,0)], "url(#gFront)", INK, 0.4));
+      out.push(poly([iso(x+RW,y,RH),iso(x+RW,y+RD,RH),iso(x+RW,y+RD,0),iso(x+RW,y,0)], "url(#gSide)", INK, 0.4));
       if(LOD >= 1)
-        out.push(poly([iso(x,y+RD,0.13),iso(x+RW,y+RD,0.13),iso(x+RW,y+RD,0),iso(x,y+RD,0)], "#083024", null));
+        out.push(poly([iso(x,y+RD,0.13),iso(x+RW,y+RD,0.13),iso(x+RW,y+RD,0),iso(x,y+RD,0)], "#111111", null));
       if(LOD === 2){
         for(var u = 0.28; u < RH - 0.18; u += 0.135)
-          out.push(line(iso(x+0.055,y+RD,u), iso(x+RW-0.055,y+RD,u), "#0C5340", 0.55));
-        out.push(line(iso(x+0.045,y+RD,RH-0.06), iso(x+0.045,y+RD,0.16), "#2AB185", 0.5));
-        out.push(line(iso(x+RW-0.045,y+RD,RH-0.06), iso(x+RW-0.045,y+RD,0.16), "#2AB185", 0.5));
-        out.push(poly([iso(x+0.10,y+RD,RH-0.13),iso(x+0.19,y+RD,RH-0.13),iso(x+0.19,y+RD,RH-0.20),iso(x+0.10,y+RD,RH-0.20)], "#9CFFD4", null));
-        out.push(poly([iso(x+0.07,y+0.12,RH),iso(x+RW-0.07,y+0.12,RH),iso(x+RW-0.07,y+RD-0.12,RH),iso(x+0.07,y+RD-0.12,RH)], "#5FEDB0", "#3CCB90", 0.4));
+          out.push(line(iso(x+0.055,y+RD,u), iso(x+RW-0.055,y+RD,u), "#3A3A3A", 0.55));
+        out.push(line(iso(x+0.045,y+RD,RH-0.06), iso(x+0.045,y+RD,0.16), "#6E6E6E", 0.5));
+        out.push(line(iso(x+RW-0.045,y+RD,RH-0.06), iso(x+RW-0.045,y+RD,0.16), "#6E6E6E", 0.5));
+        out.push(poly([iso(x+0.10,y+RD,RH-0.13),iso(x+0.19,y+RD,RH-0.13),iso(x+0.19,y+RD,RH-0.20),iso(x+0.10,y+RD,RH-0.20)], "#FFFFFF", null));
+        out.push(poly([iso(x+0.07,y+0.12,RH),iso(x+RW-0.07,y+0.12,RH),iso(x+RW-0.07,y+RD-0.12,RH),iso(x+0.07,y+RD-0.12,RH)], "#343434", "#5A5A5A", 0.4));
       }
       // row-end coolant distribution unit: every liquid row needs one
       if(liquid && LOD >= 1 && p[3] === rowLen[p[2]] - 1){
         var cx = x + RW + 0.08, CW = 0.7, CH = 1.72;
-        out.push(poly([iso(cx,y,CH),iso(cx+CW,y,CH),iso(cx+CW,y+RD,CH),iso(cx,y+RD,CH)], "#1A6B54", "#0A0C0E"));
-        out.push(poly([iso(cx,y+RD,CH),iso(cx+CW,y+RD,CH),iso(cx+CW,y+RD,0),iso(cx,y+RD,0)], "url(#gCdu)", "#0A0C0E"));
-        out.push(poly([iso(cx+CW,y,CH),iso(cx+CW,y+RD,CH),iso(cx+CW,y+RD,0),iso(cx+CW,y,0)], "#07281F", "#0A0C0E"));
+        out.push(poly([iso(cx,y,CH),iso(cx+CW,y,CH),iso(cx+CW,y+RD,CH),iso(cx,y+RD,CH)], "#262626", INK, 0.4));
+        out.push(poly([iso(cx,y+RD,CH),iso(cx+CW,y+RD,CH),iso(cx+CW,y+RD,0),iso(cx,y+RD,0)], "url(#gCdu)", INK, 0.4));
+        out.push(poly([iso(cx+CW,y,CH),iso(cx+CW,y+RD,CH),iso(cx+CW,y+RD,0),iso(cx+CW,y,0)], "#121212", INK, 0.4));
         if(LOD === 2)
-          out.push(line(iso(cx+0.06,y+RD,CH-0.18), iso(cx+CW-0.06,y+RD,CH-0.18), "#3FE0A0", 0.7));
+          out.push(line(iso(cx+0.06,y+RD,CH-0.18), iso(cx+CW-0.06,y+RD,CH-0.18), "#EDEDED", 0.7));
       }
     });
 
@@ -1161,8 +1180,8 @@
     if(LOD === 2){
       for(var br = 0; br < rows; br++){
         var by = rowY(br) + RD/2 - 0.09, bz = RH + 0.52, bw = rowLen[br]*RW;
-        out.push(poly([iso(ox-0.15,by,bz+0.1),iso(ox+bw+0.15,by,bz+0.1),iso(ox+bw+0.15,by+0.18,bz+0.1),iso(ox-0.15,by+0.18,bz+0.1)], "#22404A", "#0A0C0E", 0.4, .75));
-        out.push(poly([iso(ox-0.15,by+0.18,bz+0.1),iso(ox+bw+0.15,by+0.18,bz+0.1),iso(ox+bw+0.15,by+0.18,bz),iso(ox-0.15,by+0.18,bz)], "#152A33", "#0A0C0E", 0.4, .75));
+        out.push(poly([iso(ox-0.15,by,bz+0.1),iso(ox+bw+0.15,by,bz+0.1),iso(ox+bw+0.15,by+0.18,bz+0.1),iso(ox-0.15,by+0.18,bz+0.1)], "#2A2A2A", "#8A8A8A", 0.4, .75));
+        out.push(poly([iso(ox-0.15,by+0.18,bz+0.1),iso(ox+bw+0.15,by+0.18,bz+0.1),iso(ox+bw+0.15,by+0.18,bz),iso(ox-0.15,by+0.18,bz)], "#1C1C1C", "#8A8A8A", 0.4, .75));
       }
     }
 
@@ -1180,6 +1199,7 @@
      count stays exact. Very large fleets draw a fixed number of halls, each standing for more. */
   var HALL_RACKS = 600, CAMPUS_MAX = 48;
   function drawCampus(n, liquid){
+    var INK = "#D6D6D6";   // the drawing is hidden-line: dark faces, light edges
     var RW = 0.6, RD = 1.2, RH = 2.0, AISLE = 1.35, PER = 30, ROWS = HALL_RACKS / PER, S = 9, EDGE = 1.6, GAP = 6;
     // each hall holds 600 and the last takes the rest; past the cap each drawn hall stands for more
     var total = Math.ceil(n / HALL_RACKS), halls = Math.min(total, CAMPUS_MAX), per = halls < total ? n / halls : HALL_RACKS;
@@ -1194,14 +1214,14 @@
         (stroke ? ' stroke="' + stroke + '" stroke-width="' + (sw || 0.7) + '" stroke-linejoin="round"' : "") + "/>";
     }
     function box(x, y, w, d, h, top, front, side){
-      return poly([iso(x, y, h), iso(x + w, y, h), iso(x + w, y + d, h), iso(x, y + d, h)], top, "#0A0C0E", 0.5) +
-        poly([iso(x, y + d, h), iso(x + w, y + d, h), iso(x + w, y + d, 0), iso(x, y + d, 0)], front, "#0A0C0E", 0.5) +
-        poly([iso(x + w, y, h), iso(x + w, y + d, h), iso(x + w, y + d, 0), iso(x + w, y, 0)], side, "#0A0C0E", 0.5);
+      return poly([iso(x, y, h), iso(x + w, y, h), iso(x + w, y + d, h), iso(x, y + d, h)], top, INK, 0.4) +
+        poly([iso(x, y + d, h), iso(x + w, y + d, h), iso(x + w, y + d, 0), iso(x, y + d, 0)], front, INK, 0.4) +
+        poly([iso(x + w, y, h), iso(x + w, y + d, h), iso(x + w, y + d, 0), iso(x + w, y, 0)], side, INK, 0.4);
     }
     out.push("<defs>" +
-      '<linearGradient id="gTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#63EEB4"/><stop offset="1" stop-color="#41D294"/></linearGradient>' +
-      '<linearGradient id="gFront" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1D8E69"/><stop offset="1" stop-color="#0E5B43"/></linearGradient>' +
-      '<linearGradient id="gSide" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#136B51"/><stop offset="1" stop-color="#0A3F2F"/></linearGradient>' +
+      '<linearGradient id="gTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E2E2E"/><stop offset="1" stop-color="#262626"/></linearGradient>' +
+      '<linearGradient id="gFront" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1D1D1D"/><stop offset="1" stop-color="#171717"/></linearGradient>' +
+      '<linearGradient id="gSide" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#141414"/><stop offset="1" stop-color="#101010"/></linearGradient>' +
       "</defs>");
 
     // halls far to near, so nearer buildings paint over the ones behind them
@@ -1213,13 +1233,13 @@
       // this hall's share of the fleet, as rack positions out of a full 600
       var fill = Math.round(Math.min(HALL_RACKS, Math.max(0, n - h * per) / per * HALL_RACKS));
       // the slab, with a lip so it reads as a building rather than a drawing of one
-      out.push(poly([iso(X + HW, Y, 0), iso(X + HW, Y + HD, 0), iso(X + HW, Y + HD, -0.7), iso(X + HW, Y, -0.7)], "#07090B"));
-      out.push(poly([iso(X, Y + HD, 0), iso(X + HW, Y + HD, 0), iso(X + HW, Y + HD, -0.7), iso(X, Y + HD, -0.7)], "#0B0E11"));
-      out.push(poly([iso(X, Y, 0), iso(X + HW, Y, 0), iso(X + HW, Y + HD, 0), iso(X, Y + HD, 0)], "#0F1418", "#1C2126"));
+      out.push(poly([iso(X + HW, Y, 0), iso(X + HW, Y + HD, 0), iso(X + HW, Y + HD, -0.7), iso(X + HW, Y, -0.7)], "#0E0E0E"));
+      out.push(poly([iso(X, Y + HD, 0), iso(X + HW, Y + HD, 0), iso(X + HW, Y + HD, -0.7), iso(X, Y + HD, -0.7)], "#131313"));
+      out.push(poly([iso(X, Y, 0), iso(X + HW, Y, 0), iso(X + HW, Y + HD, 0), iso(X, Y + HD, 0)], "#181818", "#4A4A4A"));
       if(detail >= 1){
         for(var a = 1; a < ROWS - 1; a += 2){
           var ay = Y + rowY(a) + RD;
-          out.push(poly([iso(X + EDGE, ay, 0), iso(X + EDGE + PER * RW, ay, 0), iso(X + EDGE + PER * RW, ay + AISLE - 0.12, 0), iso(X + EDGE, ay + AISLE - 0.12, 0)], "#132831"));
+          out.push(poly([iso(X + EDGE, ay, 0), iso(X + EDGE + PER * RW, ay, 0), iso(X + EDGE + PER * RW, ay + AISLE - 0.12, 0), iso(X + EDGE, ay + AISLE - 0.12, 0)], "#1E1E1E"));
         }
       }
       for(var r = 0; r < ROWS; r++){
@@ -1229,9 +1249,9 @@
         if(detail === 2){
           // cabinet seams on the face you can see
           for(var c = 1; c < k; c++){ var p0 = iso(x + c * RW, y + RD, RH), p1 = iso(x + c * RW, y + RD, 0);
-            out.push('<line x1="' + p0[0].toFixed(1) + '" y1="' + p0[1].toFixed(1) + '" x2="' + p1[0].toFixed(1) + '" y2="' + p1[1].toFixed(1) + '" stroke="#0B4636" stroke-width="0.6"/>'); }
+            out.push('<line x1="' + p0[0].toFixed(1) + '" y1="' + p0[1].toFixed(1) + '" x2="' + p1[0].toFixed(1) + '" y2="' + p1[1].toFixed(1) + '" stroke="#5A5A5A" stroke-width="0.6"/>'); }
         }
-        if(liquid && detail >= 1) out.push(box(x + w + 0.08, y, 0.7, RD, 1.72, "#1A6B54", "#0F5040", "#07281F"));
+        if(liquid && detail >= 1) out.push(box(x + w + 0.08, y, 0.7, RD, 1.72, "#262626", "#1A1A1A", "#121212"));
       }
     });
 

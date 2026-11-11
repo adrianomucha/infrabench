@@ -11,8 +11,8 @@
   var CSS = [
     "html:has(.cf[open]){overflow:hidden}",
     ".cf{width:min(520px,calc(100vw - 32px));max-height:calc(100dvh - 32px);margin:auto;padding:0;overflow:auto;",
-    "  background:var(--bg3,#14181C);color:var(--tx);border:1px solid var(--line2);box-shadow:0 24px 64px rgba(0,0,0,.55)}",
-    ".cf::backdrop{background:rgba(5,7,10,.72)}",
+    "  background:var(--bg3,#222222);color:var(--tx);border:1px solid var(--line2);box-shadow:0 24px 64px rgba(0,0,0,.55)}",
+    ".cf::backdrop{background:rgba(10,10,10,.72)}",
     ".cf form{display:grid;gap:18px;padding:28px}",
     ".cf-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}",
     ".cf h2{margin:0;font-size:var(--fs-heading);font-weight:500;letter-spacing:-.02em;line-height:1.25}",
