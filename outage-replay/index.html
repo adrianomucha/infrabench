@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Outage replay · Infrabench</title>
-<meta name="description" content="Six public cloud incidents replayed as an operator timeline. What the status page showed, when it showed it, and how long the truth took to surface. Set your own detection threshold and see which outages you would have caught first. Every timestamp sourced.">
+<meta name="description" content="Fifteen public cloud incidents from nine providers, replayed as an operator timeline. What the status page showed, when it showed it, and how long the truth took to surface. Pick your vendors and your paging threshold, and leave with a runbook policy. Every timestamp sourced.">
 <meta property="og:title" content="Outage replay · How long the status page stayed green">
-<meta property="og:description" content="Every status page lags the outage it describes. Six documented incidents, replayed against the provider's own postmortem, with the detection gap measured in minutes. Set your threshold, see who tells you first.">
+<meta property="og:description" content="Every status page lags the outage it describes. Fifteen documented incidents, replayed against the provider's own postmortem, with the gap measured in minutes. Pick your vendors and your threshold, and copy the policy.">
 <meta property="og:type" content="website">
 <!-- Falls back to the suite card until /outage-replay/og.png is cut. A card that 404s
      unfurls as nothing and fails silently, which is worse than a generic one. -->
@@ -31,11 +31,11 @@
 </script>
 <style>
   /* Outage replay as a working console, on the suite's tokens and type scale and the same
-     panel system as the other two tools. Pick an incident and a detection threshold in the
-     rail; to the right, five figures, the incident replayed on two lanes with a playhead,
-     the status page's own posts against what was true, and the six incidents ranked.
-     Explanation lives in tabs below. The three verdict colours are status and always
-     travel with their word. */
+     panel system as the other tools. Set a paging threshold and pick your vendors in the
+     rail; to the right, five figures, the three lines they add up to, the incident
+     replayed on two lanes with a playhead, the status page's own posts against what was
+     true, and the incidents ranked. Explanation lives in tabs below. The three verdict
+     colours are status and always travel with their word. */
   :root{
     color-scheme:dark;
     --bg:#0A0C0E;          /* page surface */
@@ -139,13 +139,17 @@
   /* ---------- inputs ---------- */
   .rail .grp{border:0;margin:0;padding:12px var(--pad);min-width:0}
   .rail > .grp:first-child{padding-top:16px}
-  .rail > .grp:nth-child(2){padding-bottom:18px}
   .grp > legend,.grp-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;width:100%;
     padding:0;margin:0 0 8px;font-size:var(--fs-small);font-weight:500;color:var(--tx)}
   .rail fieldset.grp > legend{float:left}
   .rail fieldset.grp > legend + *{clear:both}
   .grp-h label{cursor:pointer}
   .grp output{font-size:var(--fs-small);font-weight:500;color:var(--tx);white-space:nowrap}
+  .lg-r{display:inline-flex;align-items:baseline;gap:10px}
+  .lg-r output{font-weight:400;color:var(--tx3)}
+  .lnk{padding:0;margin:0;background:none;border:0;font:inherit;font-size:var(--fs-caption);font-weight:400;color:var(--tx2);cursor:pointer;
+    text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em;text-decoration-color:var(--link-underline)}
+  .lnk:hover{color:var(--tx);text-decoration-color:currentColor}
   .hint{font-size:var(--fs-caption);line-height:1.45;color:var(--tx3);margin:8px 0 0;text-wrap:pretty}
 
   .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -215,7 +219,7 @@
   .kpi .s{margin-top:2px;font-size:var(--fs-caption);color:var(--tx3);line-height:1.45;text-wrap:pretty}
   .kpi.hit{animation:kflash .7s ease-out}
   @keyframes kflash{from{background:#1A2026}to{background:var(--bg2)}}
-  /* the six incidents in gap order, one segment each */
+  /* the incidents in gap order, one segment each */
   .vbar{display:flex;gap:2px;height:6px;margin:2px 0 7px}
   .vbar span{flex:1;background:var(--line2)}
   .vbar .make{background:var(--v-make)} .vbar .slip{background:var(--v-slip)} .vbar .miss{background:var(--v-miss)}
@@ -413,20 +417,39 @@
     .btn:active:not(:disabled),.whatif button:active:not(:disabled),.chip input:active + span{scale:.96}
   }
   /* ---------- Outage replay's own parts ---------- */
-  /* the console grid carries one more panel: the log sits between the replay and the ranking */
-  .dash{grid-template-rows:auto auto auto auto 1fr;grid-template-areas:"rail kpi" "rail viz" "rail log" "rail list" "rail ."}
+  /* the console grid carries two more panels: the takeaway sits under the figures, and the
+     log between the replay and the ranking */
+  .dash{grid-template-rows:auto auto auto auto auto 1fr;grid-template-areas:"rail kpi" "rail rule" "rail viz" "rail log" "rail list" "rail ."}
   .logw{grid-area:log;min-width:0;container:log / inline-size}
-  @media(max-width:900px){ .dash{grid-template-rows:none;grid-template-areas:"kpi" "rail" "viz" "log" "list"} }
+  .rulew{grid-area:rule;min-width:0;container:rule / inline-size}
+  @media(max-width:900px){ .dash{grid-template-rows:none;grid-template-areas:"kpi" "rail" "rule" "viz" "log" "list"} }
 
-  /* the six incidents, as radio rows that show their gap */
-  .incs{display:grid;gap:6px}
-  .inc{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;row-gap:1px;padding:7px 10px 8px;
-    border:1px solid var(--control-border);cursor:pointer}
+  /* ---------- what to do about it ---------- */
+  .rulew .pn-hd{align-items:center;padding:12px var(--pad)}
+  .rulew .pn-hd .r{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+  .rulew .lbl{font-size:var(--fs-caption);color:var(--tx3)}
+  .rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin:0;padding:0;list-style:none;
+    background:var(--line);border-top:1px solid var(--line);counter-reset:rule}
+  .rules li{counter-increment:rule;background:var(--bg2);padding:14px var(--pad) 16px}
+  .rules li::before{content:counter(rule, decimal-leading-zero);display:block;margin-bottom:8px;font-family:var(--mono);
+    font-size:var(--fs-caption);letter-spacing:.08em;color:var(--grn)}
+  .rules h3{font-size:var(--fs-ui);font-weight:500;line-height:1.3;margin:0 0 6px;text-wrap:balance}
+  .rules p{margin:0;font-size:var(--fs-small);line-height:1.5;color:var(--tx2);text-wrap:pretty}
+  .rules p b{color:var(--tx);font-weight:500}
+  @container rule (max-width:760px){ .rules{grid-template-columns:minmax(0,1fr)} }
+
+  /* the incidents, as radio rows that show their gap. The list scrolls inside the rail, so
+     the controls under it stay in reach however many incidents there are; the padding
+     and the negative margin leave room for a row's focus ring. */
+  .incs{display:grid;gap:5px;max-height:338px;overflow-y:auto;scrollbar-width:thin;padding:3px;margin:-3px}
+  .incs.more-below{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 40px),transparent)}
+  .inc{position:relative;display:grid;grid-template-columns:5.4em minmax(0,1fr) auto;column-gap:10px;row-gap:2px;align-items:center;
+    padding:6px 10px 8px;border:1px solid var(--control-border);font-size:var(--fs-ui);cursor:pointer}
   .inc input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;cursor:pointer}
-  .inc .nm{font-size:var(--fs-small);color:var(--tx);line-height:1.35}
-  .inc .dt{grid-column:1;font-size:var(--fs-caption);color:var(--tx3);line-height:1.35}
-  .inc .g{grid-row:1 / span 2;grid-column:2;align-self:center;font-size:var(--fs-small);font-weight:500;color:var(--tx2);white-space:nowrap}
-  .inc .gb{position:relative;grid-column:1 / -1;height:3px;margin-top:6px;background:var(--line2)}
+  .inc .nm{grid-column:1 / 3;font-size:var(--fs-small);color:var(--tx);line-height:1.35}
+  .inc .dt{grid-column:1;font-size:var(--fs-caption);color:var(--tx3);line-height:1.35;white-space:nowrap}
+  .inc .g{grid-column:3;font-size:var(--fs-small);font-weight:500;color:var(--tx2);white-space:nowrap}
+  .inc .gb{position:relative;grid-column:2 / 4;height:3px;background:var(--line2)}
   .inc .gb i{display:block;height:100%;background:var(--tx3)}
   .inc.on .gb i{background:var(--tx)}
   /* your threshold, on the same scale as the dark window: a gap that passes the tick is one you beat */
@@ -469,13 +492,12 @@
     .player input[type=range]{order:3;flex-basis:100%}
     .player .st{order:4;min-width:0}
   }
-  .what{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 24px;align-items:baseline;padding:12px var(--pad) 14px;border-top:1px solid var(--line)}
+  .what{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;padding:12px var(--pad) 14px;border-top:1px solid var(--line)}
   .what p{margin:0;font-size:var(--fs-small);color:var(--tx2);text-wrap:pretty}
   .what p b{color:var(--tx);font-weight:500}
-  .what .src{font-size:var(--fs-caption);color:var(--tx3);white-space:nowrap}
+  .what .src{font-size:var(--fs-caption);color:var(--tx3)}
   .what a{color:var(--tx2);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.3em;text-decoration-color:var(--link-underline)}
   .what a:hover{color:var(--tx);text-decoration-color:currentColor}
-  @container (max-width:700px){ .what{grid-template-columns:minmax(0,1fr)} .what .src{white-space:normal} }
   .dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none}
   .dot.ok{background:#2A6552;box-shadow:inset 0 0 0 1px #3FE0A0} .dot.warn{background:var(--v-slip)}
   .dot.clear{background:var(--grn)} .dot.make{background:var(--v-make)} .dot.slip{background:var(--v-slip)} .dot.miss{background:var(--v-miss)}
@@ -528,8 +550,8 @@
 
   @media print{
     :root{--bg:#fff;--bg2:#fff;--bg3:#fff;--line:#c7cdd5;--line2:#a8b1bc;--tx:#12161b;--tx2:#39424d;--tx3:#5b6470}
-    .top nav,.tbar .acts,.rail,.mini,.toast,.skip,.ref,.sec,.listw .pn-hd .r,.player{display:none}
-    .dash{display:block;padding:0} .kpiw,.vizw,.logw{margin-bottom:16px}
+    .top nav,.tbar .acts,.rail,.mini,.toast,.skip,.ref,.sec,.listw .pn-hd .r,.rulew .pn-hd .r,.player{display:none}
+    .dash{display:block;padding:0} .kpiw,.rulew,.vizw,.logw{margin-bottom:16px}
     .lr.future .said,.lr.future .tru,.lr.future .lt b{opacity:1}
     .print-url{display:block;margin-top:14px;font-family:var(--mono);font-size:11px;word-break:break-all}
   }
@@ -588,17 +610,23 @@
 
   <!-- inputs -->
   <div class="rail pn" role="group" aria-label="Your replay">
-    <fieldset class="grp">
-      <legend>Incident</legend>
-      <div class="incs" id="incs"></div>
-    </fieldset>
-
     <div class="grp">
       <div class="grp-h"><label for="thr">Your monitoring pages at</label><output id="thrOut" for="thr"></output></div>
       <input type="range" id="thr" min="0" max="1000" step="1">
       <div class="scale" aria-hidden="true"><span>1</span><span>60</span><span>240 min</span></div>
       <p class="hint">after your users start failing. Drag the dashed line on the replay to set it there.</p>
     </div>
+
+    <fieldset class="grp">
+      <legend>Your vendors <span class="lg-r"><output id="provOut"></output><button type="button" class="lnk" id="provClear" hidden>Clear</button></span></legend>
+      <div class="chips" id="provs"></div>
+      <p class="hint">Pick the ones you run on and every figure counts only their incidents.</p>
+    </fieldset>
+
+    <fieldset class="grp">
+      <legend>Incident to replay</legend>
+      <div class="incs" id="incs"></div>
+    </fieldset>
 
     <div class="grp">
       <div class="grp-h"><label for="cost">A minute down costs you</label>
@@ -627,10 +655,29 @@
       <div class="kpi you" id="k1"><dt id="kt1"></dt><dd class="v"><b id="kv1"></b><small id="ku1"></small></dd><dd class="d" id="kd1"></dd><dd class="s" id="ks1"></dd></div>
       <div class="kpi" id="k2"><dt>You would be first on</dt><dd class="v"><b id="kv2"></b><small id="ku2"></small></dd><dd class="d" id="kd2"></dd>
         <dd class="s"><span class="vbar" id="vbar" aria-hidden="true"></span><span id="ks2"></span></dd></div>
-      <div class="kpi" id="k3"><dt>Total impact</dt><dd class="v"><b id="kv3"></b></dd><dd class="d" id="kd3"></dd><dd class="s" id="ks3"></dd></div>
-      <div class="kpi" id="k4"><dt>Threshold to beat all six</dt><dd class="v"><b id="kv4"></b><small>minutes</small></dd><dd class="d" id="kd4"></dd><dd class="s" id="ks4"></dd></div>
+      <div class="kpi" id="k3"><dt id="kt3">The median delay</dt><dd class="v"><b id="kv3"></b><small>minutes</small></dd><dd class="d" id="kd3"></dd><dd class="s" id="ks3"></dd></div>
+      <div class="kpi" id="k4"><dt id="kt4">To be first</dt><dd class="v"><b id="kv4"></b><small id="ku4">minutes</small></dd><dd class="d" id="kd4"></dd><dd class="s" id="ks4"></dd></div>
     </dl>
     <p class="alert" id="alert" hidden><span class="ic" aria-hidden="true"></span><span id="alertT"></span></p>
+  </div>
+
+  <!-- the takeaway -->
+  <div class="rulew pn" id="rule">
+    <div class="pn-hd">
+      <h2>What to do about it<span class="meta" id="ruleMeta"></span></h2>
+      <div class="r">
+        <span class="lbl" id="sloL">Your availability target</span>
+        <div class="seg" role="group" aria-labelledby="sloL" id="sloSeg">
+          <button type="button" data-slo="99.5">99.5%</button><button type="button" data-slo="99.9">99.9%</button><button type="button" data-slo="99.95">99.95%</button><button type="button" data-slo="99.99">99.99%</button>
+        </div>
+        <button class="btn ghost" type="button" id="copyPolicy">Copy as a runbook policy</button>
+      </div>
+    </div>
+    <ol class="rules">
+      <li><h3 id="r1h"></h3><p id="r1"></p></li>
+      <li><h3 id="r2h"></h3><p id="r2"></p></li>
+      <li><h3 id="r3h"></h3><p id="r3"></p></li>
+    </ol>
   </div>
 
   <!-- the replay -->
@@ -672,7 +719,7 @@
   <!-- the ranking -->
   <div class="listw pn">
     <div class="pn-hd">
-      <h2>All six, ranked <span class="meta" id="listMeta"></span></h2>
+      <h2><span id="listH"></span><span class="meta" id="listMeta"></span></h2>
       <div class="r">
         <div class="seg" role="group" aria-label="Rank by">
           <button type="button" data-srt="gap" aria-pressed="true">Gap</button>
@@ -683,7 +730,7 @@
       </div>
     </div>
     <table class="pl">
-      <caption class="sr-only">The six incidents, ranked, with how long each status page stayed green, total impact, and where your paging threshold lands against it. Press an incident to replay it.</caption>
+      <caption class="sr-only">The incidents, ranked, with how long each status page stayed green, total impact, and where your paging threshold lands against it. Press an incident to replay it.</caption>
       <thead><tr><th scope="col"><span class="sr-only">Rank</span></th><th scope="col">Incident</th><th scope="col" class="n" id="thGap">Dark</th><th scope="col" class="n" id="thLen">Total</th><th scope="col" id="thYou">At your threshold</th></tr></thead>
       <tbody id="queue"></tbody>
     </table>
@@ -707,13 +754,13 @@
     <p class="lead"><span>A status page is a press release with a clock on it.</span> It fails the way any published spec does: optimistically.</p>
     <div class="cards">
       <div><h3>It is written, not measured</h3><p>Nothing on a status page is emitted by the failing system. A person decides the blast radius is now large enough to admit to, writes a sentence and gets it approved. That pipeline has a floor of several minutes on its best day.</p></div>
-      <div><h3>It often shares fate with the outage</h3><p>In December 2021 AWS posted that the incident was “affecting some of our monitoring and incident response tooling, which is delaying our ability to provide updates.” The instrument was downstream of the thing it measured. That is not rare.</p></div>
+      <div><h3>It often shares fate with the outage</h3><p>In December 2021 AWS posted that the incident was “affecting some of our monitoring and incident response tooling, which is delaying our ability to provide updates.” Google’s first post in June 2025 took about an hour because the infrastructure behind its status page was down too. Heroku’s status page ran on the hosts that failed.</p></div>
       <div><h3>You are on the clock before it moves</h3><p>Your users started failing at the first timestamp, not the second. Every minute of that gap is a minute spent deciding whether it was you, and the only instrument that could have told you sits inside your own account.</p></div>
     </div>
-    <dl class="stats" aria-label="The six incidents">
+    <dl class="stats" aria-label="The incidents in numbers">
       <div><dt>Median gap before the page moved</dt><dd id="stMed"></dd></div>
       <div><dt>Longest documented gap</dt><dd id="stMax"></dd></div>
-      <div><dt>Total impact replayed here</dt><dd id="stDown"></dd></div>
+      <div><dt>Took over half an hour to post</dt><dd id="stSlow"></dd></div>
     </dl>
   </div>
 
@@ -722,7 +769,7 @@
     <div class="two">
       <ol class="steps">
         <li><div><h3>The first clock: when customers started failing</h3><p>Taken from the provider’s own retrospective, written afterwards with internal telemetry. It is the earliest honest number anyone publishes, and nobody outside could have known it on the day.</p></div></li>
-        <li><div><h3>The second clock: when the status page said anything</h3><p>Not when it was accurate or named a cause, just the first public admission that something was wrong. It is the friendliest reading of the provider, and the gap is still tens of minutes.</p></div></li>
+        <li><div><h3>The second clock: when the status page said anything</h3><p>Not when it was accurate or named a cause, just the first public admission that something was wrong. It is the friendliest reading of the provider, and the gap is usually still tens of minutes.</p></div></li>
         <li><div><h3>The gap</h3><p>Second clock minus first. The window in which your dashboard was green, your users were not, and no outside source would have backed you up.</p></div></li>
         <li><div><h3>Your threshold against it</h3><p>Your own paging delay, taken from the gap. A positive margin means you were first and the page confirmed what you knew. A negative one means the status page told you first.</p></div></li>
       </ol>
@@ -736,7 +783,7 @@
   </div>
 
   <div role="tabpanel" id="incidents" aria-labelledby="t-incidents" tabindex="0" hidden>
-    <p class="lead"><span>Each has a published retrospective that states when impact began, the number nobody can reconstruct from outside.</span> Incidents where that timestamp was never published are not here, however famous.</p>
+    <p class="lead"><span><span id="incLead"></span>Each has a published retrospective that states when impact began, the number nobody can reconstruct from outside.</span> Incidents where that timestamp was never published are not here, however famous.</p>
     <div class="tscroll" tabindex="0" role="region" aria-label="Incident table, scrolls sideways on narrow screens">
       <table class="ref-t">
         <caption class="sr-only">Every incident replayed by this tool, with its detection gap, total impact and source</caption>
@@ -747,7 +794,7 @@
   </div>
 
   <div role="tabpanel" id="method" aria-labelledby="t-method" tabindex="0" hidden>
-    <p class="lead"><span>Every timestamp, and where it came from.</span> The model is five lines.</p>
+    <p class="lead"><span>Every timestamp, and where it came from.</span> The model is six lines.</p>
     <div class="two">
       <dl class="eq">
         <div><dt>Gap</dt><dd>first public status post − first customer impact</dd></div>
@@ -755,13 +802,16 @@
         <div><dt>Dark</dt><dd>impact → first post: console green, users failing</dd></div>
         <div><dt>Open</dt><dd>first post → mitigation: acknowledged, unresolved</dd></div>
         <div><dt>Recovering</dt><dd>mitigation → all clear: backlog draining</dd></div>
+        <div><dt>Budget</dt><dd>(100 − target) % × 30 days × 1,440 min</dd></div>
       </dl>
       <div class="calls">
         <p><b>It does not measure whether the post was true.</b> The gap closes the moment anything is admitted, however vague. “Investigating elevated error rates” during a total regional failure counts as the page having moved.</p>
         <p><b>Nor your blast radius, nor malice.</b> Two accounts in the same region had very different days, and every gap here has a mundane explanation; in at least two the tooling needed to update the page was inside the failure.</p>
-        <p><b>All times are UTC</b>, converted where the source published local time. The provider’s wording is quoted verbatim where it was published, and marked as reported where it was paraphrased in coverage.</p>
-        <p><b>Impact start always comes from the retrospective</b>, never a third-party detector. Downdetector spikes appear in the log as context because they are what an outsider saw, but they never set the clock.</p>
-        <p><b>Two acknowledgements are weaker than the rest</b>: the AWS December 2021 first post and the Azure Front Door first advisory come from secondary reporting, and are marked reported. Nothing is scraped live; the page ships the data it draws.</p>
+        <p><b>It is not always late.</b> <span id="notAlways"></span></p>
+        <p><b>All times are UTC</b>, converted where the source published local time. Wording inside quotation marks is the provider’s own. Lines without them summarise what the page showed at that moment.</p>
+        <p><b>Impact start always comes from the retrospective</b>, never a third-party detector and never the status post itself: twice here the first post dated the start later than the review eventually did.</p>
+        <p><b>Two first posts are weaker than the rest</b>: AWS in October 2025 and Cloudflare in December 2025 are timed from coverage and mirrors on the day rather than the provider’s archive, and are marked reported. Microsoft’s July 2024 review times its first communication without naming the channel. Nothing is scraped live; the page ships the data it draws.</p>
+        <p><b>The budget line assumes the outage is yours too.</b> It sets the vendor’s silence against the downtime your availability target allows in a 30-day month. If you stayed up, it cost you nothing.</p>
       </div>
     </div>
   </div>
@@ -795,7 +845,7 @@
 
 <footer>
   <div class="wrap">
-    <p class="fine">Incident timings come from each provider’s own retrospective: AWS <a href="https://aws.amazon.com/message/101925/" target="_blank" rel="noopener">DynamoDB service disruption, October 2025</a> and <a href="https://aws.amazon.com/message/12721/" target="_blank" rel="noopener">US-EAST-1 service event, December 2021</a>, Microsoft’s <a href="https://azure.status.microsoft/en-us/status/history/" target="_blank" rel="noopener">Azure status history</a> review for Front Door, Google Cloud’s <a href="https://status.cloud.google.com/incidents/ow5i3PPK96RduMcb1SsW" target="_blank" rel="noopener">Service Control incident report</a>, <a href="https://blog.cloudflare.com/18-november-2025-outage/" target="_blank" rel="noopener">Cloudflare’s 18 November 2025 postmortem</a> and <a href="https://www.fastly.com/blog/summary-of-june-8-outage" target="_blank" rel="noopener">Fastly’s summary of the June 8 outage</a>.</p>
+    <p class="fine" id="srcList"></p>
     <p class="fine">Status posts that could not be recovered from a primary archive are marked reported. This is a communication timeline, not an availability measurement: it says when you would have been told, not how much of your traffic failed.</p>
     <p class="meta">Outage replay is part of <a href="/">Infrabench</a> by <a href="https://adrianmucha.us" target="_blank" rel="noopener">Adrian Mucha</a> / FruitBat Design, Los&nbsp;Angeles &middot; MIT licensed &middot; <a href="https://github.com/adrianomucha/infrabench" target="_blank" rel="noopener">Source&nbsp;on&nbsp;GitHub</a></p>
   </div>
@@ -809,98 +859,175 @@
   "use strict";
 
   /* ============================================================================
-     THE DATA. Six incidents, each with the two timestamps the whole tool turns on:
+     THE DATA. Each incident carries the two timestamps the whole tool turns on:
      t0, when customers started failing, taken from the provider's retrospective,
      and ack, the first public post on the status page. Everything else on the page
      is derived from this block, so correcting it is a single edit here.
+       pk, pv the vendor: a key for the filter and the name on its chip
        t0     first customer impact, from the provider's own retrospective
        ack    first public acknowledgement of any kind on the status page
        mit    mitigation applied and recovery under way, where the source states it
        end    all clear
        conf   "primary" if ack came from the provider's own record, "reported" if it
-              came from contemporaneous secondary coverage. Shown in the table.
+              came from coverage or mirrors on the day. Shown in the table.
+       src    the retrospective; src2 the status record, where it is a separate page
        posts  the log. s is what the console showed at that moment:
               ok = operational, warn = investigating or degraded, down = outage
-              said = the status page, verbatim where quoted. true = what was actually
-              happening, from the retrospective.
+              said = the status page; q marks the provider's own words, the rest
+              summarise what the page showed. tru = what was actually happening,
+              from the retrospective.
      ========================================================================= */
   var INCIDENTS = [
     {
-      id:"aws2025", name:"AWS us-east-1", prov:"Amazon Web Services", when:"20 October 2025",
-      t0:"2025-10-20T06:48Z", ack:"2025-10-20T07:11Z", mit:"2025-10-20T08:15Z", end:"2025-10-20T21:20Z",
-      conf:"primary",
+      id:"aws2025", pk:"aws", pv:"AWS", name:"AWS us-east-1", prov:"Amazon Web Services", when:"20 October 2025",
+      t0:"2025-10-20T06:48Z", ack:"2025-10-20T07:11Z", mit:"2025-10-20T09:25Z", end:"2025-10-20T21:20Z",
+      conf:"reported",
       cause:"A race between two DNS automation processes let a stale plan overwrite a newer one, and the cleanup job then deleted it, leaving the DynamoDB endpoint in us-east-1 with no records at all.",
       blast:"DynamoDB, then EC2 instance launches, Lambda, and network load balancer health checks, and then most of the consumer internet that sits on top of them.",
       src:"https://aws.amazon.com/message/101925/", srcName:"AWS post-event summary",
       posts:[
         {t:"2025-10-20T06:48Z", s:"ok",   said:"All services operating normally.", tru:"DynamoDB in us-east-1 begins returning elevated API error rates. The endpoint's DNS record set is empty, so nothing can even find the database."},
-        {t:"2025-10-20T07:11Z", s:"warn", said:"Increased error rates for multiple services in the US-EAST-1 region. Investigating.", tru:"Twenty three minutes in. Every service with a DynamoDB dependency is already failing, which by this hour of the morning is most of them."},
-        {t:"2025-10-20T07:38Z", s:"warn", said:"Investigating continues.", tru:"Engineers identify the empty DynamoDB DNS state as the source. The cause is known internally, and the page still says only that error rates are elevated."},
-        {t:"2025-10-20T08:15Z", s:"down", said:"Root cause identified as DNS resolution of the DynamoDB API endpoints. Applying mitigations.", tru:"Temporary mitigations let internal services reconnect, which unblocks the tooling needed to fix everything else."},
-        {t:"2025-10-20T09:25Z", s:"down", said:"DynamoDB recovering. Other services still impaired.", tru:"All DNS information restored, global table replicas caught up seven minutes later. The database is fine. The cascade is not."},
-        {t:"2025-10-20T21:20Z", s:"ok",   said:"All services have returned to normal operations.", tru:"Fourteen and a half hours after the first failed call. The database outage lasted about three hours. The other eleven were everything that had queued up behind it."}
+        {t:"2025-10-20T07:11Z", s:"warn", q:1, said:"We are investigating increased error rates and latencies for multiple AWS services in the US-EAST-1 Region.", tru:"Twenty three minutes in. Every service with a DynamoDB dependency is already failing. The post was widely quoted on the day; AWS's summary does not time it, so it is marked reported."},
+        {t:"2025-10-20T07:38Z", s:"warn", said:"No change. Still investigating.", tru:"Engineers identify the empty DynamoDB DNS state as the source. The cause is known internally, and the page still says only that error rates are elevated."},
+        {t:"2025-10-20T09:01Z", s:"down", said:"Names a potential root cause: DNS resolution of the DynamoDB API endpoint.", tru:"Eighty three minutes after engineers had it. Temporary mitigations had been letting internal services reconnect since 08:15."},
+        {t:"2025-10-20T09:25Z", s:"down", said:"Recovery under way for DynamoDB. Other services still impaired.", tru:"All DNS information restored. The database is fine. The cascade is not."},
+        {t:"2025-10-20T21:20Z", s:"ok",   said:"The last services return to normal operations.", tru:"Fourteen and a half hours after the first failed call. The database outage lasted under three hours. The rest was everything that had queued up behind it."}
       ]
     },
     {
-      id:"aws2021", name:"AWS us-east-1", prov:"Amazon Web Services", when:"7 December 2021",
+      id:"aws2021", pk:"aws", pv:"AWS", name:"AWS us-east-1", prov:"Amazon Web Services", when:"7 December 2021",
       t0:"2021-12-07T15:30Z", ack:"2021-12-07T16:22Z", mit:null, end:"2021-12-07T22:22Z",
-      conf:"reported",
+      conf:"primary",
       cause:"An automated capacity scaling action produced a surge of connections on the internal network. A latent defect in client back-off logic turned that surge into sustained congestion that would not clear itself.",
       blast:"EC2 control plane APIs, Route 53, the Management Console, STS, and the ability to open a support case, which was impaired for very nearly the whole event.",
       src:"https://aws.amazon.com/message/12721/", srcName:"AWS service event summary",
       posts:[
         {t:"2021-12-07T15:30Z", s:"ok",   said:"All services operating normally.", tru:"Internal network congestion begins. Customer API calls start failing across the region. Support case creation is impaired from three minutes later."},
-        {t:"2021-12-07T16:22Z", s:"warn", said:"Investigating increased error rates for the AWS Management Console.", tru:"Reported, not archived. Roughly fifty minutes in, and the first admission is scoped to the console rather than the region."},
-        {t:"2021-12-07T17:37Z", s:"down", said:"We are seeing impact to multiple AWS APIs in the US-EAST-1 Region. This issue is also affecting some of our monitoring and incident response tooling, which is delaying our ability to provide updates.", tru:"The clearest sentence any provider has published about this problem. The instrument was downstream of the failure it was supposed to report."},
-        {t:"2021-12-07T22:22Z", s:"ok",   said:"Network device impairment resolved. Services returning to normal.", tru:"Just under seven hours. Support case creation had been impaired for nearly all of it, so the escape hatch was shut for the duration."}
+        {t:"2021-12-07T16:22Z", s:"warn", q:1, said:"We are investigating increased error rates for the AWS Management Console.", tru:"Fifty two minutes. AWS's summary says the congestion stopped its dashboard tooling failing over to a standby region until now, and the first admission is scoped to the console rather than the region."},
+        {t:"2021-12-07T17:37Z", s:"down", q:1, said:"We are seeing impact to multiple AWS APIs in the US-EAST-1 Region. This issue is also affecting some of our monitoring and incident response tooling, which is delaying our ability to provide updates.", tru:"The clearest sentence any provider has published about this problem. The instrument was downstream of the failure it was supposed to report."},
+        {t:"2021-12-07T22:22Z", s:"ok",   said:"Network devices recovered. Services returning to normal.", tru:"Just under seven hours. Support case creation had been impaired for nearly all of it, so the escape hatch was shut for the duration."}
       ]
     },
     {
-      id:"azure2025", name:"Azure Front Door", prov:"Microsoft Azure", when:"29 October 2025",
-      t0:"2025-10-29T15:45Z", ack:"2025-10-29T17:26Z", mit:null, end:"2025-10-30T00:05Z",
-      conf:"reported",
-      cause:"An inadvertent tenant configuration change propagated an inconsistent configuration across the Front Door fleet. The protection mechanism that should have caught it failed because of a software defect.",
+      id:"azure2025", pk:"azure", pv:"Azure", name:"Azure Front Door", prov:"Microsoft Azure", when:"29 October 2025",
+      t0:"2025-10-29T15:41Z", ack:"2025-10-29T16:18Z", mit:"2025-10-29T18:30Z", end:"2025-10-30T00:05Z",
+      conf:"primary",
+      cause:"A configuration change produced corrupt metadata that passed the staged safety checks, then crashed Front Door's data plane as it spread across the fleet.",
       blast:"Azure Portal, Entra ID, App Service, Azure SQL, Container Registry, Sentinel, Purview, Virtual Desktop, and the Microsoft 365 surfaces sitting behind the same edge.",
-      src:"https://azure.status.microsoft/en-us/status/history/", srcName:"Azure status history and preliminary PIR",
+      src:"https://azure.status.microsoft/en-us/status/history/?trackingId=YKYN-BWZ", srcName:"Azure post incident review YKYN-BWZ",
       posts:[
-        {t:"2025-10-29T15:45Z", s:"ok",   said:"All services operating normally.", tru:"Front Door begins serving errors and timeouts as the bad configuration spreads. Anything fronted by it starts failing, including the portal customers would use to check."},
-        {t:"2025-10-29T17:26Z", s:"warn", said:"Azure Portal failed away from Azure Front Door.", tru:"Reported, not archived. This is the earliest action in Microsoft's published timeline, so the true first advisory may have been earlier. Even read generously it is more than an hour and a half."},
-        {t:"2025-10-29T17:51Z", s:"down", said:"Customers may experience issues with Azure Front Door. Impact began at approximately 16:00 UTC.", tru:"The provider's own estimate of its start time, published two hours after the actual start, and fifteen minutes later than the retrospective would eventually settle on."},
-        {t:"2025-10-30T00:05Z", s:"ok",   said:"Services restored. Configuration changes blocked pending review.", tru:"Eight and a third hours. Recovery required rolling back to a last known good configuration and freezing further changes to stop it recurring mid-repair."}
+        {t:"2025-10-29T15:41Z", s:"ok",   said:"All services operating normally.", tru:"Front Door nodes begin crashing on corrupt metadata introduced six minutes earlier. Anything fronted by it starts failing, including the portal customers would use to check."},
+        {t:"2025-10-29T15:48Z", s:"ok",   said:"All services operating normally.", tru:"Monitoring alerts fire and the investigation starts. Seven minutes in, Microsoft knows. The page says nothing for another half hour."},
+        {t:"2025-10-29T16:18Z", s:"warn", said:"Initial communication posted to the public status page.", tru:"Thirty seven minutes. Targeted notices reach affected customers through Service Health two minutes later."},
+        {t:"2025-10-29T17:26Z", s:"down", said:"Incident open.", tru:"The Azure Portal is failed away from Front Door, so customers can reach it again. A last known good configuration starts rolling out fourteen minutes later."},
+        {t:"2025-10-29T18:30Z", s:"down", said:"Incident open.", tru:"Front Door's DNS servers recover and traffic is rebalanced by hand onto healthy edge sites. Customers begin to see improvement."},
+        {t:"2025-10-30T00:05Z", s:"ok",   said:"Impact confirmed mitigated.", tru:"Eight hours and twenty four minutes. Availability and latency are back to where they were before the change."}
       ]
     },
     {
-      id:"gcp2025", name:"Google Cloud", prov:"Google Cloud", when:"12 June 2025",
-      t0:"2025-06-12T17:51Z", ack:"2025-06-12T19:05Z", mit:null, end:"2025-06-13T01:18Z",
+      id:"azure2024c", pk:"azure", pv:"Azure", name:"Azure Central US", prov:"Microsoft Azure", when:"18 July 2024",
+      t0:"2024-07-18T21:40Z", ack:"2024-07-18T22:56Z", mit:"2024-07-19T02:55Z", end:"2024-07-19T22:00Z",
+      conf:"primary",
+      cause:"A routine update to the storage allow list of VM host addresses was built from incomplete source files. Storage then rejected disk requests from the hosts left off it, and the rollout did not check for falling VM availability before it carried on.",
+      blast:"Virtual machines in Central US and the services built on them, with SQL Database and SQL Managed Instance the last to be verified as recovered.",
+      src:"https://azure.status.microsoft/en-us/status/history/?trackingId=1K80-N_8", srcName:"Azure post incident review 1K80-N_8",
+      posts:[
+        {t:"2024-07-18T21:40Z", s:"ok",   said:"All services operating normally.", tru:"Storage begins rejecting disk requests from VM hosts that were left off an updated allow list. Virtual machines across the region lose their disks."},
+        {t:"2024-07-18T22:09Z", s:"ok",   said:"All services operating normally.", tru:"Targeted messages go to a subset of customers through Service Health in the portal. The public page has said nothing."},
+        {t:"2024-07-18T22:56Z", s:"warn", said:"Banner posted: investigating alerts in the Central US region.", tru:"Seventy six minutes. Broad Service Health notifications for the services known to be affected follow half an hour later."},
+        {t:"2024-07-19T02:55Z", s:"down", said:"Incident open.", tru:"The corrected configuration is on every storage scale unit in the region. Storage is back. The databases on top of it are not."},
+        {t:"2024-07-19T22:00Z", s:"ok",   said:"Impact mitigated.", tru:"Twenty four hours and twenty minutes after it began, the last SQL databases are verified as recovered."}
+      ]
+    },
+    {
+      id:"azure2024f", pk:"azure", pv:"Azure", name:"Azure Front Door", prov:"Microsoft Azure", when:"30 July 2024",
+      t0:"2024-07-30T11:45Z", ack:"2024-07-30T13:13Z", mit:"2024-07-30T13:58Z", end:"2024-07-30T19:43Z",
+      conf:"primary",
+      cause:"After a DDoS attack had been absorbed, a network misconfiguration in the mitigation path caused congestion and packet loss at Front Door frontends. Microsoft said an error in its own defences amplified the impact rather than mitigating it.",
+      blast:"Intermittent connection errors and timeouts for services behind Azure Front Door and Azure CDN, in multiple regions.",
+      src:"https://azure.status.microsoft/en-us/status/history/?trackingId=KTY1-HW8", srcName:"Azure post incident review KTY1-HW8",
+      posts:[
+        {t:"2024-07-30T11:45Z", s:"ok",   said:"All services operating normally.", tru:"Route updates fail at one European site as DDoS protection disengages, and a latent misconfiguration sends traffic into congestion. Connections begin timing out."},
+        {t:"2024-07-30T11:47Z", s:"ok",   said:"All services operating normally.", tru:"The Azure Portal team detects the degradation, two minutes in. Detection was never the slow step."},
+        {t:"2024-07-30T13:13Z", s:"warn", said:"Investigating reports of issues connecting to Microsoft services.", tru:"Eighty eight minutes. The review says communications were published at this time and does not name the channel, so this is the earliest public word of any kind."},
+        {t:"2024-07-30T13:58Z", s:"warn", said:"Incident open.", tru:"Rerouting traffic mitigates most of the impact. A smaller set of customers keeps seeing connection timeouts for hours."},
+        {t:"2024-07-30T19:43Z", s:"ok",   said:"Impact mitigated.", tru:"Just under eight hours. Availability is confirmed back at its level before the incident."}
+      ]
+    },
+    {
+      id:"gcp2025", pk:"gcp", pv:"Google Cloud", name:"Google Cloud IAM", prov:"Google Cloud", when:"12 June 2025",
+      t0:"2025-06-12T17:51Z", ack:"2025-06-12T18:46Z", mit:null, end:"2025-06-13T01:18Z",
       conf:"primary",
       cause:"A quota policy feature shipped without a feature flag hit a policy record with blank fields, and the unhandled null crashed the Service Control binary globally, taking IAM token issuance with it.",
       blast:"IAM, and therefore effectively everything: Cloud Storage, Cloud Shell, Memorystore, and every product that needs a token to serve a request.",
-      src:"https://status.cloud.google.com/incidents/ow5i3PPK96RduMcb1SsW", srcName:"Google Cloud incident report",
+      src:"https://status.cloud.google.com/incidents/ow5i3PPK96RduMcb1SsW", srcName:"Google Cloud incident report, June 2025",
       posts:[
         {t:"2025-06-12T17:51Z", s:"ok",   said:"All services operating normally.", tru:"Service Control crash loops worldwide. IAM stops issuing tokens, so authenticated calls fail everywhere at once."},
-        {t:"2025-06-12T17:56Z", s:"ok",   said:"All services operating normally.", tru:"Downdetector reports for Google Cloud spike. The crowd has the story five minutes in. The dashboard still does not."},
-        {t:"2025-06-12T19:05Z", s:"warn", said:"We are investigating an issue with multiple Google Cloud products.", tru:"Seventy four minutes. The longest gap of the six, on the incident where the failing component was the one that authorises every request."},
-        {t:"2025-06-13T01:18Z", s:"ok",   said:"The issue with multiple Google Cloud products has been resolved for all affected projects.", tru:"Seven and a half hours end to end. Most regions recovered far earlier; the largest ones took longest because everything retried at once when the fix landed."}
+        {t:"2025-06-12T18:46Z", s:"warn", q:1, said:"We are experiencing service issues with multiple GCP products beginning at Thursday, 2025-06-12 10:51 PDT.", tru:"Fifty five minutes. Google's report says the first post took about an hour because the infrastructure behind Cloud Service Health was down with everything else."},
+        {t:"2025-06-13T01:18Z", s:"ok",   said:"All services recovered.", tru:"Seven and a half hours end to end. Most regions recovered far earlier; the largest took longest because everything retried at once when the fix landed."}
       ]
     },
     {
-      id:"cf2025", name:"Cloudflare", prov:"Cloudflare", when:"18 November 2025",
-      t0:"2025-11-18T11:20Z", ack:"2025-11-18T12:03Z", mit:"2025-11-18T14:30Z", end:"2025-11-18T17:06Z",
+      id:"gcp2021", pk:"gcp", pv:"Google Cloud", name:"Google Cloud load balancing", prov:"Google Cloud", when:"16 November 2021",
+      t0:"2021-11-16T17:34Z", ack:"2021-11-16T18:10Z", mit:null, end:"2021-11-16T19:28Z",
+      conf:"primary",
+      cause:"A bug in the pipeline that propagates customer configuration rules to Google's global load balancers.",
+      blast:"Services served through Google Cloud's external load balancers, which put a long list of unrelated sites behind the same failure.",
+      src:"https://status.cloud.google.com/incidents/6PM5mNd43NbMqjCZ5REh", srcName:"Google Cloud incident report, November 2021",
+      posts:[
+        {t:"2021-11-16T17:34Z", s:"ok",   said:"All services operating normally.", tru:"The load balancer configuration pipeline starts shipping a faulty configuration. Requests to services behind it begin to fail."},
+        {t:"2021-11-16T18:10Z", s:"warn", q:1, said:"We are experiencing an issue with Cloud Networking beginning at Tuesday, 2021-11-16 09:53 US/Pacific.", tru:"Thirty six minutes. The post dates the start to 09:53 Pacific. Google's final report moved it to 09:34, nineteen minutes earlier."},
+        {t:"2021-11-16T19:28Z", s:"ok",   said:"Resolved for all affected projects.", tru:"One hour and fifty four minutes after it began."}
+      ]
+    },
+    {
+      id:"gcp2019", pk:"gcp", pv:"Google Cloud", name:"Google Cloud network", prov:"Google Cloud", when:"2 June 2019",
+      t0:"2019-06-02T18:45Z", ack:"2019-06-02T19:25Z", mit:null, end:"2019-06-02T22:40Z",
+      conf:"primary",
+      cause:"A configuration change meant for a few servers in one region was applied across several neighbouring regions, which stopped using more than half of their network capacity. The congestion also slowed the tools engineers needed to fix it.",
+      blast:"Google Cloud, G Suite and YouTube for users routed through the eastern United States.",
+      src:"https://status.cloud.google.com/incident/cloud-networking/19009", srcName:"Google Cloud networking incident 19009",
+      src2:"https://status.cloud.google.com/incident/compute/19003", src2Name:"Compute Engine incident 19003",
+      posts:[
+        {t:"2019-06-02T18:45Z", s:"ok",   said:"All services operating normally.", tru:"Network capacity drops across several regions and congestion builds in the eastern United States."},
+        {t:"2019-06-02T19:25Z", s:"warn", q:1, said:"We are investigating an issue with Google Compute Engine.", tru:"Forty minutes. The first post names one product. YouTube, G Suite and much of Google Cloud are affected."},
+        {t:"2019-06-02T19:53Z", s:"warn", q:1, said:"We are investigating an issue with Google Cloud Networking.", tru:"A second entry opens for the network itself, sixty eight minutes in."},
+        {t:"2019-06-02T22:40Z", s:"ok",   said:"Network congestion resolved.", tru:"Three hours and fifty five minutes after it began."}
+      ]
+    },
+    {
+      id:"cf2025", pk:"cloudflare", pv:"Cloudflare", name:"Cloudflare", prov:"Cloudflare", when:"18 November 2025",
+      t0:"2025-11-18T11:20Z", ack:"2025-11-18T11:48Z", mit:"2025-11-18T14:30Z", end:"2025-11-18T17:06Z",
       conf:"primary",
       cause:"A database permissions change made a query return duplicate rows, which doubled the size of a bot management feature file. The oversized file was distributed fleet-wide and the proxy rejected it.",
       blast:"Core CDN and security traffic, Workers KV, Access, the dashboard and the API. Roughly a fifth of the web sits behind it, so the failure looked like an internet outage.",
-      src:"https://blog.cloudflare.com/18-november-2025-outage/", srcName:"Cloudflare postmortem",
+      src:"https://blog.cloudflare.com/18-november-2025-outage/", srcName:"Cloudflare postmortem, 18 November 2025",
+      src2:"https://www.cloudflarestatus.com/incidents/8gmgl950y3h7", src2Name:"Cloudflare status record",
       posts:[
         {t:"2025-11-18T11:05Z", s:"ok",   said:"All services operating normally.", tru:"The database permissions change is deployed. Nothing is visibly wrong yet."},
-        {t:"2025-11-18T11:20Z", s:"ok",   said:"All services operating normally.", tru:"Core network traffic begins failing. Widespread HTTP 5xx errors, and the dashboard and API are failing alongside the traffic they would be used to diagnose."},
-        {t:"2025-11-18T12:03Z", s:"warn", said:"Cloudflare is aware of, and investigating an issue which impacts multiple customers: Widespread 500 errors, Cloudflare Dashboard and API also failing.", tru:"Forty three minutes. Notably, the post names the dashboard failure in the same breath, which is more candour than most first posts carry."},
-        {t:"2025-11-18T13:05Z", s:"down", said:"Bot Management identified. Working on remediation.", tru:"Bot management is bypassed for the worst-affected paths, which stops most of the bleeding well before the real fix."},
-        {t:"2025-11-18T14:30Z", s:"warn", said:"A fix has been implemented. Monitoring.", tru:"A known good feature file is deployed and core traffic is largely restored. Downstream services keep failing for another two and a half hours."},
-        {t:"2025-11-18T17:06Z", s:"ok",   said:"All systems operational.", tru:"Five and three quarter hours end to end, on a failure that took eleven minutes to start and one file to cause."}
+        {t:"2025-11-18T11:20Z", s:"ok",   said:"All services operating normally.", tru:"Core network traffic begins failing with widespread HTTP 5xx errors. Cloudflare's summary gives 11:20 and its timeline 11:28; this uses the earlier."},
+        {t:"2025-11-18T11:48Z", s:"warn", q:1, said:"Cloudflare is experiencing an internal service degradation. Some services may be intermittently impacted.", tru:"Twenty eight minutes. The dashboard and API customers would use to diagnose it are failing alongside the traffic."},
+        {t:"2025-11-18T13:09Z", s:"down", q:1, said:"The issue has been identified and a fix is being implemented.", tru:"Workers KV and Access had been bypassed four minutes earlier, which cut the impact well before the real fix."},
+        {t:"2025-11-18T14:42Z", s:"warn", q:1, said:"A fix has been implemented and we believe the incident is now resolved.", tru:"A known good file went out at 14:30 and core traffic is largely restored. Downstream services keep failing for another two and a half hours."},
+        {t:"2025-11-18T17:06Z", s:"ok",   said:"Errors and latency returning to normal levels.", tru:"Five and three quarter hours end to end, caused by one configuration file that doubled in size."}
       ]
     },
     {
-      id:"fastly2021", name:"Fastly", prov:"Fastly", when:"8 June 2021",
+      id:"cf2025b", pk:"cloudflare", pv:"Cloudflare", name:"Cloudflare", prov:"Cloudflare", when:"5 December 2025",
+      t0:"2025-12-05T08:47Z", ack:"2025-12-05T08:56Z", mit:null, end:"2025-12-05T09:12Z",
+      conf:"reported",
+      cause:"A configuration change meant to switch off an internal rule-testing tool was pushed globally with no gradual rollout, and hit a latent bug in the older proxy's rules code.",
+      blast:"HTTP 500 errors for customers on the older proxy who used the Cloudflare Managed Ruleset.",
+      src:"https://blog.cloudflare.com/5-december-2025-outage/", srcName:"Cloudflare postmortem, 5 December 2025",
+      posts:[
+        {t:"2025-12-05T08:47Z", s:"ok",   said:"All services operating normally.", tru:"The change is deployed and reaches the whole network within a minute. Affected customers start returning HTTP 500s."},
+        {t:"2025-12-05T08:50Z", s:"ok",   said:"All services operating normally.", tru:"Automated alerts fire and an incident is declared internally, three minutes in."},
+        {t:"2025-12-05T08:56Z", s:"warn", said:"Investigating issues with the Cloudflare Dashboard and related APIs.", tru:"Nine minutes. Reported, not archived. The post names the dashboard and API rather than the customer traffic failing behind them."},
+        {t:"2025-12-05T09:12Z", s:"ok",   said:"Change reverted. Traffic restored.", tru:"Twenty five minutes end to end. Even a nine minute acknowledgement covered more than a third of the outage."}
+      ]
+    },
+    {
+      id:"fastly2021", pk:"fastly", pv:"Fastly", name:"Fastly", prov:"Fastly", when:"8 June 2021",
       t0:"2021-06-08T09:47Z", ack:"2021-06-08T09:58Z", mit:"2021-06-08T10:36Z", end:"2021-06-08T12:44Z",
       conf:"primary",
       cause:"A valid customer configuration change tripped a latent bug in a software deployment from a month earlier, and 85 percent of the network began returning errors.",
@@ -909,15 +1036,79 @@
       posts:[
         {t:"2021-06-08T09:47Z", s:"ok",   said:"All services operating normally.", tru:"Global disruption begins. 85 percent of the network starts returning errors."},
         {t:"2021-06-08T09:48Z", s:"ok",   said:"All services operating normally.", tru:"Fastly's own monitoring identifies the disruption. One minute. This is what the ceiling looks like when detection is automated."},
-        {t:"2021-06-08T09:58Z", s:"warn", said:"We are currently investigating potential impact to performance with our CDN services.", tru:"Eleven minutes, the fastest of the six, and ten of those eleven were the write-and-approve step rather than detection."},
+        {t:"2021-06-08T09:58Z", s:"warn", q:1, said:"We are currently investigating potential impact to performance with our CDN services.", tru:"Eleven minutes, and ten of those eleven were the write-and-approve step rather than detection."},
         {t:"2021-06-08T10:36Z", s:"warn", said:"The issue has been identified and a fix is being implemented.", tru:"Impacted services begin recovering, forty nine minutes after the outage started."},
         {t:"2021-06-08T12:44Z", s:"ok",   said:"This incident has been resolved.", tru:"Just under three hours to the all clear, on an outage most people remember as one of the worst of the decade."}
+      ]
+    },
+    {
+      id:"github2018", pk:"github", pv:"GitHub", name:"GitHub", prov:"GitHub", when:"21 October 2018",
+      t0:"2018-10-21T22:52Z", ack:"2018-10-21T23:09Z", mit:null, end:"2018-10-22T23:03Z",
+      conf:"primary",
+      cause:"Routine replacement of failing network equipment cut the US East hub off from its primary data center for 43 seconds. Automated failover promoted databases on the other coast, leaving each site holding writes the other had never seen.",
+      blast:"Stale and inconsistent data across GitHub.com, with webhooks and Pages builds paused for a day while the databases were restored and reconciled.",
+      src:"https://github.blog/2018-10-30-oct21-post-incident-analysis/", srcName:"GitHub post-incident analysis",
+      posts:[
+        {t:"2018-10-21T22:52Z", s:"ok",   said:"Status green.", tru:"A 43 second network partition during maintenance. Database clusters fail over to the West Coast, and the two sites now disagree about what was written."},
+        {t:"2018-10-21T22:54Z", s:"ok",   said:"Status green.", tru:"Internal monitoring starts generating alerts, two minutes in."},
+        {t:"2018-10-21T23:09Z", s:"warn", said:"Status set to yellow.", tru:"Seventeen minutes. Setting the status is what escalates this to an active incident and alerts the incident coordinator."},
+        {t:"2018-10-21T23:13Z", s:"down", said:"Status set to red.", tru:"The coordinator joins at 23:11 and makes the call two minutes later."},
+        {t:"2018-10-22T06:51Z", s:"down", said:"Estimated time to recovery: two hours.", tru:"Eight hours in. Restoring multi-terabyte databases from backup is taking hours for each cluster, and the estimate does not hold."},
+        {t:"2018-10-22T23:03Z", s:"ok",   said:"Status set to green.", tru:"Twenty four hours and eleven minutes. The last queued webhooks and Pages builds have been processed."}
+      ]
+    },
+    {
+      id:"datadog2023", pk:"datadog", pv:"Datadog", name:"Datadog", prov:"Datadog", when:"8 March 2023",
+      t0:"2023-03-08T06:03Z", ack:"2023-03-08T06:31Z", mit:null, end:"2023-03-09T08:58Z",
+      conf:"primary",
+      cause:"An automatic systemd update restarted the network service on a large share of the fleet within the same hour, which removed the routes the container network depended on and took nodes offline in every region at once.",
+      blast:"The web app, data ingestion, monitors and alerting, across every Datadog region and cloud provider at the same time.",
+      src:"https://www.datadoghq.com/blog/2023-03-08-multiregion-infrastructure-connectivity-issue/", srcName:"Datadog postmortem",
+      src2:"https://www.datadoghq.com/blog/engineering/2023-03-08-deep-dive-into-incident-response/", src2Name:"Datadog incident response timeline",
+      posts:[
+        {t:"2023-03-08T06:00Z", s:"ok",   said:"All systems operational.", tru:"The systemd upgrade starts on its own, across regions and cloud providers."},
+        {t:"2023-03-08T06:03Z", s:"ok",   said:"All systems operational.", tru:"Datadog's monitoring detects a problem with Datadog. Users cannot load the web app."},
+        {t:"2023-03-08T06:18Z", s:"ok",   said:"All systems operational.", tru:"A high-severity incident is opened internally. The page stays green for another thirteen minutes."},
+        {t:"2023-03-08T06:31Z", s:"warn", said:"First update posted, describing problems loading the web app.", tru:"Twenty eight minutes. The first mention that data ingestion and monitors may be affected comes at 07:23, eighty minutes after the outage began."},
+        {t:"2023-03-08T09:13Z", s:"down", said:"Incident open.", tru:"Web access is restored, the first sign of recovery. Ingestion and monitors are still down."},
+        {t:"2023-03-09T08:58Z", s:"ok",   said:"All services operational in all regions.", tru:"Twenty six hours and fifty five minutes. For much of it, the monitors and alerts its customers rely on were impaired too."}
+      ]
+    },
+    {
+      id:"heroku2025", pk:"heroku", pv:"Heroku", name:"Heroku", prov:"Heroku", when:"10 June 2025",
+      t0:"2025-06-10T06:00Z", ack:"2025-06-10T08:04Z", mit:null, end:"2025-06-11T05:16Z",
+      conf:"primary",
+      cause:"An automated operating system update ran on production infrastructure where it should have been disabled. It restarted host networking, and a legacy script failed to reapply the routing rules.",
+      blast:"Outbound connectivity for dynos on affected hosts, the Heroku Dashboard, and Heroku's own internal tools and status page, which ran on the same infrastructure.",
+      src:"https://www.heroku.com/blog/summary-of-june-10-outage/", srcName:"Heroku outage summary",
+      src2:"https://status.heroku.com/incidents/2822", src2Name:"Heroku status record",
+      posts:[
+        {t:"2025-06-10T06:00Z", s:"ok",   said:"All systems operational.", tru:"Heroku services begin to degrade badly. The status page and the internal tools used to update it are on the infrastructure that is failing."},
+        {t:"2025-06-10T08:04Z", s:"warn", q:1, said:"Engineers are investigating an issue with the Heroku platform.", tru:"Two hours and four minutes, the longest gap here. Heroku's review: its tools and status page were also impacted, which severely delayed its ability to communicate."},
+        {t:"2025-06-10T13:07Z", s:"down", q:1, said:"Beginning at 06:03 UTC, Heroku is having intermittent outages which are currently being investigated.", tru:"Seven hours in, the page puts a start time on it. Fifty one minutes later a workaround lets the team post updates to X instead."},
+        {t:"2025-06-11T05:16Z", s:"ok",   q:1, said:"Engineers have implemented all fixes. The Heroku Platform is now operating normally.", tru:"Twenty three hours and sixteen minutes after the first failures."}
+      ]
+    },
+    {
+      id:"openai2024", pk:"openai", pv:"OpenAI", name:"OpenAI", prov:"OpenAI", when:"11 December 2024",
+      t0:"2024-12-11T23:16Z", ack:"2024-12-11T23:17Z", mit:"2024-12-12T01:40Z", end:"2024-12-12T03:38Z",
+      conf:"primary",
+      cause:"A new telemetry service generated enough Kubernetes API load on the largest clusters to overwhelm the control plane, which broke DNS-based service discovery.",
+      blast:"ChatGPT, the API and Sora, degraded or unavailable for more than four hours.",
+      src:"https://status.openai.com/incidents/ctrsv3lwd797", srcName:"OpenAI postmortem and status record",
+      posts:[
+        {t:"2024-12-11T23:16Z", s:"ok",   said:"All systems operational.", tru:"Customer impact begins as the Kubernetes control plane on the largest clusters is overwhelmed."},
+        {t:"2024-12-11T23:17Z", s:"warn", q:1, said:"We are currently investigating the issue and will provide more updates shortly.", tru:"One minute. The fastest acknowledgement here, and the one case where watching the vendor's page would have cost you nothing."},
+        {t:"2024-12-11T23:53Z", s:"down", q:1, said:"We have reports of API calls returning errors, and difficulties logging in to platform.openai.com and ChatGPT.", tru:"Thirty seven minutes in, the page says what is broken. Acknowledging fast and describing accurately are different skills."},
+        {t:"2024-12-12T01:50Z", s:"down", q:1, said:"API and ChatGPT traffic is partially recovered. Sora remains down.", tru:"API traffic had begun to recover ten minutes earlier. ChatGPT and Sora follow about an hour after that."},
+        {t:"2024-12-12T03:38Z", s:"ok",   said:"All clusters recovered.", tru:"Four hours and twenty two minutes after it began."}
       ]
     }
   ];
 
   var MIN = 60000;
-  var state = { inc:"gcp2025", thr:15, srt:"gap" };
+  var FLOOR = 5;   /* a first post inside five minutes is one no paging rule beats */
+  var state = { inc:"gcp2025", thr:15, srt:"gap", prov:[], slo:99.9 };
 
   function $(id){ return document.getElementById(id); }
   function T(s){ return Date.parse(s); }
@@ -964,8 +1155,13 @@
       rec:  x.mit ? mins(x.mit, x.end) : 0
     };
   }
+  /* the incidents in play: every one, or only those from the vendors you picked */
+  function pool(){
+    if(!state.prov.length) return INCIDENTS;
+    return INCIDENTS.filter(function(x){ return state.prov.indexOf(x.pk) > -1; });
+  }
   function compute(){
-    var all = INCIDENTS.map(measure);
+    var all = pool().map(measure);
     var cur = null;
     for(var i=0;i<all.length;i++){ if(all[i].x.id===state.inc) cur = all[i]; }
     var order = all.slice();
@@ -979,12 +1175,14 @@
     };
   }
 
-  /* median of the six gaps, used in the hero, the strip and the decision line */
-  function medianGap(){
-    var g = INCIDENTS.map(function(x){ return mins(x.t0, x.ack); }).sort(function(a,b){ return a-b; });
+  /* the median gap: of every incident, or of a list of them */
+  function medianGap(list){
+    var g = (list || INCIDENTS).map(function(x){ return mins(x.t0, x.ack); }).sort(function(a,b){ return a-b; });
     var h = g.length/2;
     return g.length % 2 ? g[Math.floor(h)] : Math.round((g[h-1] + g[h]) / 2);
   }
+  /* minutes of downtime a 30-day month allows at an availability target */
+  function budget(slo){ return (100 - slo) / 100 * 30 * 24 * 60; }
 
   /* ===== MODEL END: everything above is the data and the model; everything below draws it ===== */
 
@@ -998,7 +1196,11 @@
   function q(el, sel){ return el.querySelector(sel); }
   function fmt(n){ return Math.round(n).toLocaleString("en-US"); }
 
-  var DEFAULTS = { inc:"gcp2025", thr:15, srt:"gap", cost:0 };
+  var DEFAULTS = { inc:"gcp2025", thr:15, srt:"gap", cost:0, slo:99.9 };
+  var SLOS = [99.5, 99.9, 99.95, 99.99];
+  /* the vendors, in the order the data lists them */
+  var PROVS = [];
+  INCIDENTS.forEach(function(x){ if(!PROVS.some(function(p){ return p.k === x.pk; })) PROVS.push({ k:x.pk, name:x.pv }); });
   state.cost = 0;   // what a minute down costs you; off until you set it
   function money(n){
     // three figures at most: $1,650, $590K, $14.7M, $740M, $1.2B; rounding up never reads as $1,000K
@@ -1013,10 +1215,18 @@
 
   /* compute() plus the figures every panel shares */
   function run(){
-    var r = compute();
-    r.minGap = Math.min.apply(null, r.all.map(function(a){ return a.gap; }));
-    r.safe = Math.max(1, r.minGap - 1);
-    r.med = medianGap();
+    var r = compute(), gaps = r.all.map(function(a){ return a.gap; });
+    r.n = r.all.length;
+    r.mine = state.prov.length > 0;
+    r.minGap = Math.min.apply(null, gaps);
+    r.maxGap = Math.max.apply(null, gaps);
+    r.med = medianGap(r.all.map(function(a){ return a.x; }));
+    r.over30 = gaps.filter(function(g){ return g > 30; }).length;
+    // the ones a paging rule can beat, and the threshold that beats every one of them
+    r.quick = r.all.filter(function(a){ return a.gap < FLOOR; });
+    var beat = r.all.filter(function(a){ return a.gap >= FLOOR; });
+    r.safeN = beat.length;
+    r.safe = beat.length ? Math.min.apply(null, beat.map(function(a){ return a.gap; })) - 1 : null;
     r.bands = { make:0, slip:0, miss:0 };
     r.all.forEach(function(a){ r.bands[a.band]++; });
     r.byGap = r.all.slice().sort(function(a, b){ return b.gap - a.gap; });
@@ -1053,7 +1263,7 @@
 
   /* ---------- the five figures, each saying how it moved ---------- */
   var kpiBase = null, lastR = null, dragging = false, lastShown = null, dragShown = null;
-  function vals(r){ return [r.cur.gap, r.cur.margin, r.first, r.cur.total, r.safe]; }
+  function vals(r){ return [r.cur.gap, r.cur.margin, r.first, r.med, r.safe === null ? 0 : r.safe]; }
   function renderKpis(r){
     var m = r.cur, x = m.x, v = vals(r), b = kpiBase;
 
@@ -1082,13 +1292,17 @@
     if(b && b[2] !== v[2]) chip("kd2", v[2] > b[2] ? 1 : -1, Math.abs(v[2] - b[2]) + (v[2] > b[2] ? " more" : " fewer"), v[2] > b[2] ? "good" : "bad");
     else chip("kd2", 0, "");
 
-    setText("kv3", dur(m.total));
-    $("ks3").textContent = "first failure to all clear";
-    if(b && b[3] !== v[3]) chip("kd3", 0, "was " + dur(b[3]), ""); else chip("kd3", 0, "");
+    tweenText("kv3", r.med, function(n){ return fmt(n); });
+    $("kt3").textContent = r.mine ? "Your vendors\u2019 median delay" : "The median delay";
+    $("ks3").textContent = r.over30 ? "over half an hour on " + r.over30 + " of " + r.n : "never over half an hour";
+    if(b && b[3] !== v[3]) chip("kd3", 0, "was " + b[3] + NB + "min", ""); else chip("kd3", 0, "");
 
-    setText("kv4", "≤" + NB + r.safe);
-    $("ks4").textContent = "the median gap is " + r.med + NB + "min";
-    chip("kd4", 0, "");
+    $("kt4").textContent = r.safe === null ? "To be first" : "To be first on " + (r.n === 1 ? "it" : r.safeN === r.n ? "all " + r.n : r.safeN + " of " + r.n);
+    setText("kv4", r.safe === null ? "No rule" : "\u2264" + NB + r.safe);
+    $("ku4").textContent = r.safe === null ? "" : "minutes";
+    $("ks4").textContent = r.quick.length ? r.quick.map(function(a){ return a.x.name; }).join(" and ") + " posted inside " + FLOOR + NB + "min"
+      : "the fastest first post took " + r.minGap + NB + "min";
+    if(b && b[4] && v[4] && b[4] !== v[4]) chip("kd4", 0, "was \u2264" + NB + b[4], ""); else chip("kd4", 0, "");
 
     // figures light up once when they land somewhere new; never on every tick of a drag
     var shown = v.map(String);
@@ -1099,7 +1313,8 @@
   /* one line, only when something deserves saying */
   function renderAlert(r){
     var m = r.cur, a = null;
-    if(r.last === r.all.length) a = ["bad", "At " + state.thr + " minutes the status page beats you on all " + r.all.length + ". Page within " + r.safe + NB + "minutes and you are first on every one."];
+    if(r.last === r.n && r.n > 1) a = ["bad", "At " + state.thr + " minutes the status page beats you on all " + r.n + "." +
+      (r.safe === null ? "" : " Page within " + r.safe + NB + "minutes and you are first on " + (r.safeN === r.n ? "every one." : r.safeN + "."))];
     else if(m.margin <= 0) a = ["warn", "On this incident the status page would have told you " + (m.margin === 0 ? "at the same minute as" : durWords(-m.margin) + " before") + " your own monitoring."];
     else if(m.x.conf === "reported") a = ["info", "The first status post here is reported, not archived: it comes from coverage at the time, so the true gap may differ by a few minutes."];
     $("alert").hidden = !a;
@@ -1111,9 +1326,15 @@
     $("incs").innerHTML = INCIDENTS.map(function(x){
       var g = mins(x.t0, x.ack);
       return '<label class="inc" data-id="' + x.id + '"><input type="radio" name="inc" value="' + x.id + '">' +
-        '<span class="nm">' + esc(x.name) + '</span><span class="dt">' + esc(x.when) + '</span>' +
-        '<span class="g">' + dur(g) + '<span class="sr-only"> dark</span></span>' +
+        '<span class="nm">' + esc(x.name) + '</span><span class="g">' + dur(g) + '<span class="sr-only"> dark</span></span>' +
+        '<span class="dt">' + dayOf(x.t0) + " " + new Date(T(x.t0)).getUTCFullYear() + '</span>' +
         '<span class="gb" aria-hidden="true"><i style="width:' + pct(g / MAXGAP) + '"></i><b class="th"></b></span></label>';
+    }).join("");
+  }
+
+  function buildProvs(){
+    $("provs").innerHTML = PROVS.map(function(p){
+      return '<label class="chip"><input type="checkbox" value="' + p.k + '"><span>' + esc(p.name) + '</span></label>';
     }).join("");
   }
 
@@ -1156,7 +1377,7 @@
     if(!lastR) return;
     var x = lastR.cur.x, G = tlGeo(), K = ink(), d = domain(x), d0 = d[0], d1 = d[1];
     tl.g = G; tl.d = d;
-    $("lgMit").hidden = !x.mit;   // only three of the six retrospectives date a mitigation
+    $("lgMit").hidden = !x.mit;   // not every retrospective dates a mitigation
     var pw = G.W - G.L - G.R, t = view.t === null ? d1 : view.t;
     function X(ms){ return G.L + (ms - d0) / (d1 - d0) * pw; }
     function txt(xx, yy, s, anchor, fill, extra){ return '<text x="' + xx.toFixed(1) + '" y="' + yy.toFixed(1) + '" text-anchor="' + anchor + '" fill="' + fill + '" font-size="12" font-family="Archivo, sans-serif"' + (extra || "") + '>' + s + '</text>'; }
@@ -1244,7 +1465,8 @@
     var b = document.createElement("b"); b.textContent = hhmm(new Date(t).toISOString()) + " UTC · " + (off === 0 ? "start" : off > 0 ? "+" + dur(off) : dur(-off) + " before"); tip.appendChild(b);
     function row(a, v){ var d = document.createElement("div"); d.className = "row"; var s1 = document.createElement("span"); s1.textContent = a; var s2 = document.createElement("span"); s2.textContent = v; d.appendChild(s1); d.appendChild(s2); tip.appendChild(d); }
     row("Users", tr[1]); row("Status page", pg[1]);
-    if(pg[2]){ var k = document.createElement("span"); k.className = "k"; k.textContent = "“" + (pg[2].said.length > 110 ? pg[2].said.slice(0, 108) + "…" : pg[2].said) + "”"; tip.appendChild(k); }
+    if(pg[2]){ var k = document.createElement("span"); k.className = "k"; var sd = pg[2].said.length > 110 ? pg[2].said.slice(0, 108) + "\u2026" : pg[2].said;
+      k.textContent = pg[2].q ? "\u201C" + sd + "\u201D" : sd; tip.appendChild(k); }
     tip.hidden = false;
     var box = tip.parentNode.getBoundingClientRect(), px = ev.clientX - box.left, py = ev.clientY - box.top, w = tip.offsetWidth, h = tip.offsetHeight;
     tip.style.left = clamp(px + 14, 0, Math.max(0, box.width - w)) + "px";
@@ -1274,7 +1496,7 @@
       var s = T(pt.t) >= T(x.end) ? "clear" : T(pt.t) < T(x.ack) ? "ok" : "warn";
       return '<li class="lr" data-t="' + T(pt.t) + '">' +
         '<button type="button" class="lt"><b>' + hhmm(pt.t) + '</b><small>' + esc(rel) + '</small></button>' +
-        '<div><span class="h">The status page</span><p class="said"><span class="dot ' + s + '" aria-hidden="true"></span><span>' + esc(pt.said) + '</span></p></div>' +
+        '<div><span class="h">The status page</span><p class="said"><span class="dot ' + s + '" aria-hidden="true"></span><span>' + (pt.q ? "\u201C" + esc(pt.said) + "\u201D" : esc(pt.said)) + '</span></p></div>' +
         '<div><span class="h">What was true</span><p class="tru">' + esc(pt.tru) + '</p></div></li>';
     }).join("");
   }
@@ -1338,10 +1560,11 @@
   function renderList(r){
     var tb = $("queue"), first = {}, order = r.order.map(function(m){ return m.x.id; }).join();
     var animate = !reduce.matches && lastOrder !== null && lastOrder !== order;
-    if(animate) tb.querySelectorAll("tr.qr").forEach(function(tr){ first[tr.getAttribute("data-id")] = tr.getBoundingClientRect().top; });
+    if(animate) tb.querySelectorAll("tr.qr").forEach(function(tr){ if(!tr.hidden) first[tr.getAttribute("data-id")] = tr.getBoundingClientRect().top; });
+    tb.querySelectorAll("tr.qr").forEach(function(tr){ tr.hidden = true; });
     r.order.forEach(function(m, i){
       var x = m.x, tr = tb.querySelector('tr.qr[data-id="' + x.id + '"]'), cur = x.id === state.inc;
-      tb.appendChild(tr);
+      tb.appendChild(tr); tr.hidden = false;
       q(tr, ".rk").textContent = i + 1;
       tr.classList.toggle("cur", cur);
       q(tr, ".pick").setAttribute("aria-pressed", cur ? "true" : "false");
@@ -1358,7 +1581,7 @@
     if(animate){
       tb.querySelectorAll("tr.qr").forEach(function(tr){
         var dd = first[tr.getAttribute("data-id")] - tr.getBoundingClientRect().top;
-        if(!dd) return;
+        if(!dd || tr.hidden) return;
         tr.style.transition = "none"; tr.style.transform = "translateY(" + dd + "px)";
         void tr.offsetWidth;
         tr.style.transition = "transform .38s cubic-bezier(.2,.7,.2,1)"; tr.style.transform = "";
@@ -1368,9 +1591,66 @@
     if(state.srt !== "date") $(state.srt === "gap" ? "thGap" : "thLen").setAttribute("aria-sort", "descending");
     $("thYou").textContent = "At your " + state.thr + NB + "min";
     placeTicks();
+    $("listH").textContent = r.n === 1 ? "Your one incident" : (r.mine ? "Your " : "All ") + r.n + ", ranked";
     $("listMeta").textContent = " · by " + (state.srt === "gap" ? "longest dark window" : state.srt === "len" ? "longest outage" : "most recent") +
       (state.thr <= MAXGAP ? " · the tick is your " + state.thr + NB + "min" : "");
     document.querySelectorAll(".listw .seg button").forEach(function(b){ b.setAttribute("aria-pressed", b.getAttribute("data-srt") === state.srt); });
+  }
+
+  /* ---------- what to do about it ----------
+     The figures, turned into the three lines a runbook needs: whether to wait for the
+     vendor, how fast to page on your own signal, and what the silence costs. */
+  function budgetText(m){ return m >= 10 ? fmt(m) : (Math.round(m * 10) / 10).toFixed(1); }
+  function times(f){ return f >= 10 ? fmt(f) : (Math.round(f * 10) / 10).toFixed(1).replace(/\.0$/, ""); }
+  function shareText(share){ return share < 1 ? Math.round(share * 100) + "%" : times(share) + NB + pl(+times(share), "month"); }
+  function quickNames(r){ return r.quick.map(function(a){ return a.x.name; }).join(" and "); }
+  function renderRule(r){
+    var n = r.n, bud = budget(state.slo), share = r.med / bud;
+    var scope = r.mine ? (n === 1 ? "the one incident from your vendors" : "the " + n + " incidents from your vendors") : "these " + n + " incidents";
+    $("ruleMeta").textContent = " \u00B7 from " + plural(n, "incident") + (r.mine ? " on your vendors" : "");
+
+    $("r1h").textContent = "Do not wait for the page";
+    $("r1").innerHTML = "On " + scope + " the first post came " + (n > 1 ? "a median of " : "") + "<b>" + plural(r.med, "minute") + "</b> after users started failing" +
+      (n > 1 ? ", and anywhere from " + dur(r.minGap) + " to " + dur(r.maxGap) : "") + ". " +
+      (r.over30 && n > 1 ? "It took over half an hour on " + r.over30 + " of " + n + ". " : "") + "Until it moves, a green vendor page tells you nothing.";
+
+    var qn = r.quick.length ? " " + quickNames(r) + " posted inside " + FLOOR + " minutes, which no paging rule beats." : "";
+    if(r.safe === null){
+      $("r2h").textContent = "No paging rule beats this page";
+      $("r2").innerHTML = quickNames(r) + " posted inside " + FLOOR + " minutes. Your own signal still tells you the one thing the post cannot: whether it is hitting you.";
+    } else if(state.thr <= r.safe){
+      $("r2h").textContent = "Keep paging at " + plural(state.thr, "minute");
+      $("r2").innerHTML = "At " + plural(state.thr, "minute") + " your own monitoring tells you before the vendor does on <b>" + r.first + " of " + n + "</b>." + qn;
+    } else {
+      $("r2h").textContent = "Page on your own errors within " + plural(r.safe, "minute");
+      $("r2").innerHTML = "At " + plural(state.thr, "minute") + " you hear it first on <b>" + r.first + " of " + n + "</b>. Tighten to " + r.safe + " and that becomes " + r.safeN + "." + qn;
+    }
+
+    $("r3h").textContent = "The silence alone spends " + shareText(share) + " of " + (share < 1 ? "your month" : "budget");
+    $("r3").innerHTML = state.slo + "% allows <b>" + budgetText(bud) + " minutes</b> down in a 30-day month. If the outage takes you with it, " +
+      plural(r.med, "minute") + (r.med === 1 ? " has" : " have") + " gone before the vendor says a word" + (state.cost ? ", about <b>" + money(r.med * state.cost) + "</b> at your rate" : "") + ".";
+  }
+  function policy(){
+    var r = run(), L = [], bud = budget(state.slo), share = r.med / bud, n = r.n, vend = [], yrs = [];
+    r.all.forEach(function(a){ if(vend.indexOf(a.x.pv) < 0) vend.push(a.x.pv); yrs.push(new Date(T(a.x.t0)).getUTCFullYear()); });
+    var y0 = Math.min.apply(null, yrs), y1 = Math.max.apply(null, yrs);
+    L.push("Vendor outage policy");
+    L.push("Basis: " + plural(n, "documented incident") + ", " + y0 + (y1 !== y0 ? " to " + y1 : "") + " (" + vend.join(", ") + ").");
+    L.push("");
+    L.push("1. We act on our own signals. A vendor's status page is not an input to paging or failover.");
+    L.push("   Its first post came " + (n > 1 ? "a median of " : "") + dur(r.med) + " after impact began" +
+      (n > 1 ? " (from " + dur(r.minGap) + " to " + dur(r.maxGap) + (r.over30 ? "; over 30 min on " + r.over30 + " of " + n : "") + ")" : "") + ".");
+    L.push("2. We page at " + plural(state.thr, "minute") + " of sustained errors.");
+    L.push("   On this record that is ahead of the vendor's first post on " + r.first + " of " + n + "." +
+      (r.safe !== null && state.thr > r.safe ? " Paging within " + r.safe + " would make it " + r.safeN + "." : ""));
+    L.push("3. A green vendor page while our own errors are up is the normal case, not a reason to stand down.");
+    L.push("4. We update our own status page from our own signals, without waiting for the vendor's.");
+    L.push("5. Error budget: " + state.slo + "% allows " + budgetText(bud) + " min a month. " + (n > 1 ? "The median vendor silence" : "That silence") +
+      " alone is " + (share < 1 ? Math.round(share * 100) + "% of it" : times(share) + " " + pl(+times(share), "month") + " of it") +
+      (state.cost ? ", about " + money(r.med * state.cost) + " at " + money(state.cost) + " a minute" : "") + ".");
+    L.push("");
+    L.push("Evidence, incident by incident: " + location.href);
+    return L.join("\n");
   }
 
   /* ---------- the incident in words, and the worked example ---------- */
@@ -1378,7 +1658,9 @@
     var x = r.cur.x;
     $("tlTitle").innerHTML = esc(x.name) + ' <span>· ' + esc(x.when) + (x.prov !== x.name ? ' · ' + esc(x.prov) : '') + '</span>';
     $("what").innerHTML = "<b>What broke.</b> " + esc(x.cause);
-    $("whatSrc").innerHTML = 'Source: <a href="' + x.src + '" target="_blank" rel="noopener">' + esc(x.srcName) + '</a>' + (x.conf === "reported" ? " · first post reported, not archived" : "");
+    $("whatSrc").innerHTML = 'Source: <a href="' + x.src + '" target="_blank" rel="noopener">' + esc(x.srcName) + '</a>' +
+      (x.src2 ? ' and <a href="' + x.src2 + '" target="_blank" rel="noopener">' + esc(x.src2Name) + '</a>' : '') +
+      (x.conf === "reported" ? " · first post reported, not archived" : "");
   }
   function renderWorked(r){
     var m = r.cur, x = m.x, L = [];
@@ -1402,21 +1684,40 @@
     var held = document.activeElement;
     if($("cost") !== held) $("cost").value = state.cost ? fmt(state.cost) : "";
     document.querySelectorAll("#costSeg button").forEach(function(b){ b.setAttribute("aria-pressed", +b.getAttribute("data-c") === state.cost ? "true" : "false"); });
-    var x = byId(state.inc), g = mins(x.t0, x.ack), all = 0;
-    INCIDENTS.forEach(function(i){ all += mins(i.t0, i.ack); });
-    $("costNote").textContent = state.cost ? dur(g) + " dark on " + x.name + ": " + money(g * state.cost) + ". All six: " + money(all * state.cost) + "."
+    var x = byId(state.inc), g = mins(x.t0, x.ack), all = 0, P = pool(), inPool = {};
+    P.forEach(function(i){ all += mins(i.t0, i.ack); inPool[i.id] = 1; });
+    $("costNote").textContent = state.cost ? dur(g) + " dark on " + x.name + ": " + money(g * state.cost) + ". " + (state.prov.length ? "Your " : "All ") + P.length + ": " + money(all * state.cost) + "."
       : "Optional: prices each minute the page stayed green";
+    document.querySelectorAll("#provs input").forEach(function(c){ c.checked = state.prov.indexOf(c.value) > -1; });
+    $("provOut").textContent = state.prov.length ? plural(P.length, "incident") : "all " + PROVS.length;
+    $("provClear").hidden = !state.prov.length;
+    document.querySelectorAll("#sloSeg button").forEach(function(b){ b.setAttribute("aria-pressed", +b.getAttribute("data-slo") === state.slo ? "true" : "false"); });
     if($("thr") !== held) $("thr").value = posFromThr(state.thr);
     setFill($("thr"));
     $("thrOut").textContent = state.thr + NB + pl(state.thr, "minute");
     $("thr").setAttribute("aria-valuetext", state.thr + " " + pl(state.thr, "minute") + " after users start failing");
+    var box = $("incs");
     document.querySelectorAll("#incs .inc").forEach(function(l){
-      var on = l.getAttribute("data-id") === state.inc;
+      var id = l.getAttribute("data-id"), on = id === state.inc;
+      l.hidden = !inPool[id];
       l.classList.toggle("on", on); q(l, "input").checked = on;
     });
+    // keep the incident being replayed in view inside its own scrolling list, without moving the page
+    var cur = q(box, ".inc.on");
+    if(cur && box.scrollHeight > box.clientHeight){
+      var top = cur.offsetTop - box.offsetTop, bot = top + cur.offsetHeight;
+      if(top < box.scrollTop) box.scrollTop = top - 4;
+      else if(bot > box.scrollTop + box.clientHeight) box.scrollTop = bot - box.clientHeight + 4;
+    }
+    recue();
   }
-  function isDefault(){ for(var k in DEFAULTS) if(state[k] !== DEFAULTS[k]) return false; return true; }
-  function longestId(){ var b = INCIDENTS[0]; INCIDENTS.forEach(function(x){ if(mins(x.t0, x.ack) > mins(b.t0, b.ack)) b = x; }); return b.id; }
+  function isDefault(){ if(state.prov.length) return false; for(var k in DEFAULTS) if(state[k] !== DEFAULTS[k]) return false; return true; }
+  function longestId(){ var P = pool(), b = P[0]; P.forEach(function(x){ if(mins(x.t0, x.ack) > mins(b.t0, b.ack)) b = x; }); return b.id; }
+  /* a vendor filter can leave the incident being replayed outside it; move to the longest one inside */
+  function settle(){
+    state.prov = state.prov.filter(function(k){ return PROVS.some(function(p){ return p.k === k; }); });
+    if(!pool().some(function(x){ return x.id === state.inc; })) state.inc = longestId();
+  }
   function renderTry(){
     document.querySelectorAll(".try button").forEach(function(b){
       var t = b.getAttribute("data-try");
@@ -1425,12 +1726,14 @@
   }
 
   function render(animate){
+    settle();
     var r = run();
     lastR = r;
     if(view.inc !== state.inc){ view.inc = state.inc; view.t = null; stopPlay(); buildLog(); }
     syncControls();
     renderKpis(r);
     renderAlert(r);
+    renderRule(r);
     renderWhat(r);
     drawTimeline();
     renderClock();
@@ -1471,7 +1774,7 @@
       $("srStatus").textContent = m.x.name + ", " + m.x.when + ". The status page showed no incident for " + durWords(m.gap) +
         " after customers began failing. At your threshold of " + state.thr + " minutes you would have known " +
         (m.margin > 0 ? durWords(m.margin) + " before the status page." : m.margin < 0 ? durWords(-m.margin) + " after the status page." : "at the same minute.") +
-        " Across all six you would be first on " + r.first + ".";
+        " Across " + (r.mine ? "your " : "all ") + r.n + " you would be first on " + r.first + ".";
     }, 500);
   }
 
@@ -1479,13 +1782,24 @@
   function buildStatics(){
     var gaps = INCIDENTS.map(function(x){ return mins(x.t0, x.ack); });
     var lo = Math.min.apply(null, gaps), hi = Math.max.apply(null, gaps);
-    var totalDown = INCIDENTS.reduce(function(a, x){ return a + mins(x.t0, x.end); }, 0);
     var yrs = INCIDENTS.map(function(x){ return new Date(T(x.t0)).getUTCFullYear(); });
-    $("prov").textContent = INCIDENTS.length + NB + "incidents · " + Math.min.apply(null, yrs) + " to " + Math.max.apply(null, yrs) +
-      " · gaps from " + dur(lo) + " to " + dur(hi) + " · every impact time from the provider’s own retrospective";
+    $("prov").textContent = INCIDENTS.length + NB + "incidents · " + PROVS.length + NB + "providers · " + Math.min.apply(null, yrs) + " to " + Math.max.apply(null, yrs) +
+      " · first posts from " + dur(lo) + " to " + dur(hi) + " after impact · every impact time from the provider’s own retrospective";
     $("stMed").innerHTML = medianGap() + "<small>minutes</small>";
     $("stMax").innerHTML = hi + "<small>minutes</small>";
-    $("stDown").innerHTML = Math.round(totalDown / 60) + "<small>hours</small>";
+    var fast = gaps.filter(function(g){ return g <= 15; }).length, slow = gaps.filter(function(g){ return g > 30; }).length;
+    $("stSlow").innerHTML = slow + "<small>of " + INCIDENTS.length + "</small>";
+    $("notAlways").textContent = fast + " of the " + INCIDENTS.length + " posted inside fifteen minutes, and the fastest took " + plural(lo, "minute") +
+      ". The lag is a distribution, which is why the tool gives a median and a count rather than a rule, and why a first post inside " + FLOOR + " minutes is counted as one no paging rule beats.";
+    $("incLead").textContent = INCIDENTS.length + " incidents from " + PROVS.length + " providers. ";
+    var seen = {}, links = [];
+    INCIDENTS.forEach(function(x){
+      [[x.src, x.srcName], [x.src2, x.src2Name]].forEach(function(s){
+        if(!s[0] || seen[s[0]]) return; seen[s[0]] = 1;
+        links.push('<a href="' + s[0] + '" target="_blank" rel="noopener">' + esc(s[1]) + '</a>');
+      });
+    });
+    $("srcList").innerHTML = "Impact times come from each provider’s own retrospective, and first posts from its status record where one survives: " + links.join(", ") + ".";
     $("incTable").innerHTML = INCIDENTS.map(function(x){
       var g = mins(x.t0, x.ack);
       return "<tr><th scope=\"row\">" + esc(x.name) + '<span class="ci">' + esc(x.when) + "</span></th>" +
@@ -1528,6 +1842,8 @@
     u.set("i", state.inc); u.set("t", state.thr);
     if(state.srt !== "gap") u.set("srt", state.srt);
     if(state.cost) u.set("c", state.cost);
+    if(state.prov.length) u.set("v", state.prov.join("."));
+    if(state.slo !== DEFAULTS.slo) u.set("slo", state.slo);
     try{ history.replaceState(null, "", "#" + u.toString()); }
     catch(e){ try{ location.hash = u.toString(); }catch(e2){} }
   }
@@ -1540,6 +1856,8 @@
     if(u.get("t")) state.thr = Math.max(1, Math.min(240, parseInt(u.get("t"), 10) || 15));
     if(u.get("srt") === "len" || u.get("srt") === "date") state.srt = u.get("srt");
     if(u.get("c")){ var c = parseFloat(u.get("c")); if(isFinite(c) && c > 0) state.cost = Math.min(1e7, Math.round(c)); }
+    if(u.get("v")) state.prov = u.get("v").split(".").filter(function(k, i, a){ return a.indexOf(k) === i && PROVS.some(function(p){ return p.k === k; }); });
+    if(u.get("slo") && SLOS.indexOf(parseFloat(u.get("slo"))) > -1) state.slo = parseFloat(u.get("slo"));
     return true;
   }
 
@@ -1556,7 +1874,7 @@
     document.body.removeChild(ta);
   }
   function summary(){
-    var r = compute(), m = r.cur, x = m.x, L = [];
+    var r = run(), m = r.cur, x = m.x, L = [];
     L.push(x.name + ", " + x.when + " (" + x.prov + ")");
     L.push("");
     L.push("Impact began      " + hhmm(x.t0) + " UTC");
@@ -1570,12 +1888,12 @@
     if(state.cost) L.push("At " + money(state.cost) + " a minute, the dark window cost " + money(m.gap * state.cost) +
       (m.margin > 0 ? "; your head start is worth " + money(m.margin * state.cost) + "." : "."));
     L.push("");
-    L.push("All " + r.all.length + " incidents by dark window:");
+    L.push((r.mine ? "Your " : "All ") + plural(r.n, "incident") + " by dark window:");
     r.all.slice().sort(function(a, b){ return b.gap - a.gap; }).forEach(function(a, i){
       L.push((i + 1) + ". " + a.x.name + " (" + a.x.when + "): " + dur(a.gap) + " dark, " + dur(a.total) + " total");
     });
     L.push("");
-    L.push("Median gap across all six: " + dur(medianGap()) + ".");
+    L.push("Median gap across " + (r.mine ? "these " : "all ") + r.n + ": " + dur(r.med) + ".");
     L.push("Your failover trigger belongs on your own error rates, not on their dashboard.");
     L.push("");
     L.push("Run your own: " + location.href);
@@ -1585,9 +1903,20 @@
   /* ---------- wiring ---------- */
   document.addEventListener("DOMContentLoaded", function(){
     var shared = readUrl(), anchor = /^#(why|how|incidents|method)$/.test(location.hash) ? location.hash.slice(1) : null;
-    buildStatics(); buildIncs(); buildList();
+    buildStatics(); buildIncs(); buildProvs(); buildList();
+    cue($("incs"), "more-below", true);
 
     $("incs").addEventListener("change", function(e){ change(function(){ state.inc = e.target.value; }); });
+    $("provs").addEventListener("change", function(e){
+      var k = e.target.value;
+      change(function(){ var i = state.prov.indexOf(k); if(i > -1) state.prov.splice(i, 1); else state.prov.push(k); });
+    });
+    $("provClear").addEventListener("click", function(){ change(function(){ state.prov = []; }); $("provs").querySelector("input").focus(); });
+    $("sloSeg").addEventListener("click", function(e){
+      var b = e.target.closest("button"); if(!b) return; var v = +b.getAttribute("data-slo");
+      if(v !== state.slo) change(function(){ state.slo = v; });
+    });
+    $("copyPolicy").addEventListener("click", function(){ copy(policy(), "Policy copied"); });
     $("thr").addEventListener("input", function(){ var el = this; change(function(){ state.thr = thrFromPos(+el.value); }, true); });
     $("cost").addEventListener("input", function(){ var v = parseFloat(this.value.replace(/[$,\s]/g, "")); v = isFinite(v) && v > 0 ? Math.min(1e7, Math.round(v)) : 0; change(function(){ state.cost = v; }, true); });
     $("cost").addEventListener("change", function(){ endDrag(); this.value = state.cost ? fmt(state.cost) : ""; });
@@ -1604,7 +1933,7 @@
         if(t === "fast") state.thr = 5;
         if(t === "slow") state.thr = 60;
         if(t === "longest") state.inc = longestId();
-        if(t === "reset") for(var k in DEFAULTS) state[k] = DEFAULTS[k];
+        if(t === "reset"){ for(var k in DEFAULTS) state[k] = DEFAULTS[k]; state.prov = []; }
       });
     });
 
